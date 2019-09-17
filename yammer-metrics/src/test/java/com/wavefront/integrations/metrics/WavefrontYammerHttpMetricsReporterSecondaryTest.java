@@ -64,7 +64,7 @@ public class WavefrontYammerHttpMetricsReporterSecondaryTest {
         setSelectInterval(200).
         build();
     metricsServer = ServerBootstrap.bootstrap().
-        setLocalAddress(InetAddress.getLocalHost()).
+        setLocalAddress(InetAddress.getLoopbackAddress()).
         setListenerPort(0).
         setServerInfo("Test/1.1").
         setIOReactorConfig(metricsIOreactor).
@@ -117,7 +117,7 @@ public class WavefrontYammerHttpMetricsReporterSecondaryTest {
         setSelectInterval(200).
         build();
     histogramsServer = ServerBootstrap.bootstrap().
-        setLocalAddress(InetAddress.getLocalHost()).
+        setLocalAddress(InetAddress.getLoopbackAddress()).
         setListenerPort(0).
         setServerInfo("Test/1.1").
         setIOReactorConfig(histogramsIOReactor).
@@ -169,7 +169,7 @@ public class WavefrontYammerHttpMetricsReporterSecondaryTest {
         build();
     nullServer = ServerBootstrap.bootstrap().
         setIOReactorConfig(nullIOReactor).
-        setLocalAddress(InetAddress.getLocalHost()).
+        setLocalAddress(InetAddress.getLoopbackAddress()).
         setListenerPort(0).
         setServerInfo("Test/1.1").
         registerHandler("*", new HttpAsyncRequestHandler<HttpRequest>() {
@@ -197,8 +197,8 @@ public class WavefrontYammerHttpMetricsReporterSecondaryTest {
     wavefrontYammerHttpMetricsReporter = new WavefrontYammerHttpMetricsReporter.Builder().
         withName("test-http").
         withMetricsRegistry(metricsRegistry).
-        withHost(InetAddress.getLocalHost().getHostAddress()).
-        withSecondaryHostname(InetAddress.getLocalHost().getHostAddress()).
+        withHost(InetAddress.getLoopbackAddress().getHostAddress()).
+        withSecondaryHostname(InetAddress.getLoopbackAddress().getHostAddress()).
         withPorts(
             ((InetSocketAddress) nullServer.getEndpoint().getAddress()).getPort(),
             ((InetSocketAddress) nullServer.getEndpoint().getAddress()).getPort()).
