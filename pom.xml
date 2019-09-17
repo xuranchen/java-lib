@@ -4,7 +4,7 @@
 
   <groupId>com.wavefront</groupId>
   <artifactId>javalib</artifactId>
-  <version>2019-10.0-SNAPSHOT</version>
+  <version>2019-09.1-SNAPSHOT</version>
   <modules>
     <module>java-lib</module>
     <module>yammer-metrics</module>
@@ -60,7 +60,7 @@
     <jackson.version>2.9.9</jackson.version>
     <jackson-databind.version>2.9.9.3</jackson-databind.version>
     <netty.version>4.1.41.Final</netty.version>
-    <public.project.version>2019-10.0-SNAPSHOT</public.project.version>
+    <public.project.version>2019-09.1-SNAPSHOT</public.project.version>
   </properties>
 
   <build>
