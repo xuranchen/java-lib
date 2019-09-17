@@ -1,10 +1,13 @@
 package com.wavefront.ingester;
 
+import com.google.common.collect.ImmutableSet;
+
 import org.antlr.v4.runtime.Token;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 
 import wavefront.report.ReportSourceTag;
 
@@ -15,11 +18,13 @@ import wavefront.report.ReportSourceTag;
  */
 public class ReportSourceTagIngesterFormatter extends AbstractIngesterFormatter<ReportSourceTag> {
 
-  public static final String SOURCE = "source";
-  public static final String DESCRIPTION = "description";
-  public static final String ACTION = "action";
+  static final String SOURCE = "source";
+  static final String DESCRIPTION = "description";
+  static final String ACTION = "action";
+  public static final String ACTION_ADD = "add";
   public static final String ACTION_SAVE = "save";
   public static final String ACTION_DELETE = "delete";
+  static final Set<String> VALID_ACTIONS = ImmutableSet.of(ACTION_ADD, ACTION_SAVE, ACTION_DELETE);
 
   private ReportSourceTagIngesterFormatter(List<FormatterElement> elements) {
     super(elements);
@@ -77,14 +82,18 @@ public class ReportSourceTagIngesterFormatter extends AbstractIngesterFormatter<
     if (sourceTag.getSource() == null)
       throw new RuntimeException("No source key was present in the input: " + input);
 
-    if (sourceTag.getAction() != null) {
-      // verify that only 'add' or 'delete' is present
-      String actionStr = sourceTag.getAction();
-      if (!actionStr.equals(ACTION_SAVE) && !actionStr.equals(ACTION_DELETE))
-        throw new RuntimeException("Action string did not match save/delete: " + input);
-    } else {
-      // no value was specified hence throw an exception
+    final String action = sourceTag.getAction();
+    if (action == null) {
       throw new RuntimeException("No action key was present in the input: " + input);
+    }
+    // verify it's a valid action one of 'add', 'save' or 'delete'
+    if (!VALID_ACTIONS.contains(action)) {
+      throw new RuntimeException("Action string did not match save/delete: " + input);
+    }
+    if (sourceTag.getSourceTagLiteral().equals("SourceTag") &&
+        (action.equals(ACTION_ADD) || action.equals(ACTION_DELETE)) &&
+        (sourceTag.getAnnotations() == null || sourceTag.getAnnotations().size() > 1)) {
+      throw new RuntimeException("Only 1 tag is allowed for action type `" + action + "`");
     }
     return ReportSourceTag.newBuilder(sourceTag).build();
   }

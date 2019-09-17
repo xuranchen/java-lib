@@ -132,45 +132,75 @@ public class ReportSourceTagDecoderTest {
 
   @Test
   public void testSimpleSourceDescriptions() throws Exception {
-      ReportSourceTagDecoder decoder = new ReportSourceTagDecoder();
-      List<ReportSourceTag> out = new ArrayList<>();
-      // Testwith source description
-      decoder.decode(String.format("@%s %s=%s %s= aSource description=desc",
-          SOURCE_DESCRIPTION,
-          ReportSourceTagIngesterFormatter.ACTION, ReportSourceTagIngesterFormatter.ACTION_SAVE,
-          ReportSourceTagIngesterFormatter.SOURCE), out);
-      ReportSourceTag reportSourceTag = out.get(0);
+    ReportSourceTagDecoder decoder = new ReportSourceTagDecoder();
+    List<ReportSourceTag> out = new ArrayList<>();
+    // Testwith source description
+    decoder.decode(String.format("@%s %s=%s %s= aSource description=desc",
+        SOURCE_DESCRIPTION,
+        ReportSourceTagIngesterFormatter.ACTION, ReportSourceTagIngesterFormatter.ACTION_SAVE,
+        ReportSourceTagIngesterFormatter.SOURCE), out);
+    ReportSourceTag reportSourceTag = out.get(0);
     assertEquals("Action name didn't match.", ReportSourceTagIngesterFormatter.ACTION_SAVE,
-          reportSourceTag.getAction());
-      assertEquals("Source did not match.", "aSource", reportSourceTag.getSource());
-      assertEquals("Description did not match.", "desc", reportSourceTag.getDescription());
+        reportSourceTag.getAction());
+    assertEquals("Source did not match.", "aSource", reportSourceTag.getSource());
+    assertEquals("Description did not match.", "desc", reportSourceTag.getDescription());
 
-      // Test delete action where description field is not necessary
-      out.clear();
-      String format = String.format("@%s %s=%s %s=aSource", SOURCE_DESCRIPTION,
-          ReportSourceTagIngesterFormatter.ACTION, ReportSourceTagIngesterFormatter.ACTION_DELETE,
-          ReportSourceTagIngesterFormatter.SOURCE);
-      decoder.decode(format, out);
-      reportSourceTag = out.get(0);
+    // Test delete action where description field is not necessary
+    out.clear();
+    String format = String.format("@%s %s=%s %s=aSource", SOURCE_DESCRIPTION,
+        ReportSourceTagIngesterFormatter.ACTION, ReportSourceTagIngesterFormatter.ACTION_DELETE,
+        ReportSourceTagIngesterFormatter.SOURCE);
+    decoder.decode(format, out);
+    reportSourceTag = out.get(0);
     assertEquals("Action name did not match for input : " + format, ReportSourceTagIngesterFormatter
-              .ACTION_DELETE,
-          reportSourceTag.getAction());
-      assertEquals("Source did not match for input : " + format, "aSource", reportSourceTag
-          .getSource());
+            .ACTION_DELETE,
+        reportSourceTag.getAction());
+    assertEquals("Source did not match for input : " + format, "aSource", reportSourceTag
+        .getSource());
 
-      // Add a source tag to the SourceDescription message -- this should cause an exception
-      out.clear();
-      String msg = String.format("@%s action = save source = aSource description = desc " +
-          "sourceTag4", SOURCE_DESCRIPTION);
-      boolean isException = false;
-      try {
-        decoder.decode(msg, out);
-      } catch (Exception ex) {
-        isException = true;
-        logger.info(ex.getMessage());
-      }
-      assertTrue("Expected an exception, since source tag was supplied in SourceDescription " +
-          "message for input : " + msg, isException);
+    // Add a source tag to the SourceDescription message -- this should cause an exception
+    out.clear();
+    String msg = String.format("@%s action = save source = aSource description = desc " +
+        "sourceTag4", SOURCE_DESCRIPTION);
+    boolean isException = false;
+    try {
+      decoder.decode(msg, out);
+    } catch (Exception ex) {
+      isException = true;
+      logger.info(ex.getMessage());
+    }
+    assertTrue("Expected an exception, since source tag was supplied in SourceDescription " +
+        "message for input : " + msg, isException);
 
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testInvalidSourceTagAddWithTwoTagsThrows() {
+    // Test sourceTag add with two tags -- this should result in an exception
+    new ReportSourceTagDecoder().decode(
+        String.format("@%s action=add source=source sourceTag3 sourceTag5", SOURCE_TAG),
+        new ArrayList<>());
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testInvalidSourceTagDeleteWithTwoTagsThrows() {
+    // Test sourceTag delete with two tags -- this should result in an exception
+    new ReportSourceTagDecoder().decode(
+        String.format("@%s action=delete source=source sourceTag3 sourceTag5", SOURCE_TAG),
+        new ArrayList<>());
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testInvalidSourceTagAddWithNoTagsThrows() {
+    // Test sourceTag add with no tags -- this should result in an exception
+    new ReportSourceTagDecoder().decode(String.format("@%s action=add source=source", SOURCE_TAG),
+        new ArrayList<>());
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testInvalidSourceTagDeleteWithNoTagsThrows() {
+    // Test sourceTag delete with no tags -- this should result in an exception
+    new ReportSourceTagDecoder().decode(String.format("@%s action=delete source=source", SOURCE_TAG),
+        new ArrayList<>());
   }
 }
