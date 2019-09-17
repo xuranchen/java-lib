@@ -8,7 +8,7 @@ Wavefront shared Java library
 ## To start developing
 
 ```
-$ git clone github.com/wavefronthq/java-lib
+$ git clone https://github.com/wavefronthq/java-lib
 $ cd java-lib
 $ mvn clean install -DskipTests
 ```
