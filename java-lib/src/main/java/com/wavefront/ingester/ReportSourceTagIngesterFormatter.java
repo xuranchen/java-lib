@@ -90,10 +90,8 @@ public class ReportSourceTagIngesterFormatter extends AbstractIngesterFormatter<
     if (!VALID_ACTIONS.contains(action)) {
       throw new RuntimeException("Action string did not match save/delete: " + input);
     }
-    if (sourceTag.getSourceTagLiteral().equals("SourceTag") &&
-        (action.equals(ACTION_ADD) || action.equals(ACTION_DELETE)) &&
-        (sourceTag.getAnnotations() == null || sourceTag.getAnnotations().size() > 1)) {
-      throw new RuntimeException("Only 1 tag is allowed for action type `" + action + "`");
+    if (sourceTag.getSourceTagLiteral().equals("SourceTag") && sourceTag.getAnnotations() == null) {
+      throw new RuntimeException("No tag(s) provided for action type `" + action + "`");
     }
     return ReportSourceTag.newBuilder(sourceTag).build();
   }

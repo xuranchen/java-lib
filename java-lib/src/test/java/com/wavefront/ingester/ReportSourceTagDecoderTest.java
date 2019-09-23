@@ -174,20 +174,48 @@ public class ReportSourceTagDecoderTest {
 
   }
 
-  @Test(expected = RuntimeException.class)
-  public void testInvalidSourceTagAddWithTwoTagsThrows() {
-    // Test sourceTag add with two tags -- this should result in an exception
-    new ReportSourceTagDecoder().decode(
-        String.format("@%s action=add source=source sourceTag3 sourceTag5", SOURCE_TAG),
-        new ArrayList<>());
-  }
+  @Test
+  public void testExpandSourceTagAddDeleteWithMultipleTags() {
+    // Test sourceTag add with 3 tags -- this should generate 3 ReportSourceTag objects
+    ReportSourceTagDecoder decoder = new ReportSourceTagDecoder();
+    List<ReportSourceTag> out = new ArrayList<>();
+    decoder.decode("@SourceTag action=add source=aSource sourceTag1 sourceTag2 sourceTag3", out);
+    assertEquals(3, out.size());
 
-  @Test(expected = RuntimeException.class)
-  public void testInvalidSourceTagDeleteWithTwoTagsThrows() {
-    // Test sourceTag delete with two tags -- this should result in an exception
-    new ReportSourceTagDecoder().decode(
-        String.format("@%s action=delete source=source sourceTag3 sourceTag5", SOURCE_TAG),
-        new ArrayList<>());
+    assertEquals("SourceTag", out.get(0).getSourceTagLiteral());
+    assertEquals("add", out.get(0).getAction());
+    assertEquals("aSource", out.get(0).getSource());
+    assertEquals(1, out.get(0).getAnnotations().size());
+    assertEquals("sourceTag1", out.get(0).getAnnotations().get(0));
+
+    assertEquals("SourceTag", out.get(1).getSourceTagLiteral());
+    assertEquals("add", out.get(1).getAction());
+    assertEquals("aSource", out.get(1).getSource());
+    assertEquals(1, out.get(1).getAnnotations().size());
+    assertEquals("sourceTag2", out.get(1).getAnnotations().get(0));
+
+    assertEquals("SourceTag", out.get(2).getSourceTagLiteral());
+    assertEquals("add", out.get(2).getAction());
+    assertEquals("aSource", out.get(2).getSource());
+    assertEquals(1, out.get(2).getAnnotations().size());
+    assertEquals("sourceTag3", out.get(2).getAnnotations().get(0));
+
+    out.clear();
+
+    decoder.decode("@SourceTag action=delete source=aSource sourceTag4 sourceTag5", out);
+    assertEquals(2, out.size());
+
+    assertEquals("SourceTag", out.get(0).getSourceTagLiteral());
+    assertEquals("delete", out.get(0).getAction());
+    assertEquals("aSource", out.get(0).getSource());
+    assertEquals(1, out.get(0).getAnnotations().size());
+    assertEquals("sourceTag4", out.get(0).getAnnotations().get(0));
+
+    assertEquals("SourceTag", out.get(1).getSourceTagLiteral());
+    assertEquals("delete", out.get(1).getAction());
+    assertEquals("aSource", out.get(1).getSource());
+    assertEquals(1, out.get(1).getAnnotations().size());
+    assertEquals("sourceTag5", out.get(1).getAnnotations().get(0));
   }
 
   @Test(expected = RuntimeException.class)
