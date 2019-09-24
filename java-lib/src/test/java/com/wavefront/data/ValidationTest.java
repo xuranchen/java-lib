@@ -412,22 +412,6 @@ public class ValidationTest {
       assertTrue(iae.getMessage().contains("WF-430"));
     }
 
-    // span annotation (key+value) too long: WF-431
-    span = getValidSpan();
-    span.getAnnotations().add(new Annotation(Strings.repeat("k", 100), Strings.repeat("v", 154)));
-    ValidationConfiguration tagConfig = new ValidationConfiguration().
-        setSpanAnnotationsKeyLengthLimit(255).
-        setSpanAnnotationsValueLengthLimit(255);
-    Validation.validateSpan(span, tagConfig);
-    span = getValidSpan();
-    span.getAnnotations().add(new Annotation(Strings.repeat("k", 100), Strings.repeat("v", 155)));
-    try {
-      Validation.validateSpan(span, tagConfig);
-      fail();
-    } catch (IllegalArgumentException iae) {
-      assertTrue(iae.getMessage().contains("WF-431"));
-    }
-
     // span annotation key too long: WF-432
     span = getValidSpan();
     span.getAnnotations().add(new Annotation("k23456", "v1"));

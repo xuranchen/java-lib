@@ -187,12 +187,6 @@ public class Validation {
       for (Annotation annotation : annotations) {
         final String tagK = annotation.getKey();
         final String tagV = annotation.getValue();
-        // Each tag of the form "k=v" must be < 256
-        if (tagK.length() + tagV.length() >= 255) {
-          ERROR_COUNTERS.get("spanAnnotationTooLong").inc();
-          throw new IllegalArgumentException("WF-431: Span annotation (key+value) too long (" +
-              (tagK.length() + tagV.length() + 1) + " characters, max: 256): " + tagK + "=" + tagV);
-        }
         if (tagK.length() > config.getSpanAnnotationsKeyLengthLimit()) {
           ERROR_COUNTERS.get("spanAnnotationKeyTooLong").inc();
           throw new IllegalArgumentException("WF-432: Span annotation key is too long (" + tagK.length() +
