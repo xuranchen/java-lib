@@ -343,16 +343,6 @@ public class ValidationTest {
   public void testInvalidSpansWithValidationConfig() {
     Span span;
 
-    // span name has invalid characters: WF-415
-    span = getValidSpan();
-    span.setName("span~name");
-    try {
-      Validation.validateSpan(span, config);
-      fail();
-    } catch (IllegalArgumentException iae) {
-      assertTrue(iae.getMessage().contains("WF-415"));
-    }
-
     // span annotation key has invalid characters: WF-416
     span = getValidSpan();
     span.getAnnotations().add(new Annotation("$key", "v"));
