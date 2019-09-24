@@ -5,6 +5,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import com.google.re2j.Matcher;
+import com.google.re2j.Pattern;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -23,8 +25,6 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -47,8 +47,8 @@ public abstract class AbstractIngesterFormatter<T> {
 
   protected static final FormatterElement WHITESPACE_ELEMENT = new
       ReportPointIngesterFormatter.Whitespace();
-  protected static final Pattern SINGLE_QUOTE_PATTERN = Pattern.compile("\\'", Pattern.LITERAL);
-  protected static final Pattern DOUBLE_QUOTE_PATTERN = Pattern.compile("\\\"", Pattern.LITERAL);
+  protected static final Pattern SINGLE_QUOTE_PATTERN = Pattern.compile(Pattern.quote("\\'"));
+  protected static final Pattern DOUBLE_QUOTE_PATTERN = Pattern.compile(Pattern.quote("\\\""));
   protected static final String DOUBLE_QUOTE_REPLACEMENT = Matcher.quoteReplacement("\"");
   protected static final String SINGLE_QUOTE_REPLACEMENT = Matcher.quoteReplacement("'");
 
