@@ -177,6 +177,10 @@ public class Validation {
       throw new IllegalArgumentException("WF-428: Span name is too long (" + source.length() + " characters, max: " +
           config.getSpanLengthLimit() + "): " + spanName);
     }
+    if (spanName.contains("*")) {
+      ERROR_COUNTERS.get("spanNameBadChars").inc();
+      throw new IllegalArgumentException("WF-415: Span name has illegal character *: " + spanName);
+    }
     final List<Annotation> annotations = span.getAnnotations();
     if (annotations != null) {
       if (annotations.size() > config.getSpanAnnotationsCountLimit()) {
@@ -200,11 +204,12 @@ public class Validation {
           if (blockedLoggingRateLimiter.tryAcquire()) {
             log.warning("[" + span.getCustomer() + "] Span trimmed due to tagV length: " +
                 annotation.getKey() + " limit for: " + span.getCustomer() + " is: " +
-                config.getSpanAnnotationsValueLengthLimit() + ", found: " + annotation.getValue().length()
-                + ", span: " + span);
+                config.getSpanAnnotationsValueLengthLimit() + ", found: " +
+                annotation.getValue().length() + ", span: " + span);
           }
-            // trim the tag value to the allowed limit
-          annotation.setValue(annotation.getValue().substring(0, config.getSpanAnnotationsValueLengthLimit()));
+          // trim the tag value to the allowed limit
+          annotation.setValue(annotation.getValue().
+              substring(0, config.getSpanAnnotationsValueLengthLimit()));
           ERROR_COUNTERS.get("spanAnnotationValueTruncated").inc();
         }
       }
