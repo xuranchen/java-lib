@@ -18,7 +18,7 @@ import javax.ws.rs.core.Response;
  *
  * @author vasily@wavefront.com
  */
-@Path("/v2/")
+@Path("/")
 public interface SourceTagAPI {
 
   /**
@@ -29,7 +29,7 @@ public interface SourceTagAPI {
    * @param tagValue tag to add.
    */
   @PUT
-  @Path("source/{id}/tag/{tagValue}")
+  @Path("v2/source/{id}/tag/{tagValue}")
   @Produces(MediaType.APPLICATION_JSON)
   Response appendTag(@PathParam("id") String id,
                      @QueryParam("t") String token,
@@ -43,7 +43,7 @@ public interface SourceTagAPI {
    * @param tagValue tag to remove.
    */
   @DELETE
-  @Path("source/{id}/tag/{tagValue}")
+  @Path("v2/source/{id}/tag/{tagValue}")
   @Produces(MediaType.APPLICATION_JSON)
   Response removeTag(@PathParam("id") String id,
                      @QueryParam("t") String token,
@@ -57,7 +57,7 @@ public interface SourceTagAPI {
    * @param tagValuesToSet tags to set.
    */
   @POST
-  @Path("source/{id}/tag")
+  @Path("v2/source/{id}/tag")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   Response setTags(@PathParam ("id") String id,
@@ -73,7 +73,7 @@ public interface SourceTagAPI {
    * @param description description.
    */
   @POST
-  @Path("source/{id}/description")
+  @Path("v2/source/{id}/description")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   Response setDescription(@PathParam("id") String id,
@@ -87,7 +87,7 @@ public interface SourceTagAPI {
    * @param token authentication token.
    */
   @DELETE
-  @Path("source/{id}/description")
+  @Path("v2/source/{id}/description")
   @Produces(MediaType.APPLICATION_JSON)
   Response removeDescription(@PathParam("id") String id,
                              @QueryParam("t") String token);
