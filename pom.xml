@@ -4,7 +4,7 @@
 
   <groupId>com.wavefront</groupId>
   <artifactId>javalib</artifactId>
-  <version>2019-09.2-SNAPSHOT</version>
+  <version>2019-09.2</version>
   <modules>
     <module>java-lib</module>
     <module>yammer-metrics</module>
@@ -32,7 +32,7 @@
     <connection>scm:git:git@github.com:wavefronthq/java-lib.git</connection>
     <developerConnection>scm:git:git@github.com:wavefronthq/java-lib.git</developerConnection>
     <url>git@github.com:wavefronthq/java-lib.git</url>
-    <tag>HEAD</tag>
+    <tag>javalib-2019-09.2</tag>
   </scm>
 
   <distributionManagement>
@@ -60,7 +60,7 @@
     <jackson.version>2.9.10</jackson.version>
     <jackson-databind.version>2.9.10</jackson-databind.version>
     <netty.version>4.1.41.Final</netty.version>
-    <public.project.version>2019-09.2-SNAPSHOT</public.project.version>
+    <public.project.version>2019-09.2</public.project.version>
   </properties>
 
   <build>
