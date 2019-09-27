@@ -202,14 +202,12 @@ public class Validation {
         }
         if (tagV.length() > config.getSpanAnnotationsValueLengthLimit()) {
           if (blockedLoggingRateLimiter.tryAcquire()) {
-            log.warning("[" + span.getCustomer() + "] Span trimmed due to tagV length: " +
-                annotation.getKey() + " limit for: " + span.getCustomer() + " is: " +
-                config.getSpanAnnotationsValueLengthLimit() + ", found: " +
-                annotation.getValue().length() + ", span: " + span);
+            log.warning("WF-433: Span annotation value for " + tagK + " is too long (" +
+                tagV.length() + " characters, max: " + config.getAnnotationsValueLengthLimit() +
+                "), value will be truncated: " + tagV);
           }
           // trim the tag value to the allowed limit
-          annotation.setValue(annotation.getValue().
-              substring(0, config.getSpanAnnotationsValueLengthLimit()));
+          annotation.setValue(tagV.substring(0, config.getSpanAnnotationsValueLengthLimit()));
           ERROR_COUNTERS.get("spanAnnotationValueTruncated").inc();
         }
       }
