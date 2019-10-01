@@ -203,7 +203,7 @@ public class Validation {
         if (tagV.length() > config.getSpanAnnotationsValueLengthLimit()) {
           if (blockedLoggingRateLimiter.tryAcquire()) {
             log.warning("WF-433: Span annotation value for " + tagK + " is too long (" +
-                tagV.length() + " characters, max: " + config.getAnnotationsValueLengthLimit() +
+                tagV.length() + " characters, max: " + config.getSpanAnnotationsValueLengthLimit() +
                 "), value will be truncated: " + tagV);
           }
           // trim the tag value to the allowed limit
