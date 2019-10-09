@@ -33,7 +33,26 @@ public class AgentConfiguration {
   private Boolean collectorSetsRetryBackoff;
   private Double retryBackoffBaseSeconds;
   private Boolean collectorSetsRateLimit;
+
+  /**
+   * When set, enforces a per proxy rate limit for points.
+   */
   private Long collectorRateLimit;
+
+  /**
+   * When set, enforces a per proxy rate limit for histogram distributions.
+   */
+  private Long histogramRateLimit;
+
+  /**
+   * When set, enforces a per proxy rate limit for spans.
+   */
+  private Long spanRateLimit;
+
+  /**
+   * When set, enforces a per proxy rate limit for span logs.
+   */
+  private Long spanLogsRateLimit;
   private Boolean shutOffAgents = false;
   private Boolean showTrialExpired = false;
 
@@ -107,6 +126,30 @@ public class AgentConfiguration {
 
   public void setCollectorRateLimit(Long collectorRateLimit) {
     this.collectorRateLimit = collectorRateLimit;
+  }
+
+  public Long getHistogramRateLimit() {
+    return histogramRateLimit;
+  }
+
+  public void setHistogramRateLimit(Long histogramRateLimit) {
+    this.histogramRateLimit = histogramRateLimit;
+  }
+
+  public Long getSpanRateLimit() {
+    return spanRateLimit;
+  }
+
+  public void setSpanRateLimit(Long spanRateLimit) {
+    this.spanRateLimit = spanRateLimit;
+  }
+
+  public Long getSpanLogsRateLimit() {
+    return spanLogsRateLimit;
+  }
+
+  public void setSpanLogsRateLimit(Long spanLogsRateLimit) {
+    this.spanLogsRateLimit = spanLogsRateLimit;
   }
 
   public List<WorkUnit> getWorkUnits() {
