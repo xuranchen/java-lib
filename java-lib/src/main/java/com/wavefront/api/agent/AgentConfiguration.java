@@ -96,6 +96,11 @@ public class AgentConfiguration {
    */
   private Long globalSpanLogsRateLimit;
 
+  /**
+   * Controls the number of centroids in a histogram.
+   */
+  private Integer histogramStorageAccuracy;
+
   public Boolean getCollectorSetsRetryBackoff() {
     return collectorSetsRetryBackoff;
   }
@@ -260,6 +265,14 @@ public class AgentConfiguration {
 
   public void setGlobalSpanLogsRateLimit(Long globalSpanLogsRateLimit) {
     this.globalSpanLogsRateLimit = globalSpanLogsRateLimit;
+  }
+
+  public Integer getHistogramStorageAccuracy() {
+    return histogramStorageAccuracy;
+  }
+
+  public void setHistogramStorageAccuracy(Integer histogramStorageAccuracy) {
+    this.histogramStorageAccuracy = histogramStorageAccuracy;
   }
 
   public void validate(boolean local) {
