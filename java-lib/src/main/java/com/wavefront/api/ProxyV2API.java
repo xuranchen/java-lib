@@ -2,6 +2,7 @@ package com.wavefront.api;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.wavefront.api.agent.AgentConfiguration;
+import org.jboss.resteasy.annotations.GZIP;
 
 import java.util.UUID;
 
@@ -44,7 +45,7 @@ public interface ProxyV2API {
                                   @QueryParam("hostname") String hostname,
                                   @QueryParam("version") String version,
                                   @QueryParam("currentMillis") final Long currentMillis,
-                                  JsonNode agentMetrics,
+                                  @GZIP JsonNode agentMetrics,
                                   @QueryParam("ephemeral") Boolean ephemeral);
 
   /**
@@ -59,7 +60,7 @@ public interface ProxyV2API {
   @Path("v2/wfproxy/report")
   Response proxyReport(@HeaderParam("X-WF-PROXY-ID") final UUID proxyId,
                        @QueryParam("format") final String format,
-                       final String pushData);
+                       @GZIP final String pushData);
 
   /**
    * Reports confirmation that the proxy has processed and accepted the configuration sent from the back-end.
