@@ -101,6 +101,21 @@ public class AgentConfiguration {
    */
   private Integer histogramStorageAccuracy;
 
+  /**
+   * Global rate limit for source tag operations.
+   */
+  private Double taggedSourceOPS;
+
+  /**
+   * Global rate limit for new events.
+   */
+  private Double eventsPS;
+
+  /**
+   * System metric whitelist.
+   */
+  private List<String> systemMetrics;
+
   public Boolean getCollectorSetsRetryBackoff() {
     return collectorSetsRetryBackoff;
   }
@@ -273,6 +288,30 @@ public class AgentConfiguration {
 
   public void setHistogramStorageAccuracy(Integer histogramStorageAccuracy) {
     this.histogramStorageAccuracy = histogramStorageAccuracy;
+  }
+
+  public Double getTaggedSourceOPS() {
+    return taggedSourceOPS;
+  }
+
+  public void setTaggedSourceOPS(Double taggedSourceOPS) {
+    this.taggedSourceOPS = taggedSourceOPS;
+  }
+
+  public Double getEventsPS() {
+    return eventsPS;
+  }
+
+  public void setEventsPS(Double eventsPS) {
+    this.eventsPS = eventsPS;
+  }
+
+  public List<String> getSystemMetrics() {
+    return systemMetrics;
+  }
+
+  public void setSystemMetrics(List<String> systemMetrics) {
+    this.systemMetrics = systemMetrics;
   }
 
   public void validate(boolean local) {

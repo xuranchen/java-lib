@@ -7,8 +7,8 @@ import com.google.common.collect.Maps;
 
 import com.google.re2j.Matcher;
 import com.google.re2j.Pattern;
-import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.BaseErrorListener;
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.RecognitionException;
@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
@@ -34,6 +35,7 @@ import queryserver.parser.DSWrapperLexer;
 import wavefront.report.Annotation;
 import wavefront.report.Histogram;
 import wavefront.report.HistogramType;
+import wavefront.report.ReportEvent;
 import wavefront.report.ReportPoint;
 import wavefront.report.ReportSourceTag;
 import wavefront.report.Span;
@@ -66,7 +68,7 @@ public abstract class AbstractIngesterFormatter<T> {
       new ThreadLocal<DSWrapperLexer>() {
         @Override
         protected DSWrapperLexer initialValue() {
-          final DSWrapperLexer lexer = new DSWrapperLexer(new ANTLRInputStream(""));
+          final DSWrapperLexer lexer = new DSWrapperLexer(CharStreams.fromString(""));
           // note that other errors are not thrown by the lexer and hence we only need to handle the
           // syntaxError case.
           lexer.removeErrorListeners();
@@ -81,7 +83,7 @@ public abstract class AbstractIngesterFormatter<T> {
 
   protected Queue<Token> getQueue(String input) {
     DSWrapperLexer lexer = dsWrapperLexerThreadLocal.get();
-    lexer.setInputStream(new ANTLRInputStream(input));
+    lexer.setInputStream(CharStreams.fromString(input));
     CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
     commonTokenStream.fill();
     List<Token> tokens = commonTokenStream.getTokens();
@@ -162,6 +164,10 @@ public abstract class AbstractIngesterFormatter<T> {
     }
 
     void setName(String value) {
+      throw new UnsupportedOperationException("Should not be invoked.");
+    }
+
+    void setEndTimestamp(Long value) {
       throw new UnsupportedOperationException("Should not be invoked.");
     }
   }
@@ -304,6 +310,49 @@ public abstract class AbstractIngesterFormatter<T> {
     }
   }
 
+  protected static class EventWrapper extends AbstractWrapper {
+    ReportEvent event;
+    private String literal;
+    private List<Annotation> annotations = new ArrayList<>();
+
+    EventWrapper(ReportEvent event) {
+      this.event = event;
+    }
+
+    @Override
+    void setLiteral(String literal) {
+      this.literal = literal;
+    }
+
+    String getLiteral() {
+      return this.literal;
+    }
+
+    @Override
+    void setName(String name) {
+      event.setName(name);
+    }
+
+    @Override
+    void addAnnotation(String key, String value) {
+      annotations.add(new Annotation(key, value));
+    }
+
+    List<Annotation> getAnnotationList() {
+      return this.annotations;
+    }
+
+    @Override
+    void setTimestamp(Long timestamp) {
+      event.setStartTime(timestamp);
+    }
+
+    @Override
+    void setEndTimestamp(Long timestamp) {
+      event.setEndTime(timestamp);
+    }
+  }
+
   protected interface FormatterElement {
     /**
      * Consume tokens from the queue.
@@ -351,6 +400,11 @@ public abstract class AbstractIngesterFormatter<T> {
 
     public IngesterFormatBuilder<T> appendOptionalTimestamp() {
       elements.add(new AdaptiveTimestamp(true));
+      return this;
+    }
+
+    public IngesterFormatBuilder<T> appendOptionalEndTimestamp() {
+      elements.add(new AdaptiveEndTimestamp(true));
       return this;
     }
 
@@ -681,15 +735,14 @@ public abstract class AbstractIngesterFormatter<T> {
         // as-is
         return timestampLong;
       }
-      int timestampDigits = timestampLong.toString().length();
-      if (timestampDigits == 19) {
-        // nanoseconds.
+      if (timestampLong > 999999999999999999L) {
+        // 19 digits == nanoseconds,
         return timestampLong / 1000000;
-      } else if (timestampDigits == 16) {
-        // microseconds
+      } else if (timestampLong > 999999999999999L) {
+        // 16 digits == microseconds
         return timestampLong / 1000;
-      } else if (timestampDigits == 13) {
-        // milliseconds.
+      } else if (timestampLong > 999999999999L) {
+        // 13 digits == milliseconds
         return timestampLong;
       } else {
         // treat it as seconds.
@@ -772,6 +825,28 @@ public abstract class AbstractIngesterFormatter<T> {
     }
   }
 
+  public static class AdaptiveEndTimestamp implements FormatterElement {
+    private final boolean optional;
+    private final boolean convertToMillis;
+
+    public AdaptiveEndTimestamp(boolean optional) {
+      this(optional, true);
+    }
+
+    public AdaptiveEndTimestamp(boolean optional, boolean convertToMillis) {
+      this.optional = optional;
+      this.convertToMillis = convertToMillis;
+    }
+
+    @Override
+    public void consume(Queue<Token> tokenQueue, AbstractWrapper point) {
+      Long timestamp = parseTimestamp(tokenQueue, optional, convertToMillis);
+      if (timestamp != null) {
+        point.setEndTimestamp(timestamp);
+      }
+    }
+  }
+
   public static class Timestamp implements FormatterElement {
 
     private final TimeUnit timeUnit;
@@ -843,7 +918,7 @@ public abstract class AbstractIngesterFormatter<T> {
         // throw an exception since we expected that field to be populated
         throw new RuntimeException("Expected either @SourceTag or @SourceDescription in the " +
             "message");
-      } else if (sourceTag.getLiteral().equals("SourceTag")) {
+      } else if (sourceTag.getLiteral().equals("@SourceTag")) {
         // process it as a sourceTag -- 2 tag elements; action="add" source="aSource"
         int count = 0, max = 2;
         while (count < max) {
@@ -851,7 +926,7 @@ public abstract class AbstractIngesterFormatter<T> {
           tagElement.consume(tokenQueue, sourceTag);
           count++;
         }
-      } else if (sourceTag.getLiteral().equals("SourceDescription")) {
+      } else if (sourceTag.getLiteral().equals("@SourceDescription")) {
         // process it as a description -- all the remaining should be tags
         while (!tokenQueue.isEmpty()) {
           WHITESPACE_ELEMENT.consume(tokenQueue, sourceTag);
@@ -869,40 +944,29 @@ public abstract class AbstractIngesterFormatter<T> {
     private final String[] literals;
     private final boolean caseSensitive;
 
-    public Literals(String[] literals, boolean caseSensitive) {
+    public Literals(@Nonnull String[] literals, boolean caseSensitive) {
       this.literals = literals;
       this.caseSensitive = caseSensitive;
     }
 
     @Override
     public void consume(Queue<Token> tokenQueue, AbstractWrapper point) {
-      if (literals == null || literals.length != 2)
-        throw new RuntimeException("Sourcetag metadata parser is not properly initialized.");
-
       if (tokenQueue.isEmpty()) {
-        throw new RuntimeException("Expecting a literal string: " + literals[0] + " or " +
-            literals[1] + " but found EOF");
+        throw new RuntimeException("Reached end of line, expecting one of: " +
+            String.join(", ", literals));
       }
       String literal = getLiteral(tokenQueue);
-      if (caseSensitive) {
-        for (String specLiteral : literals) {
-          if (literal.equals(specLiteral)) {
-            point.setLiteral(literal.substring(1));
-            return;
-          }
+      for (String specLiteral : literals) {
+        if (caseSensitive && literal.equals(specLiteral)) {
+          point.setLiteral(literal);
+          return;
+        } else if (!caseSensitive && literal.equalsIgnoreCase(specLiteral)) {
+          point.setLiteral(literal);
+          return;
         }
-        throw new RuntimeException("Expecting a literal string: " + literals[0] + " or " +
-            literals[1] + " but found: " + literal);
-      } else {
-        for (String specLiteral : literals) {
-          if (literal.equalsIgnoreCase(specLiteral)) {
-            point.setLiteral(literal.substring(1));
-            return;
-          }
-        }
-        throw new RuntimeException("Expecting a literal string: " + literals[0] + " or " +
-            literals[1] + " but found: " + literal);
       }
+      throw new RuntimeException("Expecting one of: " + String.join(", ", literals) +
+          " but found: " + literal);
     }
   }
 
@@ -919,23 +983,16 @@ public abstract class AbstractIngesterFormatter<T> {
     @Override
     public void consume(Queue<Token> tokenQueue, AbstractWrapper point) {
       if (tokenQueue.isEmpty()) {
-        throw new RuntimeException("Expecting a literal string: " + literal + " but found EOF");
+        throw new RuntimeException("End of line reached, expecting a literal string: " + literal);
       }
-      String literal = getLiteral(tokenQueue);
-      if (caseSensitive) {
-        if (!literal.equals(this.literal)) {
-          throw new RuntimeException("Expecting a literal string: " + this.literal + " but found:" +
-              " " + literal);
-        }
-      } else {
-        if (!literal.equalsIgnoreCase(this.literal)) {
-          throw new RuntimeException("Expecting a literal string: " + this.literal + " but found:" +
-              " " + literal);
-        }
+      String next = getLiteral(tokenQueue);
+      boolean equals = caseSensitive ? next.equals(literal) : next.equalsIgnoreCase(literal);
+      if (!equals) {
+        throw new RuntimeException("Expecting a literal string: " + this.literal + " but found:" +
+            " " + literal);
       }
     }
   }
-
 
   protected static String getLiteral(Queue<Token> tokens) {
     StringBuilder toReturn = new StringBuilder();

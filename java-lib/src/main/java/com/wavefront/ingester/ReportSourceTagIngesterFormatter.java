@@ -58,9 +58,7 @@ public class ReportSourceTagIngesterFormatter extends AbstractIngesterFormatter<
     } catch (Exception ex) {
       throw new RuntimeException("Could not parse: " + input, ex);
     }
-    if (!queue.isEmpty()) {
-      throw new RuntimeException("Could not parse: " + input);
-    }
+    sourceTag.setSourceTagLiteral(sourceTag.getSourceTagLiteral().substring(1));
     Map<String, String> annotations = wrapper.getAnnotationMap();
     for (Map.Entry<String, String> entry : annotations.entrySet()) {
       switch (entry.getKey()) {

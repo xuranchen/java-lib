@@ -11,7 +11,8 @@ public enum ReportableEntityType {
   HISTOGRAM("histograms"),
   SOURCE_TAG("sourceTags"),
   TRACE("spans"),
-  TRACE_SPAN_LOGS("spanLogs");
+  TRACE_SPAN_LOGS("spanLogs"),
+  EVENT("events");
 
   private final String name;
 
