@@ -107,9 +107,15 @@ public class AgentConfiguration {
   private Double taggedSourceOPS;
 
   /**
+   * DEPRECATED - use {@link AgentConfiguration#collectorEPS}
+   */
+  @Deprecated
+  private Double eventsPS;
+
+  /**
    * Global rate limit for new events.
    */
-  private Double eventsPS;
+  private Double collectorEPS;
 
   /**
    * System metric whitelist.
@@ -298,12 +304,12 @@ public class AgentConfiguration {
     this.taggedSourceOPS = taggedSourceOPS;
   }
 
-  public Double getEventsPS() {
-    return eventsPS;
+  public Double getCollectorEPS() {
+    return collectorEPS;
   }
 
-  public void setEventsPS(Double eventsPS) {
-    this.eventsPS = eventsPS;
+  public void setCollectorEPS(Double collectorEPS) {
+    this.collectorEPS = collectorEPS;
   }
 
   public List<String> getSystemMetrics() {
