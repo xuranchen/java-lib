@@ -45,6 +45,11 @@ public class AgentConfiguration {
   private Long histogramRateLimit;
 
   /**
+   * When set, enforces a per proxy rate limit for source tags.
+   */
+  private Double sourceTagsRateLimit;
+
+  /**
    * When set, enforces a per proxy rate limit for spans.
    */
   private Long spanRateLimit;
@@ -53,6 +58,12 @@ public class AgentConfiguration {
    * When set, enforces a per proxy rate limit for span logs.
    */
   private Long spanLogsRateLimit;
+
+  /**
+   * When set, enforces a per proxy rate limit for events.
+   */
+  private Double eventsRateLimit;
+
   private Boolean shutOffAgents = false;
   private Boolean showTrialExpired = false;
 
@@ -77,45 +88,39 @@ public class AgentConfiguration {
   private ValidationConfiguration validationConfiguration;
 
   /**
-   * Global PPS limit.
+   * Global PPS limit (collectorPPS)
    */
   private Long globalCollectorRateLimit;
 
   /**
-   * Global histogram DPS limit.
+   * Global histogram DPS limit (collectorHistogramPPS).
    */
   private Long globalHistogramRateLimit;
 
   /**
-   * Global tracing span SPS limit.
+   * Global rate limit for source tags operations (taggedSourceOPS)
+   */
+  private Double globalSourceTagRateLimit;
+
+  /**
+   * Global tracing span SPS limit (collectorTracingPPS)
    */
   private Long globalSpanRateLimit;
 
   /**
-   * Global span logs logs/s limit.
+   * Global span logs logs/s limit (collectorSpanLogsPPS)
    */
   private Long globalSpanLogsRateLimit;
+
+  /**
+   * Global rate limit for new events (collectorEPS)
+   */
+  private Double globalEventRateLimit;
 
   /**
    * Controls the number of centroids in a histogram.
    */
   private Integer histogramStorageAccuracy;
-
-  /**
-   * Global rate limit for source tag operations.
-   */
-  private Double taggedSourceOPS;
-
-  /**
-   * DEPRECATED - use {@link AgentConfiguration#collectorEPS}
-   */
-  @Deprecated
-  private Double eventsPS;
-
-  /**
-   * Global rate limit for new events.
-   */
-  private Double collectorEPS;
 
   /**
    * System metric whitelist.
@@ -162,6 +167,14 @@ public class AgentConfiguration {
     this.histogramRateLimit = histogramRateLimit;
   }
 
+  public Double getSourceTagsRateLimit() {
+    return sourceTagsRateLimit;
+  }
+
+  public void setSourceTagsRateLimit(Double sourceTagsRateLimit) {
+    this.sourceTagsRateLimit = sourceTagsRateLimit;
+  }
+
   public Long getSpanRateLimit() {
     return spanRateLimit;
   }
@@ -178,6 +191,13 @@ public class AgentConfiguration {
     this.spanLogsRateLimit = spanLogsRateLimit;
   }
 
+  public Double getEventsRateLimit() {
+    return eventsRateLimit;
+  }
+
+  public void setEventsRateLimit(Double eventsRateLimit) {
+    this.eventsRateLimit = eventsRateLimit;
+  }
   public List<WorkUnit> getWorkUnits() {
     if (workUnits == null) return Collections.emptyList();
     return workUnits;
@@ -272,6 +292,14 @@ public class AgentConfiguration {
     this.globalHistogramRateLimit = globalHistogramRateLimit;
   }
 
+  public Double getGlobalSourceTagRateLimit() {
+    return globalSourceTagRateLimit;
+  }
+
+  public void setGlobalSourceTagRateLimit(Double globalSourceTagRateLimit) {
+    this.globalSourceTagRateLimit = globalSourceTagRateLimit;
+  }
+
   public Long getGlobalSpanRateLimit() {
     return globalSpanRateLimit;
   }
@@ -288,28 +316,20 @@ public class AgentConfiguration {
     this.globalSpanLogsRateLimit = globalSpanLogsRateLimit;
   }
 
+  public Double getGlobalEventRateLimit() {
+    return globalEventRateLimit;
+  }
+
+  public void setGlobalEventRateLimit(Double globalEventRateLimit) {
+    this.globalEventRateLimit = globalEventRateLimit;
+  }
+
   public Integer getHistogramStorageAccuracy() {
     return histogramStorageAccuracy;
   }
 
   public void setHistogramStorageAccuracy(Integer histogramStorageAccuracy) {
     this.histogramStorageAccuracy = histogramStorageAccuracy;
-  }
-
-  public Double getTaggedSourceOPS() {
-    return taggedSourceOPS;
-  }
-
-  public void setTaggedSourceOPS(Double taggedSourceOPS) {
-    this.taggedSourceOPS = taggedSourceOPS;
-  }
-
-  public Double getCollectorEPS() {
-    return collectorEPS;
-  }
-
-  public void setCollectorEPS(Double collectorEPS) {
-    this.collectorEPS = collectorEPS;
   }
 
   public List<String> getSystemMetrics() {

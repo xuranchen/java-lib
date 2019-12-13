@@ -13,6 +13,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  *
  * @author vasily@wavefront.com, with portions from Guava library source code
  */
+@SuppressWarnings("UnstableApiUsage")
 public class RecyclableRateLimiterImpl extends RateLimiter implements RecyclableRateLimiter {
   /**
    * The currently stored permits.
