@@ -198,7 +198,7 @@ public class Validation {
         }
         if (!charactersAreValid(tagK)) {
           ERROR_COUNTERS.get("spanAnnotationKeyBadChars").inc();
-          throw new IllegalArgumentException("WF-416: Point tag key has illegal character(s): " + tagK);
+          throw new IllegalArgumentException("WF-416: Span annotation key has illegal character(s): " + tagK);
         }
         if (tagV.length() > config.getSpanAnnotationsValueLengthLimit()) {
           if (blockedLoggingRateLimiter.tryAcquire()) {
