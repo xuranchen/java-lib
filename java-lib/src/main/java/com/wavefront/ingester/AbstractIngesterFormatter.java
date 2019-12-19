@@ -4,41 +4,21 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import com.google.re2j.Matcher;
-import com.google.re2j.Pattern;
-import org.antlr.v4.runtime.BaseErrorListener;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.Lexer;
-import org.antlr.v4.runtime.RecognitionException;
-import org.antlr.v4.runtime.Recognizer;
-import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.*;
 import org.apache.commons.lang.time.DateUtils;
-
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
+import queryserver.parser.DSWrapperLexer;
+import wavefront.report.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
-import queryserver.parser.DSWrapperLexer;
-import wavefront.report.Annotation;
-import wavefront.report.Histogram;
-import wavefront.report.HistogramType;
-import wavefront.report.ReportEvent;
-import wavefront.report.ReportPoint;
-import wavefront.report.ReportSourceTag;
-import wavefront.report.Span;
+import static org.apache.commons.lang.StringUtils.containsAny;
+import static org.apache.commons.lang.StringUtils.replace;
 
 /**
  * This is the base class for formatting the content.
@@ -47,12 +27,15 @@ import wavefront.report.Span;
  */
 public abstract class AbstractIngesterFormatter<T> {
 
-  protected static final FormatterElement WHITESPACE_ELEMENT = new
-      ReportPointIngesterFormatter.Whitespace();
-  protected static final Pattern SINGLE_QUOTE_PATTERN = Pattern.compile(Pattern.quote("\\'"));
-  protected static final Pattern DOUBLE_QUOTE_PATTERN = Pattern.compile(Pattern.quote("\\\""));
-  protected static final String DOUBLE_QUOTE_REPLACEMENT = Matcher.quoteReplacement("\"");
-  protected static final String SINGLE_QUOTE_REPLACEMENT = Matcher.quoteReplacement("'");
+  protected static final FormatterElement WHITESPACE_ELEMENT = new ReportPointIngesterFormatter.Whitespace();
+
+  private static final char SINGLE_QUOTE = '\'';
+  private static final String SINGLE_QUOTE_STR = String.valueOf(SINGLE_QUOTE);
+  private static final char SLASH = '\\';
+  private static final String ESCAPED_SINGLE_QUOTE_STR = SLASH + SINGLE_QUOTE_STR;
+  private static final char DOUBLE_QUOTE = '\"';
+  private static final String DOUBLE_QUOTE_STR = String.valueOf(DOUBLE_QUOTE);
+  private static final String ESCAPED_DOUBLE_QUOTE_STR = SLASH + DOUBLE_QUOTE_STR;
 
   private static final BaseErrorListener THROWING_ERROR_LISTENER = new BaseErrorListener() {
     @Override
@@ -1025,12 +1008,18 @@ public abstract class AbstractIngesterFormatter<T> {
    */
   @SuppressWarnings("WeakerAccess")  // Has users.
   public static String unquote(String text) {
-    if (text.startsWith("\"")) {
-      text = DOUBLE_QUOTE_PATTERN.matcher(text.substring(1, text.length() - 1)).
-          replaceAll(DOUBLE_QUOTE_REPLACEMENT);
-    } else if (text.startsWith("'")) {
-      text = SINGLE_QUOTE_PATTERN.matcher(text.substring(1, text.length() - 1)).
-          replaceAll(SINGLE_QUOTE_REPLACEMENT);
+    if (text.startsWith(DOUBLE_QUOTE_STR)) {
+      String quoteless = text.substring(1, text.length() - 1);
+      if (containsAny(quoteless, ESCAPED_DOUBLE_QUOTE_STR)) {
+        return replace(quoteless, ESCAPED_DOUBLE_QUOTE_STR, DOUBLE_QUOTE_STR);
+      }
+      return quoteless;
+    } else if (text.startsWith(SINGLE_QUOTE_STR)) {
+      String quoteless = text.substring(1, text.length() - 1);
+      if (containsAny(quoteless, ESCAPED_SINGLE_QUOTE_STR)) {
+        return replace(quoteless, ESCAPED_SINGLE_QUOTE_STR, SINGLE_QUOTE_STR);
+      }
+      return quoteless;
     }
     return text;
   }
