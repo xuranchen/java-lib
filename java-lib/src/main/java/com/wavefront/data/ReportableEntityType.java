@@ -6,23 +6,33 @@ package com.wavefront.data;
  * @author vasily@wavefront.com
  */
 public enum ReportableEntityType {
-  POINT("points"),
-  DELTA_COUNTER("deltaCounters"),
-  HISTOGRAM("histograms"),
-  SOURCE_TAG("sourceTags"),
-  TRACE("spans"),
-  TRACE_SPAN_LOGS("spanLogs"),
-  EVENT("events");
+  POINT("points", "pps"),
+  DELTA_COUNTER("deltaCounters", "pps"),
+  HISTOGRAM("histograms", "dps"),
+  SOURCE_TAG("sourceTags", "tags/s"),
+  TRACE("spans", "sps"),
+  TRACE_SPAN_LOGS("spanLogs", "logs/s"),
+  EVENT("events", "eps");
 
   private final String name;
+  private final String rateUnit;
 
-  ReportableEntityType(String name) {
+  /**
+   * @param name     entity name. to be used in metric names as well as log messages.
+   * @param rateUnit name of the per second unit, i.e. "rps". to be used in log messages only.
+   */
+  ReportableEntityType(String name, String rateUnit) {
     this.name = name;
+    this.rateUnit = rateUnit;
   }
 
   @Override
   public String toString() {
     return name;
+  }
+
+  public String getRateUnit() {
+    return rateUnit;
   }
 
   public String toCapitalizedString() {

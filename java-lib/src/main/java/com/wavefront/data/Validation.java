@@ -40,6 +40,7 @@ public class Validation {
 
   private final static LoadingCache<String, Counter> ERROR_COUNTERS = Caffeine.newBuilder().
       build(x -> Metrics.newCounter(new MetricName("point", "", x)));
+  @SuppressWarnings("UnstableApiUsage")
   private static final RateLimiter blockedLoggingRateLimiter = RateLimiter.create(1);
   private static final Logger log = Logger.getLogger(Validation.class.getCanonicalName());
 
@@ -55,8 +56,10 @@ public class Validation {
       if (!(44 <= cur && cur <= 57) && !(65 <= cur && cur <= 90) && !(97 <= cur && cur <= 122) &&
           cur != 95) {
         if (!((i == 0 && cur == 0x2206) || (i == 0 && cur == 0x0394) || (i == 0 && cur == 126))) {
-          // first character can also be \u2206 (∆ - INCREMENT) or \u0394 (Δ - GREEK CAPITAL LETTER DELTA)
-          // or ~ tilda character for internal metrics
+          // first character can also be:
+          // - \u2206 (∆ - INCREMENT)
+          // - \u0394 (Δ - GREEK CAPITAL LETTER DELTA)
+          // - ~ (tilde character) for internal metrics
           return false;
         }
       }
@@ -96,8 +99,9 @@ public class Validation {
     if (isHistogram) {
       if (metric.length() > config.getHistogramLengthLimit()) {
         ERROR_COUNTERS.get("histogramNameTooLong").inc();
-        throw new IllegalArgumentException("WF-409: Histogram name is too long (" + metric.length() +
-            " characters, max: " + config.getHistogramLengthLimit() + "): " + metric);
+        throw new IllegalArgumentException("WF-409: Histogram name is too long (" +
+            metric.length() + " characters, max: " + config.getHistogramLengthLimit() + "): " +
+            metric);
       }
     } else {
       if (metric.length() > config.getMetricLengthLimit()) {
@@ -108,14 +112,15 @@ public class Validation {
     }
     if (!charactersAreValid(metric)) {
       ERROR_COUNTERS.get("badchars").inc();
-      throw new IllegalArgumentException("WF-400: Point metric has illegal character(s): " + metric);
+      throw new IllegalArgumentException("WF-400: Point metric has illegal character(s): " +
+          metric);
     }
     final Map<String, String> annotations = point.getAnnotations();
     if (annotations != null) {
       if (annotations.size() > config.getAnnotationsCountLimit()) {
         ERROR_COUNTERS.get("tooManyPointTags").inc();
-        throw new IllegalArgumentException("WF-410: Too many point tags (" + annotations.size() + ", max " +
-            config.getAnnotationsCountLimit() + "): ");
+        throw new IllegalArgumentException("WF-410: Too many point tags (" + annotations.size() +
+            ", max " + config.getAnnotationsCountLimit() + "): ");
       }
       for (Map.Entry<String, String> tag : annotations.entrySet()) {
         final String tagK = tag.getKey();
@@ -123,8 +128,8 @@ public class Validation {
         // Each tag of the form "k=v" must be < 256
         if (tagK.length() + tagV.length() >= 255) {
           ERROR_COUNTERS.get("pointTagTooLong").inc();
-          throw new IllegalArgumentException("WF-411: Point tag (key+value) too long (" + (tagK.length() +
-              tagV.length() + 1) + " characters, max: 255): " + tagK + "=" + tagV);
+          throw new IllegalArgumentException("WF-411: Point tag (key+value) too long (" +
+              (tagK.length() + tagV.length() + 1) + " characters, max: 255): " + tagK + "=" + tagV);
         }
         if (tagK.length() > config.getAnnotationsKeyLengthLimit()) {
           ERROR_COUNTERS.get("pointTagKeyTooLong").inc();
@@ -133,17 +138,20 @@ public class Validation {
         }
         if (!charactersAreValid(tagK)) {
           ERROR_COUNTERS.get("badchars").inc();
-          throw new IllegalArgumentException("WF-401: Point tag key has illegal character(s): " + tagK);
+          throw new IllegalArgumentException("WF-401: Point tag key has illegal character(s): " +
+              tagK);
         }
         if (tagV.length() > config.getAnnotationsValueLengthLimit()) {
           ERROR_COUNTERS.get("pointTagValueTooLong").inc();
-          throw new IllegalArgumentException("WF-413: Point tag value is too long (" + tagV.length() +
-              " characters, max: " + config.getAnnotationsValueLengthLimit() + "): " + tagV);
+          throw new IllegalArgumentException("WF-413: Point tag value is too long (" +
+              tagV.length() + " characters, max: " + config.getAnnotationsValueLengthLimit() +
+              "): " + tagV);
         }
       }
     }
     if (!(value instanceof Double || value instanceof Long || value instanceof Histogram)) {
-      throw new IllegalArgumentException("WF-403: Value is not a long/double/histogram object: " + value);
+      throw new IllegalArgumentException("WF-403: Value is not a long/double/histogram object: " +
+          value);
     }
     if (value instanceof Histogram) {
       Histogram histogram = (Histogram) value;
@@ -151,7 +159,8 @@ public class Validation {
           histogram.getCounts().stream().allMatch(i -> i == 0)) {
         throw new IllegalArgumentException("WF-405: Empty histogram");
       }
-    } else if ((metric.charAt(0) == 0x2206 || metric.charAt(0) == 0x0394) && ((Number) value).doubleValue() <= 0) {
+    } else if ((metric.charAt(0) == 0x2206 || metric.charAt(0) == 0x0394) &&
+        ((Number) value).doubleValue() <= 0) {
       throw new IllegalArgumentException("WF-404: Delta metrics cannot be non-positive");
     }
   }
@@ -169,13 +178,13 @@ public class Validation {
     }
     if (source.length() > config.getHostLengthLimit()) {
       ERROR_COUNTERS.get("spanSourceTooLong").inc();
-      throw new IllegalArgumentException("WF-427: Span source/host name is too long (" + source.length() +
-          " characters, max: " + config.getHostLengthLimit() + "): " + source);
+      throw new IllegalArgumentException("WF-427: Span source/host name is too long (" +
+          source.length() + " characters, max: " + config.getHostLengthLimit() + "): " + source);
     }
     if (spanName.length() > config.getSpanLengthLimit()) {
       ERROR_COUNTERS.get("spanNameTooLong").inc();
-      throw new IllegalArgumentException("WF-428: Span name is too long (" + source.length() + " characters, max: " +
-          config.getSpanLengthLimit() + "): " + spanName);
+      throw new IllegalArgumentException("WF-428: Span name is too long (" + source.length() +
+          " characters, max: " + config.getSpanLengthLimit() + "): " + spanName);
     }
     if (spanName.contains("*")) {
       ERROR_COUNTERS.get("spanNameBadChars").inc();
@@ -185,22 +194,25 @@ public class Validation {
     if (annotations != null) {
       if (annotations.size() > config.getSpanAnnotationsCountLimit()) {
         ERROR_COUNTERS.get("spanTooManyAnnotations").inc();
-        throw new IllegalArgumentException("WF-430: Span has too many annotations (" + annotations.size() + ", max " +
-            config.getSpanAnnotationsCountLimit() + ")");
+        throw new IllegalArgumentException("WF-430: Span has too many annotations (" +
+            annotations.size() + ", max " + config.getSpanAnnotationsCountLimit() + ")");
       }
       for (Annotation annotation : annotations) {
         final String tagK = annotation.getKey();
         final String tagV = annotation.getValue();
         if (tagK.length() > config.getSpanAnnotationsKeyLengthLimit()) {
           ERROR_COUNTERS.get("spanAnnotationKeyTooLong").inc();
-          throw new IllegalArgumentException("WF-432: Span annotation key is too long (" + tagK.length() +
-              " characters, max: " + config.getSpanAnnotationsKeyLengthLimit() + "): " + tagK);
+          throw new IllegalArgumentException("WF-432: Span annotation key is too long (" +
+              tagK.length() + " characters, max: " + config.getSpanAnnotationsKeyLengthLimit() +
+              "): " + tagK);
         }
         if (!charactersAreValid(tagK)) {
           ERROR_COUNTERS.get("spanAnnotationKeyBadChars").inc();
-          throw new IllegalArgumentException("WF-416: Span annotation key has illegal character(s): " + tagK);
+          throw new IllegalArgumentException("WF-416: Span annotation key has illegal " +
+              "character(s): " + tagK);
         }
         if (tagV.length() > config.getSpanAnnotationsValueLengthLimit()) {
+          //noinspection UnstableApiUsage
           if (blockedLoggingRateLimiter.tryAcquire()) {
             log.warning("WF-433: Span annotation value for " + tagK + " is too long (" +
                 tagV.length() + " characters, max: " + config.getSpanAnnotationsValueLengthLimit() +
@@ -218,7 +230,8 @@ public class Validation {
    * Legacy point validator
    */
   @Deprecated
-  public static void validatePoint(ReportPoint point, String source, @Nullable Level validationLevel) {
+  public static void validatePoint(ReportPoint point, String source,
+                                   @Nullable Level validationLevel) {
     Object pointValue = point.getValue();
 
     if (StringUtils.isBlank(point.getHost())) {
@@ -226,7 +239,8 @@ public class Validation {
 
     }
     if (point.getHost().length() >= 1024) {
-      throw new IllegalArgumentException("WF-301: Source/host name is too long: " + point.getHost());
+      throw new IllegalArgumentException("WF-301: Source/host name is too long: " +
+          point.getHost());
     }
 
     if (point.getMetric().length() >= 1024) {
@@ -235,18 +249,21 @@ public class Validation {
 
     if (!charactersAreValid(point.getMetric())) {
       ERROR_COUNTERS.get("badchars").inc();
-      throw new IllegalArgumentException("WF-400 " + source + ": Point metric has illegal character");
+      throw new IllegalArgumentException("WF-400 " + source +
+          ": Point metric has illegal character");
     }
 
     if (point.getAnnotations() != null) {
       if (!annotationKeysAreValid(point)) {
-        throw new IllegalArgumentException("WF-401 " + source + ": Point annotation key has illegal character");
+        throw new IllegalArgumentException("WF-401 " + source +
+            ": Point annotation key has illegal character");
       }
 
       // Each tag of the form "k=v" must be < 256
       for (Map.Entry<String, String> tag : point.getAnnotations().entrySet()) {
         if (tag.getKey().length() + tag.getValue().length() >= 255) {
-          throw new IllegalArgumentException("Tag too long: " + tag.getKey() + "=" + tag.getValue());
+          throw new IllegalArgumentException("Tag too long: " + tag.getKey() + "=" +
+              tag.getValue());
         }
       }
     }
@@ -255,8 +272,10 @@ public class Validation {
       // Is it the right type of point?
       switch (validationLevel) {
         case NUMERIC_ONLY:
-          if (!(pointValue instanceof Long) && !(pointValue instanceof Double) && !(pointValue instanceof Histogram)) {
-            throw new IllegalArgumentException("WF-403 " + source + ": Was not long/double/histogram object");
+          if (!(pointValue instanceof Long) && !(pointValue instanceof Double) &&
+              !(pointValue instanceof Histogram)) {
+            throw new IllegalArgumentException("WF-403 " + source +
+                ": Was not long/double/histogram object");
           }
           if (pointValue instanceof Histogram) {
             Histogram histogram = (Histogram) pointValue;

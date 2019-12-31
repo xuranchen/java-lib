@@ -3,6 +3,8 @@ package com.wavefront.api.agent;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import javax.annotation.Nullable;
+
 /**
  * Data validation settings. Retrieved by the proxy from the back-end during check-in process.
  *
@@ -13,14 +15,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 public class ValidationConfiguration {
 
   /**
-   * Maximum allowed metric name length. Default: 256 characters.
+   * Maximum allowed metric name length. Default: 1023 characters (historic limit).
    */
-  private int metricLengthLimit = 256;
+  private int metricLengthLimit = 1023;
 
   /**
-   * Maximum allowed histogram metric name length. Default: 128 characters.
+   * Maximum allowed histogram metric name length. Default: 1023 characters (historic limit).
    */
-  private int histogramLengthLimit = 128;
+  private int histogramLengthLimit = 1023;
 
   /**
    * Maximum allowed span name length. Default: 128 characters.
@@ -28,24 +30,24 @@ public class ValidationConfiguration {
   private int spanLengthLimit = 128;
 
   /**
-   * Maximum allowed host/source name length. Default: 128 characters.
+   * Maximum allowed host/source name length. Default: 1023 characters (historic limit).
    */
-  private int hostLengthLimit = 128;
+  private int hostLengthLimit = 1023;
 
   /**
-   * Maximum allowed number of point tags per point/histogram. Default: 20.
+   * Maximum allowed number of point tags per point/histogram. Default: 100 (historic limit).
    */
-  private int annotationsCountLimit = 20;
+  private int annotationsCountLimit = 100;
 
   /**
-   * Maximum allowed length for point tag keys. Enforced in addition to 255 characters key + "=" + value limit.
-   * Default: 64 characters.
+   * Maximum allowed length for point tag keys. Enforced in addition to the 255 character limit
+   * for 'key + "=" + value'. Default: 253 characters (historic limit).
    */
-  private int annotationsKeyLengthLimit = 64;
+  private int annotationsKeyLengthLimit = 253;
 
   /**
-   * Maximum allowed length for point tag values. Enforced in addition to 255 characters key + "=" + value limit.
-   * Default: 255 characters.
+   * Maximum allowed length for point tag values. Enforced in addition to the 255 character limit
+   * for 'key + "=" + value'. Default: 255 characters.
    */
   private int annotationsValueLengthLimit = 255;
 
@@ -55,14 +57,14 @@ public class ValidationConfiguration {
   private int spanAnnotationsCountLimit = 20;
 
   /**
-   * Maximum allowed length for span annotation keys. Enforced in addition to 255 characters key + "=" + value limit.
-   * Default: 128 characters.
+   * Maximum allowed length for span annotation keys. Enforced in addition to 255 character limit
+   * for 'key + "=" + value'. Default: 128 characters.
    */
   private int spanAnnotationsKeyLengthLimit = 128;
 
   /**
-   * Maximum allowed length for span annotation values. Enforced in addition to 255 characters key + "=" + value limit.
-   * Default: 128 characters.
+   * Maximum allowed length for span annotation values. Enforced in addition to 255 character limit
+   * for 'key + "=" + value'. Default: 128 characters.
    */
   private int spanAnnotationsValueLengthLimit = 128;
 
@@ -154,5 +156,19 @@ public class ValidationConfiguration {
   public ValidationConfiguration setSpanAnnotationsCountLimit(int value) {
     this.spanAnnotationsCountLimit = value;
     return this;
+  }
+
+  public void updateFrom(@Nullable ValidationConfiguration other) {
+    if (other == null) return;
+    this.metricLengthLimit = other.getMetricLengthLimit();
+    this.histogramLengthLimit = other.getHistogramLengthLimit();
+    this.spanLengthLimit = other.getSpanLengthLimit();
+    this.hostLengthLimit = other.getHostLengthLimit();
+    this.annotationsCountLimit = other.getAnnotationsCountLimit();
+    this.annotationsKeyLengthLimit = other.getAnnotationsKeyLengthLimit();
+    this.annotationsValueLengthLimit = other.getAnnotationsValueLengthLimit();
+    this.spanAnnotationsCountLimit = other.getSpanAnnotationsCountLimit();
+    this.spanAnnotationsKeyLengthLimit = other.getSpanAnnotationsKeyLengthLimit();
+    this.spanAnnotationsValueLengthLimit = other.getSpanAnnotationsValueLengthLimit();
   }
 }
