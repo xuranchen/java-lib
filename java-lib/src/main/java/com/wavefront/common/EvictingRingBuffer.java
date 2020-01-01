@@ -2,6 +2,8 @@ package com.wavefront.common;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.NotThreadSafe;
+import java.io.Serializable;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,7 +23,11 @@ import java.util.stream.Stream;
  *
  * @author vasily@wavefont.com
  */
-public class EvictingRingBuffer<T> extends AbstractCollection<T> implements Queue<T>, RandomAccess {
+@NotThreadSafe
+public class EvictingRingBuffer<T> extends AbstractCollection<T>
+    implements Queue<T>, RandomAccess, Cloneable, Serializable {
+  private static final long serialVersionUID = -4686283540164095706L;
+
   private final List<T> buffer;
   private final int bufferSize;
   private int headPtr;
@@ -29,7 +35,7 @@ public class EvictingRingBuffer<T> extends AbstractCollection<T> implements Queu
   private final boolean throwOnOverflow;
 
   /**
-   * @param capacity desired capacity
+   * @param capacity desired capacity.
    */
   public EvictingRingBuffer(int capacity) {
     this(capacity, false, null, false);
@@ -47,18 +53,26 @@ public class EvictingRingBuffer<T> extends AbstractCollection<T> implements Queu
   }
 
   /**
-   * @param capacity         desired capacity
+   * @param capacity      desired capacity.
+   * @param defaultValue  pre-fill the buffer with this default value.
+   */
+  public EvictingRingBuffer(int capacity, @Nullable T defaultValue) {
+    this(capacity, false, defaultValue, true);
+  }
+
+  /**
+   * @param capacity         desired capacity.
    * @param throwOnOverflow  disables auto-eviction on overflow. When full capacity is
    *                         reached, all subsequent append() operations would throw
    *                         {@link IllegalStateException} if this parameter is true,
    *                         or evict the oldest value if this parameter is false.
-   * @param defaultValue     pre-fill the buffer with this default value
+   * @param defaultValue     pre-fill the buffer with this default value.
    */
   public EvictingRingBuffer(int capacity, boolean throwOnOverflow, @Nullable T defaultValue) {
     this(capacity, throwOnOverflow, defaultValue, true);
   }
 
-  private EvictingRingBuffer(int capacity, boolean throwOnOverflow, @Nullable T defaultValue,
+  protected EvictingRingBuffer(int capacity, boolean throwOnOverflow, @Nullable T defaultValue,
                              boolean preFill) {
     this.buffer = new ArrayList<>(Collections.nCopies(capacity + 1, defaultValue));
     this.buffer.set(0, null);
@@ -113,21 +127,16 @@ public class EvictingRingBuffer<T> extends AbstractCollection<T> implements Queu
    *
    * @param value element to be appended to the end of the buffer
    * @return true (as specified by {@link Collection#add(T)})
+   * @throws IllegalStateException if the element cannot be added at this
+   *         time due to capacity restrictions
    */
   @Override
   public boolean add(T value) {
-    if (size() == bufferSize - 1) {
-      if (throwOnOverflow) {
-        throw new IllegalStateException("Buffer capacity exceeded: " + (bufferSize - 1));
-      } else {
-        // evict oldest value
-        headPtr = wrap(headPtr + 1);
-        buffer.set(headPtr, null); // to allow evicted value to be GC'd
-      }
+    if (offer(value)) {
+      return true;
+    } else {
+      throw new IllegalStateException("Buffer capacity exceeded: " + (bufferSize - 1));
     }
-    tailPtr = wrap(tailPtr + 1);
-    buffer.set(tailPtr, value);
-    return true;
   }
 
   /**
@@ -139,11 +148,18 @@ public class EvictingRingBuffer<T> extends AbstractCollection<T> implements Queu
    */
   @Override
   public boolean offer(T value) {
-    try {
-      return add(value);
-    } catch (IllegalStateException e) {
-      return false;
+    if (size() == bufferSize - 1) {
+      if (throwOnOverflow) {
+        return false;
+      } else {
+        // evict oldest value
+        headPtr = wrap(headPtr + 1);
+        buffer.set(headPtr, null); // to allow evicted value to be GC'd
+      }
     }
+    tailPtr = wrap(tailPtr + 1);
+    buffer.set(tailPtr, value);
+    return true;
   }
 
   /**
@@ -163,7 +179,7 @@ public class EvictingRingBuffer<T> extends AbstractCollection<T> implements Queu
           Stream.concat(
               buffer.subList(headPtr + 1, bufferSize).stream(),
               buffer.subList(0, tailPtr + 1).stream()).
-          collect(Collectors.toList()));
+              collect(Collectors.toList()));
     }
   }
 
@@ -227,6 +243,34 @@ public class EvictingRingBuffer<T> extends AbstractCollection<T> implements Queu
   public T peek() {
     if (size() == 0) return null;
     return get(0);
+  }
+
+  @Override
+  public int hashCode() {
+    int result = capacity();
+    result = 31 * result + size();
+    for (int i = 0; i < size(); i++) {
+      T item = get(i);
+      result = 31 * result + (item == null ? 0 : item.hashCode());
+    }
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof EvictingRingBuffer)) return false;
+    EvictingRingBuffer<T> other = (EvictingRingBuffer<T>) obj;
+    if (capacity() != other.capacity()) return false;
+    if (size() != other.size()) return false;
+    for (int i = 0; i < size(); i++) {
+      if (get(i) != other.get(i)) return false;
+    }
+    return true;
+  }
+
+  @Override
+  public Object clone() throws CloneNotSupportedException {
+    return super.clone();
   }
 
   private int wrap(int index) {

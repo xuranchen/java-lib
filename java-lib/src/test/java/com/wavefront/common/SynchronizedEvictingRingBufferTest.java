@@ -2,6 +2,7 @@ package com.wavefront.common;
 
 import org.junit.Test;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -13,11 +14,11 @@ import static org.junit.Assert.fail;
  *
  * @author vasily@wavefront.com
  */
-public class EvictingRingBufferTest {
+public class SynchronizedEvictingRingBufferTest {
 
   @Test
   public void testRingBufferWithAutoEvict() {
-    EvictingRingBuffer<Integer> buf = new EvictingRingBuffer<>(5, false);
+    EvictingRingBuffer<Integer> buf = new SynchronizedEvictingRingBuffer<>(5, false);
     assertEquals(5, buf.capacity());
     assertEquals(0, buf.size());
     assertArrayEquals(new Integer[0], buf.toList().toArray());
@@ -98,7 +99,12 @@ public class EvictingRingBufferTest {
 
   @Test
   public void testRingBufferWithDefaultValue() {
-    EvictingRingBuffer<Integer> buf = new EvictingRingBuffer<>(5, false, 777);
+    EvictingRingBuffer<Long> buffer = new SynchronizedEvictingRingBuffer<>(5 * 60 * 1000 / 100, 0L);
+    List<Long> list = buffer.toList();
+    assertEquals(0, list.stream().mapToLong(i -> i).sum());
+    assertEquals(3000, list.size());
+
+    EvictingRingBuffer<Integer> buf = new SynchronizedEvictingRingBuffer<>(5, 777);
     assertEquals(5, buf.capacity());
     assertEquals(5, buf.size());
     assertArrayEquals(new Integer[]{777, 777, 777, 777, 777}, buf.toList().toArray());
@@ -116,7 +122,7 @@ public class EvictingRingBufferTest {
 
   @Test
   public void testRingBufferWithStrictOverflowCheckingThrowsOnOverflow() {
-    EvictingRingBuffer<Integer> buf = new EvictingRingBuffer<>(5, true);
+    EvictingRingBuffer<Integer> buf = new SynchronizedEvictingRingBuffer<>(5, true);
     assertEquals(5, buf.capacity());
     assertEquals(0, buf.size());
     buf.add(1);
@@ -141,7 +147,7 @@ public class EvictingRingBufferTest {
 
   @Test
   public void testRingBufferRemoveOnEmptyThrows() {
-    EvictingRingBuffer<Integer> buf = new EvictingRingBuffer<>(5, true);
+    EvictingRingBuffer<Integer> buf = new SynchronizedEvictingRingBuffer<>(5, true);
     assertEquals(0, buf.size());
     assertEquals(5, buf.capacity());
     buf.add(1);
@@ -156,7 +162,7 @@ public class EvictingRingBufferTest {
 
   @Test
   public void testRingBufferAccessByIndex() {
-    EvictingRingBuffer<Integer> buf = new EvictingRingBuffer<>(3);
+    EvictingRingBuffer<Integer> buf = new SynchronizedEvictingRingBuffer<>(3);
     assertEquals(0, buf.size());
     assertEquals(3, buf.capacity());
     try {

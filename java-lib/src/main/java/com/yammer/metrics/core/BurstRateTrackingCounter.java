@@ -2,6 +2,7 @@ package com.yammer.metrics.core;
 
 import com.wavefront.common.EvictingRingBuffer;
 import com.wavefront.common.NamedThreadFactory;
+import com.wavefront.common.SynchronizedEvictingRingBuffer;
 import com.yammer.metrics.Metrics;
 
 import javax.annotation.Nullable;
@@ -42,7 +43,8 @@ public class BurstRateTrackingCounter extends Counter implements Metric {
     this.delegate = (metricsRegistry == null ? Metrics.defaultRegistry() : metricsRegistry).
         newCounter(metricName);
     this.granularityMillis = granularityMillis;
-    this.perPeriodStats = new EvictingRingBuffer<>(5 * 60 * 1000 / granularityMillis, false, 0L);
+    this.perPeriodStats = new SynchronizedEvictingRingBuffer<>(5 * 60 * 1000 / granularityMillis,
+        false, 0L);
     this.burstRateHistogram = LOCAL_REGISTRY.newHistogram(BurstRateTrackingCounter.class,
         metricName.getGroup() + "-max-burst-rate");
     EXECUTOR.scheduleAtFixedRate(() -> {
