@@ -1,56 +1,113 @@
 package com.wavefront.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import wavefront.report.ReportEvent;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
- * Wrapper for the Event class.
+ * Serializing wrapper for the Event class.
  *
  * @author vasily@wavefront.com
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Event implements Serializable {
-  private ReportEvent event;
+  @JsonProperty
+  private String name;
+  @JsonProperty
+  private long startTime;
+  @JsonProperty
+  private Long endTime;
+  @JsonProperty
+  private Map<String, String> annotations;
+  @JsonProperty
+  private Map<String, List<String>> dimensions;
+  @JsonProperty
+  private List<String> hosts;
+  @JsonProperty
+  private List<String> tags;
+
+  @SuppressWarnings("unused")
+  private Event() {
+  }
 
   public Event(ReportEvent event) {
-    this.event = event;
+    this.name = event.getName();
+    this.startTime = event.getStartTime();
+    this.endTime = event.getEndTime();
+    this.annotations = new HashMap<>(event.getAnnotations());
+    this.dimensions = event.getDimensions() == null ? null :
+        event.getDimensions().entrySet().stream().
+            collect(Collectors.toMap(Map.Entry::getKey, v -> new ArrayList<>(v.getValue())));
+    this.hosts = new ArrayList<>(event.getHosts());
+    this.tags = event.getTags() == null ? null : new ArrayList<>(event.getTags());
   }
 
-  @JsonProperty
   public String getName() {
-    return event.getName();
+    return name;
   }
 
-  @JsonProperty
   public long getStartTime() {
-    return event.getStartTime();
+    return startTime;
   }
 
   @JsonProperty
   public Long getEndTime() {
-    return event.getEndTime();
+    return endTime;
   }
 
   @JsonProperty
   public Map<String, String> getAnnotations() {
-    return event.getAnnotations();
+    return annotations;
   }
 
   @JsonProperty
   public Map<String, List<String>> getDimensions() {
-    return event.getDimensions();
+    return dimensions;
   }
 
   @JsonProperty
   public List<String> getHosts() {
-    return event.getHosts();
+    return hosts;
   }
 
   @JsonProperty
   public List<String> getTags() {
-    return event.getTags();
+    return tags;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = 1;
+    result = result * 31 + (name == null ? 0 : name.hashCode());
+    result = result * 31 + (int) (startTime ^ (startTime >>> 32));
+    result = result * 31 + (endTime == null ? 0 : (int) (endTime ^ (endTime >>> 32)));
+    result = result * 31 + annotations.hashCode();
+    result = result * 31 + (dimensions == null ? 0 : dimensions.hashCode());
+    result = result * 31 + hosts.hashCode();
+    result = result * 31 + (tags == null ? 0 : tags.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null || getClass() != obj.getClass()) return false;
+    Event other = (Event) obj;
+    if (!Objects.equals(name, other.name)) return false;
+    if (startTime != other.startTime) return false;
+    if (!Objects.equals(endTime, other.endTime)) return false;
+    if (!annotations.equals(other.annotations)) return false;
+    if (!Objects.equals(dimensions, other.dimensions)) return false;
+    if (!hosts.equals(other.hosts)) return false;
+    if (!Objects.equals(tags, other.tags)) return false;
+    return true;
   }
 }
