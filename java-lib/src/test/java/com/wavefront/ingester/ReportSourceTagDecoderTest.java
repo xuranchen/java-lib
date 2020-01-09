@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import wavefront.report.ReportSourceTag;
+import wavefront.report.SourceTagAction;
+import wavefront.report.SourceOperationType;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -20,20 +22,14 @@ public class ReportSourceTagDecoderTest {
   private static final Logger logger = Logger.getLogger(ReportSourceTagDecoderTest.class
       .getCanonicalName());
 
-  private static final String SOURCE_TAG = "SourceTag";
-  private static final String SOURCE_DESCRIPTION = "SourceDescription";
-
   @Test
   public void testSimpleSourceTagFormat() throws Exception {
     ReportSourceTagDecoder decoder = new ReportSourceTagDecoder();
     List<ReportSourceTag> out = new ArrayList<>();
     // Testwith 3sourceTags
-    decoder.decode(String.format("@%s %s=%s %s=aSource sourceTag1 sourceTag2 " +
-            "sourceTag3", SOURCE_TAG,
-        ReportSourceTagIngesterFormatter.ACTION, ReportSourceTagIngesterFormatter.ACTION_SAVE,
-        ReportSourceTagIngesterFormatter.SOURCE), out);
+    decoder.decode("@SourceTag action=save source=aSource sourceTag1 sourceTag2 sourceTag3", out);
     ReportSourceTag reportSourceTag = out.get(0);
-    assertEquals("Action name didn't match.", ReportSourceTagIngesterFormatter.ACTION_SAVE,
+    assertEquals("Action name didn't match.", SourceTagAction.SAVE,
         reportSourceTag.getAction());
     assertEquals("Source did not match.", "aSource", reportSourceTag.getSource());
     assertTrue("SourceTag1 did not match.", reportSourceTag.getAnnotations().contains
@@ -41,10 +37,9 @@ public class ReportSourceTagDecoderTest {
 
     // Test with one sourceTag
     out.clear();
-    decoder.decode(String.format("@%s action = %s source = \"A Source\" sourceTag3",
-        SOURCE_TAG, ReportSourceTagIngesterFormatter.ACTION_SAVE), out);
+    decoder.decode("@SourceTag action = save source = \"A Source\" sourceTag3", out);
     reportSourceTag = out.get(0);
-    assertEquals("Action name didn't match.", ReportSourceTagIngesterFormatter.ACTION_SAVE,
+    assertEquals("Action name didn't match.", SourceTagAction.SAVE,
         reportSourceTag.getAction());
     assertEquals("Source did not match.", "A Source", reportSourceTag.getSource());
     assertTrue("SourceTag3 did not match.", reportSourceTag.getAnnotations()
@@ -52,11 +47,10 @@ public class ReportSourceTagDecoderTest {
 
     // Test with a multi-word source tag
     out.clear();
-    decoder.decode(String.format("@%s action = %s source=aSource \"A source tag\" " +
-        "\"Another tag\"", SOURCE_TAG, ReportSourceTagIngesterFormatter.ACTION_SAVE), out);
+    decoder.decode("@SourceTag action = save source=aSource \"A source tag\" " +
+        "\"Another tag\"", out);
     reportSourceTag = out.get(0);
-    assertEquals("Action name didn't match.", ReportSourceTagIngesterFormatter.ACTION_SAVE,
-        reportSourceTag.getAction());
+    assertEquals("Action name didn't match.", SourceTagAction.SAVE, reportSourceTag.getAction());
     assertEquals("Source did not match.", "aSource", reportSourceTag.getSource());
     assertTrue("'A source tag' did not match.", reportSourceTag.getAnnotations()
         .contains("A source tag"));
@@ -64,7 +58,7 @@ public class ReportSourceTagDecoderTest {
         .contains("Another tag"));
 
     // Test sourceTag without any action -- this should result in an exception
-    String msg = String.format("@%s source=aSource sourceTag4 sourceTag5", SOURCE_TAG);
+    String msg = "@SourceTag source=aSource sourceTag4 sourceTag5";
     out.clear();
     boolean isException = false;
     try {
@@ -77,7 +71,7 @@ public class ReportSourceTagDecoderTest {
         msg, isException);
 
     // Test sourceTag without any source -- this should result in an exception
-    msg = String.format("@%s action=save description=desc sourceTag5", SOURCE_TAG);
+    msg = "@SourceTag action=save \"desc\" sourceTag5";
     out.clear();
     isException = false;
     try {
@@ -88,20 +82,6 @@ public class ReportSourceTagDecoderTest {
     }
     assertTrue("Did not see an exception for SourceTag message without a source for input : " +
         msg, isException);
-
-    // Test sourceTag with action, source, and description -- this should result in an exception
-    out.clear();
-    msg = String.format("@%s action = save source = aSource description = desc sourceTag5",
-        SOURCE_TAG);
-    isException = false;
-    try {
-      decoder.decode(msg, out);
-    } catch (Exception ex) {
-      isException = true;
-      logger.info(ex.getMessage());
-    }
-    assertTrue("Did not see an exception when description was present in SourceTag message for " +
-            "input : " + msg, isException);
 
     // Test sourceTag message without the source field -- should throw an exception
     out.clear();
@@ -119,7 +99,7 @@ public class ReportSourceTagDecoderTest {
     // Test a message where action is not save or delete -- should throw an exception
     out.clear();
     isException = false;
-    msg = String.format("@%s action = anAction source=aSource sourceTag2 sourceTag3", SOURCE_TAG);
+    msg = "@SourceTag action = anAction source=aSource sourceTag2 sourceTag3";
     try {
       decoder.decode(msg, out);
     } catch (Exception ex) {
@@ -135,33 +115,24 @@ public class ReportSourceTagDecoderTest {
     ReportSourceTagDecoder decoder = new ReportSourceTagDecoder();
     List<ReportSourceTag> out = new ArrayList<>();
     // Testwith source description
-    decoder.decode(String.format("@%s %s=%s %s= aSource description=desc",
-        SOURCE_DESCRIPTION,
-        ReportSourceTagIngesterFormatter.ACTION, ReportSourceTagIngesterFormatter.ACTION_SAVE,
-        ReportSourceTagIngesterFormatter.SOURCE), out);
+    decoder.decode("@SourceDescription action=save source= aSource \"desc with space\"", out);
     ReportSourceTag reportSourceTag = out.get(0);
-    assertEquals("Action name didn't match.", ReportSourceTagIngesterFormatter.ACTION_SAVE,
+    assertEquals("Action name didn't match.", SourceTagAction.SAVE,
         reportSourceTag.getAction());
     assertEquals("Source did not match.", "aSource", reportSourceTag.getSource());
-    assertEquals("Description did not match.", "desc", reportSourceTag.getDescription());
+    assertEquals("Description did not match.", "desc with space",
+        reportSourceTag.getAnnotations().get(0));
 
     // Test delete action where description field is not necessary
     out.clear();
-    String format = String.format("@%s %s=%s %s=aSource", SOURCE_DESCRIPTION,
-        ReportSourceTagIngesterFormatter.ACTION, ReportSourceTagIngesterFormatter.ACTION_DELETE,
-        ReportSourceTagIngesterFormatter.SOURCE);
-    decoder.decode(format, out);
+    decoder.decode("@SourceDescription action=delete source=aSource", out);
     reportSourceTag = out.get(0);
-    assertEquals("Action name did not match for input : " + format, ReportSourceTagIngesterFormatter
-            .ACTION_DELETE,
-        reportSourceTag.getAction());
-    assertEquals("Source did not match for input : " + format, "aSource", reportSourceTag
-        .getSource());
+    assertEquals("Action name did not match", SourceTagAction.DELETE, reportSourceTag.getAction());
+    assertEquals("Source did not match", "aSource", reportSourceTag.getSource());
 
     // Add a source tag to the SourceDescription message -- this should cause an exception
     out.clear();
-    String msg = String.format("@%s action = save source = aSource description = desc " +
-        "sourceTag4", SOURCE_DESCRIPTION);
+    String msg = "@SourceDescription action = save source = aSource desc sourceTag4";
     boolean isException = false;
     try {
       decoder.decode(msg, out);
@@ -171,7 +142,6 @@ public class ReportSourceTagDecoderTest {
     }
     assertTrue("Expected an exception, since source tag was supplied in SourceDescription " +
         "message for input : " + msg, isException);
-
   }
 
   @Test
@@ -182,20 +152,20 @@ public class ReportSourceTagDecoderTest {
     decoder.decode("@SourceTag action=add source=aSource sourceTag1 sourceTag2 sourceTag3", out);
     assertEquals(3, out.size());
 
-    assertEquals("SourceTag", out.get(0).getSourceTagLiteral());
-    assertEquals("add", out.get(0).getAction());
+    assertEquals(SourceOperationType.SOURCE_TAG, out.get(0).getOperation());
+    assertEquals(SourceTagAction.ADD, out.get(0).getAction());
     assertEquals("aSource", out.get(0).getSource());
     assertEquals(1, out.get(0).getAnnotations().size());
     assertEquals("sourceTag1", out.get(0).getAnnotations().get(0));
 
-    assertEquals("SourceTag", out.get(1).getSourceTagLiteral());
-    assertEquals("add", out.get(1).getAction());
+    assertEquals(SourceOperationType.SOURCE_TAG, out.get(1).getOperation());
+    assertEquals(SourceTagAction.ADD, out.get(1).getAction());
     assertEquals("aSource", out.get(1).getSource());
     assertEquals(1, out.get(1).getAnnotations().size());
     assertEquals("sourceTag2", out.get(1).getAnnotations().get(0));
 
-    assertEquals("SourceTag", out.get(2).getSourceTagLiteral());
-    assertEquals("add", out.get(2).getAction());
+    assertEquals(SourceOperationType.SOURCE_TAG, out.get(2).getOperation());
+    assertEquals(SourceTagAction.ADD, out.get(2).getAction());
     assertEquals("aSource", out.get(2).getSource());
     assertEquals(1, out.get(2).getAnnotations().size());
     assertEquals("sourceTag3", out.get(2).getAnnotations().get(0));
@@ -205,14 +175,14 @@ public class ReportSourceTagDecoderTest {
     decoder.decode("@SourceTag action=delete source=aSource sourceTag4 sourceTag5", out);
     assertEquals(2, out.size());
 
-    assertEquals("SourceTag", out.get(0).getSourceTagLiteral());
-    assertEquals("delete", out.get(0).getAction());
+    assertEquals(SourceOperationType.SOURCE_TAG, out.get(0).getOperation());
+    assertEquals(SourceTagAction.DELETE, out.get(0).getAction());
     assertEquals("aSource", out.get(0).getSource());
     assertEquals(1, out.get(0).getAnnotations().size());
     assertEquals("sourceTag4", out.get(0).getAnnotations().get(0));
 
-    assertEquals("SourceTag", out.get(1).getSourceTagLiteral());
-    assertEquals("delete", out.get(1).getAction());
+    assertEquals(SourceOperationType.SOURCE_TAG, out.get(1).getOperation());
+    assertEquals(SourceTagAction.DELETE, out.get(1).getAction());
     assertEquals("aSource", out.get(1).getSource());
     assertEquals(1, out.get(1).getAnnotations().size());
     assertEquals("sourceTag5", out.get(1).getAnnotations().get(0));
@@ -221,14 +191,14 @@ public class ReportSourceTagDecoderTest {
   @Test(expected = RuntimeException.class)
   public void testInvalidSourceTagAddWithNoTagsThrows() {
     // Test sourceTag add with no tags -- this should result in an exception
-    new ReportSourceTagDecoder().decode(String.format("@%s action=add source=source", SOURCE_TAG),
+    new ReportSourceTagDecoder().decode("@SourceTag action=add source=source",
         new ArrayList<>());
   }
 
   @Test(expected = RuntimeException.class)
   public void testInvalidSourceTagDeleteWithNoTagsThrows() {
     // Test sourceTag delete with no tags -- this should result in an exception
-    new ReportSourceTagDecoder().decode(String.format("@%s action=delete source=source", SOURCE_TAG),
+    new ReportSourceTagDecoder().decode("@SourceTag action=delete source=source",
         new ArrayList<>());
   }
 }

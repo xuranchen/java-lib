@@ -3,6 +3,8 @@ package com.wavefront.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import wavefront.report.ReportSourceTag;
+import wavefront.report.SourceTagAction;
+import wavefront.report.SourceOperationType;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -17,16 +19,13 @@ import java.util.Objects;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SourceTag implements Serializable {
   @JsonProperty
-  private String sourceTagLiteral;
+  private SourceOperationType operation;
 
   @JsonProperty
-  private String action;
+  private SourceTagAction action;
 
   @JsonProperty
   private String source;
-
-  @JsonProperty
-  private String description;
 
   @JsonProperty
   private List<String> annotations;
@@ -36,27 +35,22 @@ public class SourceTag implements Serializable {
   }
 
   public SourceTag(ReportSourceTag sourceTag) {
-    this.sourceTagLiteral = sourceTag.getSourceTagLiteral();
+    this.operation = sourceTag.getOperation();
     this.action = sourceTag.getAction();
     this.source = sourceTag.getSource();
-    this.description = sourceTag.getDescription();
     this.annotations = new ArrayList<>(sourceTag.getAnnotations());
   }
 
-  public String getSourceTagLiteral() {
-    return sourceTagLiteral;
+  public SourceOperationType getOperation() {
+    return operation;
   }
 
-  public String getAction() {
+  public SourceTagAction getAction() {
     return action;
   }
 
   public String getSource() {
     return source;
-  }
-
-  public String getDescription() {
-    return description;
   }
 
   public List<String> getAnnotations() {
@@ -66,10 +60,9 @@ public class SourceTag implements Serializable {
   @Override
   public int hashCode() {
     int result = 1;
-    result = result * 31 + (sourceTagLiteral == null ? 0 : sourceTagLiteral.hashCode());
+    result = result * 31 + (operation == null ? 0 : operation.hashCode());
     result = result * 31 + (action == null ? 0 : action.hashCode());
     result = result * 31 + (source == null ? 0 : source.hashCode());
-    result = result * 31 + (description == null ? 0 : description.hashCode());
     result = result * 31 + (annotations == null ? 0 : annotations.hashCode());
     return result;
   }
@@ -79,10 +72,9 @@ public class SourceTag implements Serializable {
     if (this == obj) return true;
     if (obj == null || getClass() != obj.getClass()) return false;
     SourceTag other = (SourceTag) obj;
-    if (!Objects.equals(this.sourceTagLiteral, other.sourceTagLiteral)) return false;
+    if (!Objects.equals(this.operation, other.operation)) return false;
     if (!Objects.equals(this.action, other.action)) return false;
     if (!Objects.equals(this.source, other.source)) return false;
-    if (!Objects.equals(this.description, other.description)) return false;
     if (!Objects.equals(this.annotations, other.annotations)) return false;
     return true;
   }

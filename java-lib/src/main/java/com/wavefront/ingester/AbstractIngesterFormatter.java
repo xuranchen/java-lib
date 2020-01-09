@@ -27,7 +27,10 @@ import static org.apache.commons.lang.StringUtils.replace;
  */
 public abstract class AbstractIngesterFormatter<T> {
 
-  protected static final FormatterElement WHITESPACE_ELEMENT = new ReportPointIngesterFormatter.Whitespace();
+  protected static final FormatterElement WHITESPACE_ELEMENT = new Whitespace();
+
+  public static final String SOURCE_TAG_LITERAL = "@SourceTag";
+  public static final String SOURCE_DESCRIPTION_LITERAL = "@SourceDescription";
 
   private static final char SINGLE_QUOTE = '\'';
   private static final String SINGLE_QUOTE_STR = String.valueOf(SINGLE_QUOTE);
@@ -99,10 +102,6 @@ public abstract class AbstractIngesterFormatter<T> {
     }
 
     void setValue(double value) {
-      throw new UnsupportedOperationException("Should not be invoked.");
-    }
-
-    void setValue(String value) {
       throw new UnsupportedOperationException("Should not be invoked.");
     }
 
@@ -181,11 +180,6 @@ public abstract class AbstractIngesterFormatter<T> {
     }
 
     @Override
-    void setValue(String value) {
-      reportPoint.setValue(value);
-    }
-
-    @Override
     void setValue(Long value) {
       reportPoint.setValue(value);
     }
@@ -228,12 +222,28 @@ public abstract class AbstractIngesterFormatter<T> {
 
     @Override
     String getLiteral() {
-      return reportSourceTag.getSourceTagLiteral();
+      switch (reportSourceTag.getOperation()) {
+        case SOURCE_TAG:
+          return SOURCE_TAG_LITERAL;
+        case SOURCE_DESCRIPTION:
+          return SOURCE_DESCRIPTION_LITERAL;
+        default:
+          throw new IllegalArgumentException("Invalid operation " + reportSourceTag.getOperation());
+      }
     }
 
     @Override
     void setLiteral(String literal) {
-      reportSourceTag.setSourceTagLiteral(literal);
+      switch (literal) {
+        case SOURCE_TAG_LITERAL:
+          reportSourceTag.setOperation(SourceOperationType.SOURCE_TAG);
+          return;
+        case SOURCE_DESCRIPTION_LITERAL:
+          reportSourceTag.setOperation(SourceOperationType.SOURCE_DESCRIPTION);
+          return;
+        default:
+          throw new IllegalArgumentException("Literal " + literal + " is not allowed!");
+      }
     }
 
     @Override
@@ -243,8 +253,9 @@ public abstract class AbstractIngesterFormatter<T> {
 
     @Override
     void addAnnotation(String value) {
-      if (reportSourceTag.getAnnotations() == null)
-        reportSourceTag.setAnnotations(Lists.<String>newArrayList());
+      if (reportSourceTag.getAnnotations() == null) {
+        reportSourceTag.setAnnotations(Lists.newArrayList());
+      }
       reportSourceTag.getAnnotations().add(value);
     }
 
@@ -448,7 +459,7 @@ public abstract class AbstractIngesterFormatter<T> {
     }
 
     public IngesterFormatBuilder<T> appendLoopOfKeywords() {
-      elements.add(new LoopOfKeywords());
+      elements.add(new SourceTagKeywords());
       return this;
     }
 
@@ -678,8 +689,6 @@ public abstract class AbstractIngesterFormatter<T> {
       String value = "";
       Token current = tokenQueue.poll();
       if (current == null) throw new RuntimeException("Invalid value, found EOF");
-
-      if (current == null) throw new RuntimeException("Invalid value, found EOF");
       if (current.getType() == DSWrapperLexer.Quoted) {
         if (!value.equals("")) {
           throw new RuntimeException("invalid metric value: " + value + current.getText());
@@ -891,35 +900,15 @@ public abstract class AbstractIngesterFormatter<T> {
    * This class handles a sequence of key value pairs. Currently it works for source tag related
    * inputs only.
    */
-  public static class LoopOfKeywords implements FormatterElement {
-
+  public static class SourceTagKeywords implements FormatterElement {
     private final FormatterElement tagElement = new Tag();
 
     @Override
     public void consume(Queue<Token> tokenQueue, AbstractWrapper sourceTag) {
-      if (sourceTag.getLiteral() == null) {
-        // throw an exception since we expected that field to be populated
-        throw new RuntimeException("Expected either @SourceTag or @SourceDescription in the " +
-            "message");
-      } else if (sourceTag.getLiteral().equals("@SourceTag")) {
-        // process it as a sourceTag -- 2 tag elements; action="add" source="aSource"
-        int count = 0, max = 2;
-        while (count < max) {
-          WHITESPACE_ELEMENT.consume(tokenQueue, sourceTag);
-          tagElement.consume(tokenQueue, sourceTag);
-          count++;
-        }
-      } else if (sourceTag.getLiteral().equals("@SourceDescription")) {
-        // process it as a description -- all the remaining should be tags
-        while (!tokenQueue.isEmpty()) {
-          WHITESPACE_ELEMENT.consume(tokenQueue, sourceTag);
-          tagElement.consume(tokenQueue, sourceTag);
-        }
-      } else {
-        // throw exception, since it should be one of the above
-        throw new RuntimeException("Expected either @SourceTag or @SourceDescription in the " +
-            "message");
-      }
+      WHITESPACE_ELEMENT.consume(tokenQueue, sourceTag);
+      tagElement.consume(tokenQueue, sourceTag);
+      WHITESPACE_ELEMENT.consume(tokenQueue, sourceTag);
+      tagElement.consume(tokenQueue, sourceTag);
     }
   }
 

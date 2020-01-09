@@ -1,15 +1,13 @@
 package com.wavefront.ingester;
 
-import com.google.common.collect.ImmutableSet;
-
 import org.antlr.v4.runtime.Token;
+import wavefront.report.ReportSourceTag;
+import wavefront.report.SourceTagAction;
+import wavefront.report.SourceOperationType;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Set;
-
-import wavefront.report.ReportSourceTag;
 
 /**
  * This class can be used to parse sourceTags and description.
@@ -18,13 +16,11 @@ import wavefront.report.ReportSourceTag;
  */
 public class ReportSourceTagIngesterFormatter extends AbstractIngesterFormatter<ReportSourceTag> {
 
-  static final String SOURCE = "source";
-  static final String DESCRIPTION = "description";
-  static final String ACTION = "action";
-  public static final String ACTION_ADD = "add";
-  public static final String ACTION_SAVE = "save";
-  public static final String ACTION_DELETE = "delete";
-  static final Set<String> VALID_ACTIONS = ImmutableSet.of(ACTION_ADD, ACTION_SAVE, ACTION_DELETE);
+  private static final String SOURCE = "source";
+  private static final String ACTION = "action";
+  private static final String ACTION_ADD = "add";
+  private static final String ACTION_SAVE = "save";
+  private static final String ACTION_DELETE = "delete";
 
   private ReportSourceTagIngesterFormatter(List<FormatterElement> elements) {
     super(elements);
@@ -58,38 +54,38 @@ public class ReportSourceTagIngesterFormatter extends AbstractIngesterFormatter<
     } catch (Exception ex) {
       throw new RuntimeException("Could not parse: " + input, ex);
     }
-    sourceTag.setSourceTagLiteral(sourceTag.getSourceTagLiteral().substring(1));
-    Map<String, String> annotations = wrapper.getAnnotationMap();
-    for (Map.Entry<String, String> entry : annotations.entrySet()) {
-      switch (entry.getKey()) {
-        case ReportSourceTagIngesterFormatter.ACTION:
-          sourceTag.setAction(entry.getValue());
-          break;
-        case ReportSourceTagIngesterFormatter.SOURCE:
-          sourceTag.setSource(entry.getValue());
-          break;
-        case ReportSourceTagIngesterFormatter.DESCRIPTION:
-          sourceTag.setDescription(entry.getValue());
-          break;
-        default:
-          throw new RuntimeException("Unknown tag key = " + entry.getKey() + " specified.");
-      }
-    }
-
-    // verify the values - especially 'action' field
-    if (sourceTag.getSource() == null)
-      throw new RuntimeException("No source key was present in the input: " + input);
-
-    final String action = sourceTag.getAction();
+    String action = wrapper.getAnnotationMap().get(ReportSourceTagIngesterFormatter.ACTION);
     if (action == null) {
-      throw new RuntimeException("No action key was present in the input: " + input);
+      throw new IllegalArgumentException("No action key was present in the input: " + input);
     }
-    // verify it's a valid action one of 'add', 'save' or 'delete'
-    if (!VALID_ACTIONS.contains(action)) {
-      throw new RuntimeException("Action string did not match save/delete: " + input);
+    switch (action.toLowerCase()) {
+      case ACTION_ADD:
+        sourceTag.setAction(SourceTagAction.ADD);
+        break;
+      case ACTION_SAVE:
+        sourceTag.setAction(SourceTagAction.SAVE);
+        break;
+      case ACTION_DELETE:
+        sourceTag.setAction(SourceTagAction.DELETE);
+        break;
+      default:
+        throw new IllegalArgumentException("Invalid action '" + action + "'!");
     }
-    if (sourceTag.getSourceTagLiteral().equals("SourceTag") && sourceTag.getAnnotations() == null) {
-      throw new RuntimeException("No tag(s) provided for action type `" + action + "`");
+    String source = wrapper.getAnnotationMap().get(ReportSourceTagIngesterFormatter.SOURCE);
+    if (source == null) {
+      throw new IllegalArgumentException("No source key was present in the input: " + input);
+    }
+    sourceTag.setSource(source);
+
+    if (sourceTag.getAnnotations() == null || sourceTag.getAnnotations().isEmpty()) {
+      if (!(sourceTag.getOperation() == SourceOperationType.SOURCE_DESCRIPTION &&
+          sourceTag.getAction() == SourceTagAction.DELETE)) {
+        throw new IllegalArgumentException("No data provided for operation `" +
+            sourceTag.getOperation() + "` action: " + sourceTag.getAction());
+      }
+    } else if (sourceTag.getOperation() == SourceOperationType.SOURCE_DESCRIPTION &&
+        sourceTag.getAnnotations().size() > 1) {
+      throw new IllegalArgumentException("Only one description expected");
     }
     return ReportSourceTag.newBuilder(sourceTag).build();
   }

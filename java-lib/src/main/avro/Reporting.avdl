@@ -84,11 +84,18 @@ protocol Reporting {
     @java-class("java.util.TreeMap") map<string> annotations = {};
   }
 
+  enum SourceOperationType {
+    SOURCE_TAG, SOURCE_DESCRIPTION
+  }
+
+  enum SourceTagAction {
+    ADD, SAVE, DELETE
+  }
+
   record ReportSourceTag {
-    string sourceTagLiteral; // constant '@SourceTag' or '@SourceDescription'
-    string action; // can be either 'add', 'save' or 'delete'
+    SourceOperationType operation;
+    SourceTagAction action;
     string source;
-    union {null, string} description;
     array<string> annotations = {}; // might be empty
   }
 
