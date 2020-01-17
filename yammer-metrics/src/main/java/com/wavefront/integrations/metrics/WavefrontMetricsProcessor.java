@@ -7,6 +7,7 @@ import com.yammer.metrics.core.*;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -86,9 +87,7 @@ abstract class WavefrontMetricsProcessor implements MetricProcessor<Void> {
     for (WavefrontHistogram.MinuteBin minuteBin : bins) {
       StringBuilder sb = new StringBuilder();
       sb.append("!M ").append(minuteBin.getMinMillis() / 1000);
-      for (Centroid c : minuteBin.getDist().centroids()) {
-        sb.append(" #").append(c.count()).append(" ").append(c.mean());
-      }
+      appendCompactedCentroids(sb, minuteBin.getDist().centroids());
       sb.append(" \"").append(getName(name)).append("\"").append(tags).append("\n");
       histogramLines.add(sb.toString());
     }
@@ -110,12 +109,29 @@ abstract class WavefrontMetricsProcessor implements MetricProcessor<Void> {
     StringBuilder sb = new StringBuilder();
     for (WavefrontHistogram.MinuteBin minuteBin : bins) {
       sb.append("!M ").append(minuteBin.getMinMillis() / 1000);
-      for (Centroid c : minuteBin.getDist().centroids()) {
-        sb.append(" #").append(c.count()).append(" ").append(c.mean());
-      }
+      appendCompactedCentroids(sb, minuteBin.getDist().centroids());
       sb.append(" \"").append(getName(name)).append("\"").append(tags).append("\n");
     }
     return sb.toString();
+  }
+
+  private static void appendCompactedCentroids(StringBuilder sb, Collection<Centroid> centroids) {
+    Centroid accumulator = null;
+    for (Centroid c : centroids) {
+      if (accumulator != null && c.mean() != accumulator.mean()) {
+        sb.append(" #").append(accumulator.count()).append(" ").append(accumulator.mean());
+        accumulator = new Centroid(c.mean(), c.count());
+      } else {
+        if (accumulator == null) {
+          accumulator = new Centroid(c.mean(), c.count());
+        } else {
+          accumulator.add(c.mean(), c.count());
+        }
+      }
+    }
+    if (accumulator != null) {
+      sb.append(" #").append(accumulator.count()).append(" ").append(accumulator.mean());
+    }
   }
 
   private void writeMetered(MetricName name, Metered metered) throws Exception {

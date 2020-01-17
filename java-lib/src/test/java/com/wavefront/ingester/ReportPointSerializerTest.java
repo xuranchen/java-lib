@@ -30,8 +30,8 @@ public class ReportPointSerializerTest {
   public void setUp() {
     Histogram h = Histogram.newBuilder()
         .setType(HistogramType.TDIGEST)
-        .setBins(ImmutableList.of(10D, 20D))
-        .setCounts(ImmutableList.of(2, 4))
+        .setBins(ImmutableList.of(10D, 10D, 20D, 20D))
+        .setCounts(ImmutableList.of(1, 1, 3, 1))
         .setDuration((int) DateUtils.MILLIS_PER_MINUTE)
         .build();
     histogramPoint = ReportPoint.newBuilder()

@@ -29,14 +29,17 @@ import static java.lang.Double.NaN;
  * @author Tim Schmidt (tim@wavefront.com).
  */
 public class WavefrontHistogram extends Histogram implements Metric {
-  private final static int ACCURACY = 100;
-  private final static int MAX_BINS = 10;
+  private static final int DEFAULT_COMPRESSION = 32;
+  private static final double RECOMPRESSION_THRESHOLD_FACTOR = 2.0;
+  private static final int MAX_BINS = 10;
+  private final int compression;
   private final Supplier<Long> millis;
 
   private final ConcurrentMap<Long, LinkedList<MinuteBin>> perThreadHistogramBins = new ConcurrentHashMap<>();
 
-  private WavefrontHistogram(TDigestSample sample, Supplier<Long> millis) {
+  private WavefrontHistogram(TDigestSample sample, int compression, Supplier<Long> millis) {
     super(sample);
+    this.compression = compression;
     this.millis = millis;
   }
 
@@ -45,16 +48,29 @@ public class WavefrontHistogram extends Histogram implements Metric {
   }
 
   public static WavefrontHistogram get(MetricsRegistry registry, MetricName metricName) {
-    return get(registry, metricName, System::currentTimeMillis);
+    return get(registry, metricName, DEFAULT_COMPRESSION);
+  }
+
+  public static WavefrontHistogram get(MetricsRegistry registry,
+                                       MetricName metricName,
+                                       int compression) {
+    return get(registry, metricName, compression, System::currentTimeMillis);
+  }
+
+  public static WavefrontHistogram get(MetricsRegistry registry,
+                                       MetricName metricName,
+                                       Supplier<Long> clock) {
+    return get(registry, metricName, DEFAULT_COMPRESSION, clock);
   }
 
   @VisibleForTesting
   public static WavefrontHistogram get(MetricsRegistry registry,
                                        MetricName metricName,
+                                       int accuracy,
                                        Supplier<Long> clock) {
     // Awkward construction trying to fit in with Yammer Histograms
     TDigestSample sample = new TDigestSample();
-    WavefrontHistogram tDigestHistogram = new WavefrontHistogram(sample, clock);
+    WavefrontHistogram tDigestHistogram = new WavefrontHistogram(sample, accuracy, clock);
     sample.set(tDigestHistogram);
     return registry.getOrAdd(metricName, tDigestHistogram);
   }
@@ -75,6 +91,11 @@ public class WavefrontHistogram extends Histogram implements Metric {
     if (clear) {
       clearPriorCurrentMinuteBin(cutoffMillis);
     }
+    result.forEach(bin -> {
+      if (bin.getDist().centroidCount() > compression * RECOMPRESSION_THRESHOLD_FACTOR) {
+        bin.getDist().compress();
+      }
+    });
 
     return result;
   }
@@ -116,7 +137,7 @@ public class WavefrontHistogram extends Histogram implements Metric {
     // so synchronize the access to the respective 'bins' list
     synchronized (bins) {
       if (bins.isEmpty() || bins.getLast().minMillis != currMinMillis) {
-        bins.add(new MinuteBin(currMinMillis));
+        bins.add(new MinuteBin(currMinMillis, compression));
         if (bins.size() > MAX_BINS) {
           bins.removeFirst();
         }
@@ -212,8 +233,11 @@ public class WavefrontHistogram extends Histogram implements Metric {
 
   // TODO - how to ensure thread safety? do we care?
   private TDigest snapshot() {
-    final TDigest snapshot = new AVLTreeDigest(ACCURACY);
+    final TDigest snapshot = new AVLTreeDigest(compression);
     perThreadHistogramBins.values().stream().flatMap(List::stream).forEach(bin -> snapshot.add(bin.dist));
+    if (snapshot.centroidCount() > compression * RECOMPRESSION_THRESHOLD_FACTOR) {
+      snapshot.compress();
+    }
     return snapshot;
   }
 
@@ -278,8 +302,8 @@ public class WavefrontHistogram extends Histogram implements Metric {
     private final TDigest dist;
     private final long minMillis;
 
-    MinuteBin(long minMillis) {
-      dist = new AVLTreeDigest(ACCURACY);
+    MinuteBin(long minMillis, int accuracy) {
+      dist = new AVLTreeDigest(accuracy);
       this.minMillis = minMillis;
     }
 
