@@ -2,10 +2,10 @@ package com.wavefront.ingester;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -43,6 +43,33 @@ public class ReportPointSerializer implements Function<ReportPoint, String> {
     }
   }
 
+  private static void appendCompactedCentroids(StringBuilder sb,
+                                               List<Double> bins,
+                                               List<Integer> counts) {
+    int numCentroids = Math.min(bins.size(), counts.size());
+    Double accumulatedValue = null;
+    int accumulatedCount = 0;
+    for (int i = 0; i < numCentroids; ++i) {
+      double value = bins.get(i);
+      int count = counts.get(i);
+      if (accumulatedValue != null && value != accumulatedValue) {
+        sb.append('#').append(accumulatedCount).append(' ');
+        sb.append(accumulatedValue).append(' ');
+        accumulatedValue = value;
+        accumulatedCount = count;
+      } else {
+        if (accumulatedValue == null) {
+          accumulatedValue = value;
+        }
+        accumulatedCount += count;
+      }
+    }
+    if (accumulatedValue != null) {
+      sb.append('#').append(accumulatedCount).append(' ');
+      sb.append(accumulatedValue).append(' ');
+    }
+  }
+
   @VisibleForTesting
   public static String pointToString(ReportPoint point) {
     if (point.getValue() instanceof Double || point.getValue() instanceof Long || point.getValue() instanceof String) {
@@ -72,19 +99,10 @@ public class ReportPointSerializer implements Function<ReportPoint, String> {
         default:
           throw new RuntimeException("Unexpected histogram duration " + h.getDuration());
       }
-
       // Timestamp
       sb.append(point.getTimestamp() / 1000).append(' ');
-
       // Centroids
-      int numCentroids = Math.min(CollectionUtils.size(h.getBins()), CollectionUtils.size(h.getCounts()));
-      for (int i = 0; i < numCentroids; ++i) {
-        // Count
-        sb.append('#').append(h.getCounts().get(i)).append(' ');
-        // Mean
-        sb.append(h.getBins().get(i)).append(' ');
-      }
-
+      appendCompactedCentroids(sb, h.getBins(), h.getCounts());
       // Metric
       sb.append(quote).append(escapeQuotes(point.getMetric())).append(quote).append(" ");
 
