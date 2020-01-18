@@ -80,7 +80,7 @@
       <classifier>linux-x86_64</classifier>
     </dependency>
     <dependency>
-      <groupId>com.tunnelvisionlabs</groupId>
+      <groupId>org.antlr</groupId>
       <artifactId>antlr4-runtime</artifactId>
     </dependency>
     <dependency>
@@ -131,9 +131,9 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>com.tunnelvisionlabs</groupId>
+        <groupId>org.antlr</groupId>
         <artifactId>antlr4-maven-plugin</artifactId>
-        <version>4.7.4</version>
+        <version>4.7.1</version>
         <configuration>
           <outputDirectory>target/generated-sources/antlr4/queryserver/parser</outputDirectory>
           <sourceDirectory>${project.basedir}/src/main/antlr4</sourceDirectory>
