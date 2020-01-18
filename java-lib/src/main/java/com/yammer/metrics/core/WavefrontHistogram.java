@@ -180,15 +180,13 @@ public class WavefrontHistogram extends Histogram implements Metric {
   }
 
   public double min() {
-    // This is a lie if the winning centroid's weight > 1
-    return perThreadHistogramBins.values().stream().flatMap(List::stream).map(b -> b.dist.centroids()).
-        mapToDouble(cs -> getFirst(cs, new Centroid(MAX_VALUE)).mean()).min().orElse(NaN);
+    return perThreadHistogramBins.values().stream().flatMap(List::stream).
+        mapToDouble(b -> b.dist.getMin()).min().orElse(NaN);
   }
 
   public double max() {
-    //This is a lie if the winning centroid's weight > 1
-    return perThreadHistogramBins.values().stream().flatMap(List::stream).map(b -> b.dist.centroids()).
-        mapToDouble(cs -> getLast(cs, new Centroid(MIN_VALUE)).mean()).max().orElse(NaN);
+    return perThreadHistogramBins.values().stream().flatMap(List::stream).
+        mapToDouble(b -> b.dist.getMax()).max().orElse(NaN);
   }
 
   @Override
