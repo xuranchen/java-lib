@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>java-lib</artifactId>
@@ -80,7 +81,7 @@
       <classifier>linux-x86_64</classifier>
     </dependency>
     <dependency>
-      <groupId>org.antlr</groupId>
+      <groupId>com.tunnelvisionlabs</groupId>
       <artifactId>antlr4-runtime</artifactId>
     </dependency>
     <dependency>
@@ -131,9 +132,9 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.antlr</groupId>
+        <groupId>com.tunnelvisionlabs</groupId>
         <artifactId>antlr4-maven-plugin</artifactId>
-        <version>4.7.1</version>
+        <version>4.7.4</version>
         <configuration>
           <outputDirectory>target/generated-sources/antlr4/queryserver/parser</outputDirectory>
           <sourceDirectory>${project.basedir}/src/main/antlr4</sourceDirectory>
