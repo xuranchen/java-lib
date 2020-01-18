@@ -38,4 +38,13 @@ public enum ReportableEntityType {
   public String toCapitalizedString() {
     return name.substring(0, 1).toUpperCase() + name.substring(1);
   }
+
+  public static ReportableEntityType fromString(String name) {
+    for (ReportableEntityType type : ReportableEntityType.values()) {
+      if (type.toString().equalsIgnoreCase(name)) {
+        return type;
+      }
+    }
+    return null;
+  }
 }

@@ -1,17 +1,14 @@
 package com.wavefront.ingester;
 
 import com.google.common.annotations.VisibleForTesting;
-
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
+import wavefront.report.ReportPoint;
 
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
-import javax.annotation.Nullable;
-
-import wavefront.report.ReportPoint;
+import static com.wavefront.common.SerializerUtils.appendQuoted;
+import static com.wavefront.common.SerializerUtils.appendTagMap;
 
 /**
  * Convert a {@link ReportPoint} to its string representation in a canonical format (quoted metric name,
@@ -24,23 +21,6 @@ public class ReportPointSerializer implements Function<ReportPoint, String> {
   @Override
   public String apply(ReportPoint point) {
     return pointToString(point);
-  }
-
-  private static String quote = "\"";
-
-  private static String escapeQuotes(String raw) {
-    return StringUtils.replace(raw, quote, "\\\"");
-  }
-
-  private static void appendTagMap(StringBuilder sb, @Nullable Map<String, String> tags) {
-    if (tags == null) {
-      return;
-    }
-    for (Map.Entry<String, String> entry : tags.entrySet()) {
-      sb.append(' ').append(quote).append(escapeQuotes(entry.getKey())).append(quote)
-          .append("=")
-          .append(quote).append(escapeQuotes(entry.getValue())).append(quote);
-    }
   }
 
   private static void appendCompactedCentroids(StringBuilder sb,
@@ -72,19 +52,18 @@ public class ReportPointSerializer implements Function<ReportPoint, String> {
 
   @VisibleForTesting
   public static String pointToString(ReportPoint point) {
-    if (point.getValue() instanceof Double || point.getValue() instanceof Long || point.getValue() instanceof String) {
-      StringBuilder sb = new StringBuilder(quote)
-          .append(escapeQuotes(point.getMetric())).append(quote).append(" ")
-          .append(point.getValue()).append(" ")
-          .append(point.getTimestamp() / 1000).append(" ")
-          .append("source=").append(quote).append(escapeQuotes(point.getHost())).append(quote);
+    if (point.getValue() instanceof Number || point.getValue() instanceof String) {
+      StringBuilder sb = new StringBuilder(80);
+      appendQuoted(sb, point.getMetric()).
+          append(" ").append(point.getValue()).
+          append(" ").append(point.getTimestamp() / 1000).
+          append(" ").append("source=");
+      appendQuoted(sb, point.getHost());
       appendTagMap(sb, point.getAnnotations());
       return sb.toString();
     } else if (point.getValue() instanceof wavefront.report.Histogram) {
       wavefront.report.Histogram h = (wavefront.report.Histogram) point.getValue();
-
       StringBuilder sb = new StringBuilder();
-
       // BinType
       switch (h.getDuration()) {
         case (int) DateUtils.MILLIS_PER_MINUTE:
@@ -104,13 +83,14 @@ public class ReportPointSerializer implements Function<ReportPoint, String> {
       // Centroids
       appendCompactedCentroids(sb, h.getBins(), h.getCounts());
       // Metric
-      sb.append(quote).append(escapeQuotes(point.getMetric())).append(quote).append(" ");
-
+      appendQuoted(sb, point.getMetric());
       // Source
-      sb.append("source=").append(quote).append(escapeQuotes(point.getHost())).append(quote);
+      sb.append(" ").append("source=");
+      appendQuoted(sb, point.getHost());
       appendTagMap(sb, point.getAnnotations());
       return sb.toString();
     }
-    throw new RuntimeException("Unsupported value class: " + point.getValue().getClass().getCanonicalName());
+    throw new RuntimeException("Unsupported value class: " +
+        point.getValue().getClass().getCanonicalName());
   }
 }

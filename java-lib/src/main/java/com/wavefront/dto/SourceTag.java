@@ -11,6 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static com.wavefront.common.SerializerUtils.appendQuoted;
+import static com.wavefront.ingester.AbstractIngesterFormatter.SOURCE_DESCRIPTION_LITERAL;
+import static com.wavefront.ingester.AbstractIngesterFormatter.SOURCE_TAG_LITERAL;
+
 /**
  * Serializing wrapper for the SourceTag class.
  *
@@ -77,5 +81,41 @@ public class SourceTag implements Serializable {
     if (!Objects.equals(this.source, other.source)) return false;
     if (!Objects.equals(this.annotations, other.annotations)) return false;
     return true;
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    switch (getOperation()) {
+      case SOURCE_TAG:
+        sb.append(SOURCE_TAG_LITERAL);
+        break;
+      case SOURCE_DESCRIPTION:
+        sb.append(SOURCE_DESCRIPTION_LITERAL);
+        break;
+      default:
+        throw new IllegalArgumentException("Unknown operation: " + getOperation());
+    }
+    sb.append(" action=");
+    switch (getAction()) {
+      case SAVE:
+        sb.append("save");
+        break;
+      case ADD:
+        sb.append("add");
+        break;
+      case DELETE:
+        sb.append("delete");
+        break;
+      default:
+        sb.append("<unknown>");
+    }
+    sb.append(" source=");
+    appendQuoted(sb, getSource());
+    getAnnotations().forEach(x -> {
+      sb.append(' ');
+      appendQuoted(sb, x);
+    });
+    return sb.toString();
   }
 }

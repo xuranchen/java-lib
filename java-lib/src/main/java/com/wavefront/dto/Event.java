@@ -2,6 +2,7 @@ package com.wavefront.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.wavefront.ingester.EventDecoder;
 import wavefront.report.ReportEvent;
 
 import java.io.Serializable;
@@ -11,6 +12,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static com.wavefront.common.SerializerUtils.appendQuoted;
+import static com.wavefront.common.SerializerUtils.appendTagMap;
+import static com.wavefront.common.SerializerUtils.appendTags;
 
 /**
  * Serializing wrapper for the Event class.
@@ -109,5 +114,29 @@ public class Event implements Serializable {
     if (!hosts.equals(other.hosts)) return false;
     if (!Objects.equals(tags, other.tags)) return false;
     return true;
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder(EventDecoder.EVENT).append(' ');
+    sb.append(this.getStartTime()).append(' ');
+    if (this.getEndTime() != null) {
+      sb.append(this.getEndTime());
+    }
+    sb.append(' ');
+    appendQuoted(sb, this.getName());
+    appendTags(sb, "host", this.getHosts());
+    if (this.getAnnotations() != null) {
+      appendTagMap(sb, this.getAnnotations());
+    }
+    if (this.getDimensions() != null) {
+      for (Map.Entry<String, List<String>> entry : this.getDimensions().entrySet()) {
+        appendTags(sb, entry.getKey(), entry.getValue());
+      }
+    }
+    if (this.getTags() != null) {
+      appendTags(sb, "tag", this.getTags());
+    }
+    return sb.toString();
   }
 }
