@@ -5,6 +5,9 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.atn.LexerATNSimulator;
+import org.antlr.v4.runtime.atn.PredictionContextCache;
+import org.antlr.v4.runtime.dfa.DFA;
 import org.apache.commons.lang.time.DateUtils;
 import queryserver.parser.DSWrapperLexer;
 import wavefront.report.*;
@@ -19,6 +22,7 @@ import java.util.stream.Collectors;
 
 import static org.apache.commons.lang.StringUtils.containsAny;
 import static org.apache.commons.lang.StringUtils.replace;
+import static queryserver.parser.DSWrapperLexer._ATN;
 
 /**
  * This is the base class for formatting the content.
@@ -40,22 +44,28 @@ public abstract class AbstractIngesterFormatter<T> {
   private static final String DOUBLE_QUOTE_STR = String.valueOf(DOUBLE_QUOTE);
   private static final String ESCAPED_DOUBLE_QUOTE_STR = SLASH + DOUBLE_QUOTE_STR;
 
+  private static final BaseErrorListener THROWING_ERROR_LISTENER = new BaseErrorListener() {
+    @Override
+    public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line,
+                            int charPositionInLine, String msg, RecognitionException e) {
+      throw new RuntimeException("Syntax error at line " + line + ", position " + charPositionInLine + ": " + msg, e);
+    }
+  };
+
   protected final List<FormatterElement> elements;
 
   protected static final ThreadLocal<DSWrapperLexer> dsWrapperLexerThreadLocal =
       ThreadLocal.withInitial(() -> {
         final DSWrapperLexer lexer = new DSWrapperLexer(CharStreams.fromString(""));
+        DFA[] result = new DFA[_ATN.getNumberOfDecisions()];
+        for (int i = 0; i < _ATN.getNumberOfDecisions(); i++) {
+          result[i] = new DFA(_ATN.getDecisionState(i), i);
+        }
+        lexer.setInterpreter(new LexerATNSimulator(lexer, _ATN, result, new PredictionContextCache()));
         // note that other errors are not thrown by the lexer and hence we only need to handle the
         // syntaxError case.
         lexer.removeErrorListeners();
-        lexer.addErrorListener(new ANTLRErrorListener<Integer>() {
-          @Override
-          public <U extends Integer> void syntaxError(Recognizer<U, ?> recognizer, U offendingSymbol, int line,
-                                                      int charPositionInLine, String msg, RecognitionException e) {
-            throw new RuntimeException("Syntax error at line " + line + ", position " + charPositionInLine + ": " + msg,
-                e);
-          }
-        });
+        lexer.addErrorListener(THROWING_ERROR_LISTENER);
         return lexer;
       });
 
