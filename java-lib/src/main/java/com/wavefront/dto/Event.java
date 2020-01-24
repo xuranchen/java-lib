@@ -2,6 +2,7 @@ package com.wavefront.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.wavefront.ingester.AbstractIngesterFormatter;
 import com.wavefront.ingester.EventDecoder;
 import wavefront.report.ReportEvent;
 
@@ -118,7 +119,7 @@ public class Event implements Serializable {
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder(EventDecoder.EVENT).append(' ');
+    StringBuilder sb = new StringBuilder(AbstractIngesterFormatter.EVENT_LITERAL).append(' ');
     sb.append(this.getStartTime()).append(' ');
     if (this.getEndTime() != null) {
       sb.append(this.getEndTime());

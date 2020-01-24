@@ -1,14 +1,16 @@
 package com.wavefront.ingester;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import wavefront.report.ReportPoint;
+
+import javax.annotation.Nullable;
 
 /**
  * Graphite decoder that takes in a point of the type:
@@ -20,35 +22,25 @@ import wavefront.report.ReportPoint;
 public class GraphiteDecoder implements Decoder<String> {
 
   private static final Pattern CUSTOMERID = Pattern.compile("[a-z]+");
-  private static final AbstractIngesterFormatter<ReportPoint> FORMAT =
-      ReportPointIngesterFormatter.newBuilder()
-      .whiteSpace()
-      .appendMetricName().whiteSpace()
-      .appendValue().whiteSpace()
-      .appendOptionalTimestamp().whiteSpace()
-      .appendAnnotationsConsumer().whiteSpace().build();
-  private final String hostName;
-  private List<String> customSourceTags;
+
+  private final ReportableEntityDecoder<String, ReportPoint> pointDecoder;
 
   public GraphiteDecoder(List<String> customSourceTags) {
-    this.hostName = "unknown";
-    Preconditions.checkNotNull(customSourceTags);
-    this.customSourceTags = customSourceTags;
+    this("unknown", customSourceTags);
   }
 
   public GraphiteDecoder(String hostName, List<String> customSourceTags) {
-    Preconditions.checkNotNull(hostName);
-    this.hostName = hostName;
-    Preconditions.checkNotNull(customSourceTags);
-    this.customSourceTags = customSourceTags;
+    this(() -> hostName, customSourceTags);
+  }
+
+  public GraphiteDecoder(@Nullable Supplier<String> hostNameSupplier,
+                         List<String> customSourceTags) {
+    this.pointDecoder = new ReportPointDecoder(hostNameSupplier, customSourceTags);
   }
 
   @Override
   public void decodeReportPoints(String msg, List<ReportPoint> out, String customerId) {
-    ReportPoint point = FORMAT.drive(msg, hostName, customerId, customSourceTags);
-    if (out != null) {
-      out.add(point);
-    }
+    pointDecoder.decode(msg, out, customerId);
   }
 
   @Override

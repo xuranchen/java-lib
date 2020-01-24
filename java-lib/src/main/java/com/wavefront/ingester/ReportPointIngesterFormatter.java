@@ -2,16 +2,12 @@ package com.wavefront.ingester;
 
 import com.wavefront.common.Clock;
 import com.wavefront.common.MetricConstants;
-
-import org.antlr.v4.runtime.Token;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import wavefront.report.ReportPoint;
 
 import javax.annotation.Nullable;
-
-import wavefront.report.ReportPoint;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * Builder pattern for creating new ingestion formats. Inspired by the date time formatters in
@@ -21,15 +17,11 @@ import wavefront.report.ReportPoint;
  */
 public class ReportPointIngesterFormatter extends AbstractIngesterFormatter<ReportPoint> {
 
-  private ReportPointIngesterFormatter(List<FormatterElement> elements) {
+  private ReportPointIngesterFormatter(List<FormatterElement<ReportPoint>> elements) {
     super(elements);
   }
 
-  /**
-   * A builder pattern to create a format for the report point parse.
-   */
   public static class ReportPointIngesterFormatBuilder extends IngesterFormatBuilder<ReportPoint> {
-
     @Override
     public ReportPointIngesterFormatter build() {
       return new ReportPointIngesterFormatter(elements);
@@ -41,28 +33,28 @@ public class ReportPointIngesterFormatter extends AbstractIngesterFormatter<Repo
   }
 
   @Override
-  public ReportPoint drive(String input, String defaultHostName, String customerId,
-                           @Nullable List<String> customSourceTags) {
-    Queue<Token> queue = getQueue(input);
-
+  public ReportPoint drive(String input, Supplier<String> defaultHostNameSupplier,
+                           String customerId, @Nullable List<String> customSourceTags) {
     ReportPoint point = new ReportPoint();
     point.setTable(customerId);
     // if the point has a timestamp, this would be overriden
     point.setTimestamp(Clock.now());
-    AbstractWrapper wrapper = new ReportPointWrapper(point);
+    final StringParser parser = new StringParser(input);
+
     try {
-      for (FormatterElement element : elements) {
-        element.consume(queue, wrapper);
+      for (FormatterElement<ReportPoint> element : elements) {
+        element.consume(parser, point);
       }
     } catch (Exception ex) {
       throw new RuntimeException("Could not parse: " + input, ex);
     }
-    if (!queue.isEmpty()) {
-      throw new RuntimeException("Could not parse: " + input);
+    if (parser.hasNext()) {
+      throw new RuntimeException("Unexpected extra input: " + parser.next());
     }
 
     // Delta metrics cannot have negative values
-    if ((point.getMetric().startsWith(MetricConstants.DELTA_PREFIX) || point.getMetric().startsWith(MetricConstants.DELTA_PREFIX_2)) &&
+    if ((point.getMetric().charAt(0) == MetricConstants.DELTA_PREFIX_CHAR ||
+        point.getMetric().charAt(0) == MetricConstants.DELTA_PREFIX_CHAR_2) &&
         point.getValue() instanceof Number) {
       double v = ((Number) point.getValue()).doubleValue();
       if (v <= 0) {
@@ -95,9 +87,9 @@ public class ReportPointIngesterFormatter extends AbstractIngesterFormatter<Repo
       }
     }
     if (host == null) {
-      host = defaultHostName;
+      host = defaultHostNameSupplier.get();
     }
     point.setHost(host);
-    return ReportPoint.newBuilder(point).build();
+    return point;
   }
 }

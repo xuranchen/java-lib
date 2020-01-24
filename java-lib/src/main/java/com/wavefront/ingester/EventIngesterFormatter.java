@@ -1,15 +1,14 @@
 package com.wavefront.ingester;
 
-import org.antlr.v4.runtime.Token;
-import wavefront.report.Annotation;
 import wavefront.report.ReportEvent;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
+import java.util.function.Supplier;
 
 /**
  * Ingestion formatter for events.
@@ -18,15 +17,11 @@ import java.util.Queue;
  */
 public class EventIngesterFormatter extends AbstractIngesterFormatter<ReportEvent> {
 
-  private EventIngesterFormatter(List<FormatterElement> elements) {
+  private EventIngesterFormatter(List<FormatterElement<ReportEvent>> elements) {
     super(elements);
   }
 
-  /**
-   * A builder pattern to create a format for the report point parse.
-   */
   public static class EventIngesterFormatBuilder extends IngesterFormatBuilder<ReportEvent> {
-
     @Override
     public EventIngesterFormatter build() {
       return new EventIngesterFormatter(elements);
@@ -38,58 +33,49 @@ public class EventIngesterFormatter extends AbstractIngesterFormatter<ReportEven
   }
 
   @Override
-  public ReportEvent drive(String input, String defaultHostName, String customerId,
-                     @Nullable List<String> customSourceTags) {
-    Queue<Token> queue = getQueue(input);
-
+  public ReportEvent drive(String input, Supplier<String> defaultHostNameSupplier,
+                           String customerId, @Nullable List<String> customSourceTags) {
     final ReportEvent event = new ReportEvent();
+    StringParser parser = new StringParser(input);
+    event.setHosts(new ArrayList<>());
     event.setAnnotations(new HashMap<>());
-    EventWrapper wrapper = new EventWrapper(event);
+
     try {
-      for (FormatterElement element : elements) {
-        element.consume(queue, wrapper);
+      for (FormatterElement<ReportEvent> element : elements) {
+        element.consume(parser, event);
       }
     } catch (Exception ex) {
       throw new RuntimeException("Could not parse: " + input, ex);
     }
 
-    for (Annotation annotation : wrapper.getAnnotationList()) {
-      switch (annotation.getKey()) {
+    Iterator<Map.Entry<String, List<String>>> iter = event.getDimensions().entrySet().iterator();
+    while (iter.hasNext()) {
+      final Map.Entry<String, List<String>> entry = iter.next();
+      switch (entry.getKey()) {
         case "host":
-          if (event.getHosts() == null) {
-            event.setHosts(new ArrayList<>());
-          }
-          event.getHosts().add(annotation.getValue());
+          event.setHosts(entry.getValue());
+          iter.remove();
           break;
         case "tag":
         case "eventTag":
-          if (event.getTags() == null) {
-            event.setTags(new ArrayList<>());
-          }
-          event.getTags().add(annotation.getValue());
+          event.setTags(entry.getValue());
+          iter.remove();
           break;
         default:
-          Map<String, List<String>> dimensions = event.getDimensions();
-          if (dimensions != null && dimensions.containsKey(annotation.getKey())) {
-            dimensions.get(annotation.getKey()).add(annotation.getValue());
-          } else if (event.getAnnotations().containsKey(annotation.getKey())) {
-            // multi-value annotations should be moved to dimensions
-            if (dimensions == null) {
-              event.setDimensions(new HashMap<>());
-            }
-            List<String> multivalue = new ArrayList<>();
-            multivalue.add(event.getAnnotations().remove(annotation.getKey()));
-            multivalue.add(annotation.getValue());
-            event.getDimensions().put(annotation.getKey(), multivalue);
-          } else {
-            event.getAnnotations().put(annotation.getKey(), annotation.getValue());
+          // single-value dimensions should be moved to annotations
+          if (entry.getValue().size() == 1) {
+            event.getAnnotations().put(entry.getKey(), entry.getValue().get(0));
+            iter.remove();
           }
       }
+    }
+    if (event.getDimensions().isEmpty()) {
+      event.setDimensions(null);
     }
     // if no end time specified, we assume it's an instant event
     if (event.getEndTime() == null || event.getEndTime() == 0) {
       event.setEndTime(event.getStartTime() + 1);
     }
-    return ReportEvent.newBuilder(event).build();
+    return event;
   }
 }
