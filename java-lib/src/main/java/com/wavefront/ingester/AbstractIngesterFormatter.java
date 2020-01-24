@@ -674,6 +674,7 @@ public abstract class AbstractIngesterFormatter<T> {
       }
       value += unquote(current.getText());
     } else if (current.getType() == DSWrapperLexer.Letters ||
+        current.getType() == DSWrapperLexer.Identifier ||
         current.getType() == DSWrapperLexer.Literal ||
         current.getType() == DSWrapperLexer.Number) {
       value += current.getText();
@@ -702,6 +703,7 @@ public abstract class AbstractIngesterFormatter<T> {
         value += ReportPointIngesterFormatter.unquote(current.getText());
       } else if (current.getType() == DSWrapperLexer.Letters ||
           current.getType() == DSWrapperLexer.Literal ||
+          current.getType() == DSWrapperLexer.Identifier ||
           current.getType() == DSWrapperLexer.Number) {
         value += current.getText();
       } else {
@@ -983,6 +985,7 @@ public abstract class AbstractIngesterFormatter<T> {
     while (next != null &&
         (next.getType() == DSWrapperLexer.Letters ||
             next.getType() == DSWrapperLexer.RelaxedLiteral ||
+            next.getType() == DSWrapperLexer.Identifier ||
             next.getType() == DSWrapperLexer.Number ||
             next.getType() == DSWrapperLexer.SLASH ||
             next.getType() == DSWrapperLexer.AT ||

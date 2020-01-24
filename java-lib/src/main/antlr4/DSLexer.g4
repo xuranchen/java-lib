@@ -42,6 +42,10 @@ Letters
   : Letter+ Digit*
   ;
 
+Identifier
+  : Letter+ (Letter | Digit | '_')*
+  ;
+
 Quoted
   : '"' ( '\\"' | . )*? '"'
   | '\'' ( '\\\'' | . )*? '\''
