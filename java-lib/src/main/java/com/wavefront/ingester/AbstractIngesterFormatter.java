@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -103,9 +104,15 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
       return this;
     }
 
+    public IngesterFormatBuilder<T> annotationMap(Function<T, Map<String, String>> mapProvider,
+                                                  BiConsumer<T, Map<String, String>> mapConsumer) {
+      elements.add(new StringMap<>(mapConsumer, mapProvider, null, null));
+      return this;
+    }
+
     public IngesterFormatBuilder<T> annotationMap(BiConsumer<T, Map<String, String>> mapConsumer,
                                                   int limit) {
-      elements.add(new StringMap<>(mapConsumer, limit, null));
+      elements.add(new StringMap<>(mapConsumer, null, limit, null));
       return this;
     }
 
@@ -250,23 +257,33 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
 
   public static class StringMap<T extends SpecificRecordBase> implements FormatterElement<T> {
     private final BiConsumer<T, Map<String, String>> stringMapConsumer;
+    private final Function<T, Map<String, String>> stringMapProvider;
     private final Integer limit;
     private final Predicate<String> predicate;
 
     StringMap(BiConsumer<T, Map<String, String>> stringMapConsumer) {
-      this(stringMapConsumer, null, null);
+      this(stringMapConsumer, null, null, null);
     }
 
-    StringMap(BiConsumer<T, Map<String, String>> stringMapConsumer, @Nullable Integer limit,
+    StringMap(BiConsumer<T, Map<String, String>> stringMapConsumer,
+              @Nullable Function<T, Map<String, String>> stringMapProvider,
+              @Nullable Integer limit,
               @Nullable Predicate<String> predicate) {
       this.stringMapConsumer = stringMapConsumer;
+      this.stringMapProvider = stringMapProvider;
       this.limit = limit;
       this.predicate = predicate;
     }
 
     @Override
     public void consume(StringParser parser, T target) {
-      Map<String, String> stringMap = Maps.newHashMap();
+      Map<String, String> stringMap = null;
+      if (stringMapProvider != null) {
+        stringMap = stringMapProvider.apply(target);
+      }
+      if (stringMap == null) {
+        stringMap = Maps.newHashMap();
+      }
       int i = 0;
       while (parser.hasNext() && (limit == null || i < limit) &&
           (predicate == null || predicate.test(parser.peek()))) {
