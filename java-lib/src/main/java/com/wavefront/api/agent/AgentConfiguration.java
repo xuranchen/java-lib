@@ -1,16 +1,10 @@
 package com.wavefront.api.agent;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import java.io.File;
-import java.util.Collections;
+import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 
 /**
  * Configuration for the SSH Daemon.
@@ -22,17 +16,17 @@ import java.util.UUID;
 public class AgentConfiguration {
 
   public String name;
+  @Deprecated
   public String defaultUsername;
+  @Deprecated
   public String defaultPublicKey;
-  public boolean allowAnyHostKeys;
+  public boolean allowAnyHostKeys = true;
   public Long currentTime;
-  private List<SshTargetDTO> targets;
-  private List<WorkUnit> workUnits;
-  private Boolean collectorSetsPointsPerBatch;
+  private boolean collectorSetsPointsPerBatch = false;
   private Long pointsPerBatch;
-  private Boolean collectorSetsRetryBackoff;
+  private boolean collectorSetsRetryBackoff = false;
   private Double retryBackoffBaseSeconds;
-  private Boolean collectorSetsRateLimit;
+  private boolean collectorSetsRateLimit = false;
 
   /**
    * When set, enforces a per proxy rate limit for points.
@@ -64,23 +58,23 @@ public class AgentConfiguration {
    */
   private Double eventsRateLimit;
 
-  private Boolean shutOffAgents = false;
-  private Boolean showTrialExpired = false;
+  private boolean shutOffAgents = false;
+  private boolean showTrialExpired = false;
 
   /**
-   * If the value is true, then histogram feature is disabled; feature enabled if null or false
+   * If the value is true, then histogram feature is disabled
    */
-  private Boolean histogramDisabled;
+  private boolean histogramDisabled = false;
 
   /**
-   * If the value is true, then trace feature is disabled; feature enabled if null or false
+   * If the value is true, then trace feature is disabled
    */
-  private Boolean traceDisabled;
+  private boolean traceDisabled = false;
 
   /**
-   * If the value is true, then span logs are disabled; feature enabled if null or false.
+   * If the value is true, then span logs are disabled
    */
-  private Boolean spanLogsDisabled;
+  private boolean spanLogsDisabled = false;
 
   /**
    * Server-side configuration for various limits to be enforced at the proxy.
@@ -123,141 +117,145 @@ public class AgentConfiguration {
   private Integer histogramStorageAccuracy;
 
   /**
+   * Yaml string with preprocessor rules to override local rules at the proxy.
+   */
+  private String preprocessorRules;
+
+  /**
    * System metric whitelist.
    */
   private List<String> systemMetrics;
 
-  public Boolean getCollectorSetsRetryBackoff() {
+  public boolean getCollectorSetsRetryBackoff() {
     return collectorSetsRetryBackoff;
   }
 
-  public void setCollectorSetsRetryBackoff(Boolean collectorSetsRetryBackoff) {
+  public void setCollectorSetsRetryBackoff(boolean collectorSetsRetryBackoff) {
     this.collectorSetsRetryBackoff = collectorSetsRetryBackoff;
   }
 
+  @Nullable
   public Double getRetryBackoffBaseSeconds() {
     return retryBackoffBaseSeconds;
   }
 
-  public void setRetryBackoffBaseSeconds(Double retryBackoffBaseSeconds) {
+  public void setRetryBackoffBaseSeconds(@Nullable Double retryBackoffBaseSeconds) {
     this.retryBackoffBaseSeconds = retryBackoffBaseSeconds;
   }
 
-  public Boolean getCollectorSetsRateLimit() {
+  public boolean getCollectorSetsRateLimit() {
     return this.collectorSetsRateLimit;
   }
 
-  public void setCollectorSetsRateLimit(Boolean collectorSetsRateLimit) {
+  public void setCollectorSetsRateLimit(boolean collectorSetsRateLimit) {
     this.collectorSetsRateLimit = collectorSetsRateLimit;
   }
 
+  @Nullable
   public Long getCollectorRateLimit() {
     return this.collectorRateLimit;
   }
 
-  public void setCollectorRateLimit(Long collectorRateLimit) {
+  public void setCollectorRateLimit(@Nullable Long collectorRateLimit) {
     this.collectorRateLimit = collectorRateLimit;
   }
 
+  @Nullable
   public Long getHistogramRateLimit() {
     return histogramRateLimit;
   }
 
-  public void setHistogramRateLimit(Long histogramRateLimit) {
+  public void setHistogramRateLimit(@Nullable Long histogramRateLimit) {
     this.histogramRateLimit = histogramRateLimit;
   }
 
+  @Nullable
   public Double getSourceTagsRateLimit() {
     return sourceTagsRateLimit;
   }
 
-  public void setSourceTagsRateLimit(Double sourceTagsRateLimit) {
+  public void setSourceTagsRateLimit(@Nullable Double sourceTagsRateLimit) {
     this.sourceTagsRateLimit = sourceTagsRateLimit;
   }
 
+  @Nullable
   public Long getSpanRateLimit() {
     return spanRateLimit;
   }
 
-  public void setSpanRateLimit(Long spanRateLimit) {
+  public void setSpanRateLimit(@Nullable Long spanRateLimit) {
     this.spanRateLimit = spanRateLimit;
   }
 
+  @Nullable
   public Long getSpanLogsRateLimit() {
     return spanLogsRateLimit;
   }
 
-  public void setSpanLogsRateLimit(Long spanLogsRateLimit) {
+  public void setSpanLogsRateLimit(@Nullable Long spanLogsRateLimit) {
     this.spanLogsRateLimit = spanLogsRateLimit;
   }
 
+  @Nullable
   public Double getEventsRateLimit() {
     return eventsRateLimit;
   }
 
-  public void setEventsRateLimit(Double eventsRateLimit) {
+  public void setEventsRateLimit(@Nullable Double eventsRateLimit) {
     this.eventsRateLimit = eventsRateLimit;
   }
-  public List<WorkUnit> getWorkUnits() {
-    if (workUnits == null) return Collections.emptyList();
-    return workUnits;
-  }
 
-  public List<SshTargetDTO> getTargets() {
-    if (targets == null) return Collections.emptyList();
-    return targets;
-  }
-
-  public void setCollectorSetsPointsPerBatch(Boolean collectorSetsPointsPerBatch) {
+  public void setCollectorSetsPointsPerBatch(boolean collectorSetsPointsPerBatch) {
     this.collectorSetsPointsPerBatch = collectorSetsPointsPerBatch;
   }
 
-  public Boolean getCollectorSetsPointsPerBatch() {
+  public boolean getCollectorSetsPointsPerBatch() {
     return collectorSetsPointsPerBatch;
   }
 
-  public void setTargets(List<SshTargetDTO> targets) {
-    this.targets = targets;
-  }
-
-  public void setWorkUnits(List<WorkUnit> workUnits) {
-    this.workUnits = workUnits;
-  }
-
+  @Nullable
   public Long getPointsPerBatch() {
     return pointsPerBatch;
   }
 
-  public void setPointsPerBatch(Long pointsPerBatch) {
+  public void setPointsPerBatch(long pointsPerBatch) {
     this.pointsPerBatch = pointsPerBatch;
   }
 
-  public Boolean getShutOffAgents() { return shutOffAgents; }
+  public boolean getShutOffAgents() { return shutOffAgents; }
 
-  public void setShutOffAgents(Boolean shutOffAgents) {
+  public void setShutOffAgents(boolean shutOffAgents) {
     this.shutOffAgents = shutOffAgents;
   }
 
-  public Boolean getShowTrialExpired() { return showTrialExpired; }
+  public boolean getShowTrialExpired() { return showTrialExpired; }
 
-  public void setShowTrialExpired(Boolean trialExpired) {
+  public void setShowTrialExpired(boolean trialExpired) {
     this.showTrialExpired = trialExpired;
   }
 
-  public Boolean getHistogramDisabled() {
+  public boolean getHistogramDisabled() {
     return histogramDisabled;
   }
 
-  public void setHistogramDisabled(Boolean histogramDisabled) {
+  public void setHistogramDisabled(boolean histogramDisabled) {
     this.histogramDisabled = histogramDisabled;
   }
 
-  public Boolean getTraceDisabled() {
+  public boolean getTraceDisabled() {
     return this.traceDisabled;
   }
 
-  public void setTraceDisabled(Boolean traceDisabled) {
+  public void setTraceDisabled(boolean traceDisabled) {
     this.traceDisabled = traceDisabled;
+  }
+
+  public boolean getSpanLogsDisabled() {
+    return spanLogsDisabled;
+  }
+
+  public void setSpanLogsDisabled(boolean spanLogsDisabled) {
+    this.spanLogsDisabled = spanLogsDisabled;
   }
 
   public ValidationConfiguration getValidationConfiguration() {
@@ -268,113 +266,85 @@ public class AgentConfiguration {
     this.validationConfiguration = value;
   }
 
-  public Boolean getSpanLogsDisabled() {
-    return spanLogsDisabled;
-  }
-
-  public void setSpanLogsDisabled(Boolean spanLogsDisabled) {
-    this.spanLogsDisabled = spanLogsDisabled;
-  }
-
+  @Nullable
   public Long getGlobalCollectorRateLimit() {
     return globalCollectorRateLimit;
   }
 
-  public void setGlobalCollectorRateLimit(Long globalCollectorRateLimit) {
+  public void setGlobalCollectorRateLimit(@Nullable Long globalCollectorRateLimit) {
     this.globalCollectorRateLimit = globalCollectorRateLimit;
   }
 
+  @Nullable
   public Long getGlobalHistogramRateLimit() {
     return globalHistogramRateLimit;
   }
 
-  public void setGlobalHistogramRateLimit(Long globalHistogramRateLimit) {
+  public void setGlobalHistogramRateLimit(@Nullable Long globalHistogramRateLimit) {
     this.globalHistogramRateLimit = globalHistogramRateLimit;
   }
 
+  @Nullable
   public Double getGlobalSourceTagRateLimit() {
     return globalSourceTagRateLimit;
   }
 
-  public void setGlobalSourceTagRateLimit(Double globalSourceTagRateLimit) {
+  public void setGlobalSourceTagRateLimit(@Nullable Double globalSourceTagRateLimit) {
     this.globalSourceTagRateLimit = globalSourceTagRateLimit;
   }
 
+  @Nullable
   public Long getGlobalSpanRateLimit() {
     return globalSpanRateLimit;
   }
 
-  public void setGlobalSpanRateLimit(Long globalSpanRateLimit) {
+  public void setGlobalSpanRateLimit(@Nullable Long globalSpanRateLimit) {
     this.globalSpanRateLimit = globalSpanRateLimit;
   }
 
+  @Nullable
   public Long getGlobalSpanLogsRateLimit() {
     return globalSpanLogsRateLimit;
   }
 
-  public void setGlobalSpanLogsRateLimit(Long globalSpanLogsRateLimit) {
+  public void setGlobalSpanLogsRateLimit(@Nullable Long globalSpanLogsRateLimit) {
     this.globalSpanLogsRateLimit = globalSpanLogsRateLimit;
   }
 
+  @Nullable
   public Double getGlobalEventRateLimit() {
     return globalEventRateLimit;
   }
 
-  public void setGlobalEventRateLimit(Double globalEventRateLimit) {
+  public void setGlobalEventRateLimit(@Nullable Double globalEventRateLimit) {
     this.globalEventRateLimit = globalEventRateLimit;
   }
 
+  @Nullable
   public Integer getHistogramStorageAccuracy() {
     return histogramStorageAccuracy;
   }
 
-  public void setHistogramStorageAccuracy(Integer histogramStorageAccuracy) {
+  public void setHistogramStorageAccuracy(@Nullable Integer histogramStorageAccuracy) {
     this.histogramStorageAccuracy = histogramStorageAccuracy;
   }
 
+  @Nullable
+  public String getPreprocessorRules() {
+    return preprocessorRules;
+  }
+
+  public void setPreprocessorRules(@Nullable String preprocessorRules) {
+    this.preprocessorRules = preprocessorRules;
+  }
+
+  @Nullable
   public List<String> getSystemMetrics() {
     return systemMetrics;
   }
 
-  public void setSystemMetrics(List<String> systemMetrics) {
+  public void setSystemMetrics(@Nullable List<String> systemMetrics) {
     this.systemMetrics = systemMetrics;
-  }
-
-  public void validate(boolean local) {
-    Set<UUID> knownHostUUIDs = Collections.emptySet();
-    if (targets != null) {
-      if (defaultPublicKey != null) {
-        Preconditions.checkArgument(new File(defaultPublicKey).exists(), "defaultPublicKey does not exist");
-      }
-      knownHostUUIDs = Sets.newHashSetWithExpectedSize(targets.size());
-      for (SshTargetDTO target : targets) {
-        Preconditions.checkNotNull(target, "target cannot be null");
-        target.validate(this);
-        Preconditions.checkState(knownHostUUIDs.add(target.id), "duplicate target id: " + target.id);
-        if (target.user == null) {
-          Preconditions.checkNotNull(defaultUsername,
-              "must have default username if user is not specified, host entry: " + target.host);
-        }
-        if (target.publicKey == null) {
-          Preconditions.checkNotNull(defaultPublicKey,
-              "must have default publickey if publicKey is not specified, host entry: " + target.host);
-        }
-        if (!allowAnyHostKeys) {
-          Preconditions.checkNotNull(target.hostKey, "must specify hostKey if " +
-              "'allowAnyHostKeys' is set to false, host entry: " + target.host);
-        }
-      }
-    }
-    if (workUnits != null) {
-      for (WorkUnit unit : workUnits) {
-        Preconditions.checkNotNull(unit, "workUnit cannot be null");
-        unit.validate();
-        if (!local) {
-          Preconditions.checkState(knownHostUUIDs.containsAll(unit.targets), "workUnit: " +
-              unit.name + " refers to a target host that does not exist");
-        }
-      }
-    }
   }
 
   @Override
@@ -390,10 +360,6 @@ public class AgentConfiguration {
     if (defaultUsername != null ? !defaultUsername.equals(that.defaultUsername) : that.defaultUsername != null)
       return false;
     if (name != null ? !name.equals(that.name) : that.name != null) return false;
-    if (targets != null ? !targets.equals(that.targets) : that.targets != null) return false;
-    if (workUnits != null ? !workUnits.equals(that.workUnits) : that.workUnits != null)
-      return false;
-
     return true;
   }
 
@@ -403,8 +369,6 @@ public class AgentConfiguration {
     result = 31 * result + (defaultUsername != null ? defaultUsername.hashCode() : 0);
     result = 31 * result + (defaultPublicKey != null ? defaultPublicKey.hashCode() : 0);
     result = 31 * result + (allowAnyHostKeys ? 1 : 0);
-    result = 31 * result + (targets != null ? targets.hashCode() : 0);
-    result = 31 * result + (workUnits != null ? workUnits.hashCode() : 0);
     return result;
   }
 }
