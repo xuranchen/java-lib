@@ -4,7 +4,7 @@
 
   <groupId>com.wavefront</groupId>
   <artifactId>javalib</artifactId>
-  <version>2020-02.3-SNAPSHOT</version>
+  <version>2020-03.1-SNAPSHOT</version>
   <modules>
     <module>java-lib</module>
     <module>yammer-metrics</module>
@@ -60,7 +60,6 @@
     <jackson.version>2.9.10</jackson.version>
     <jackson-databind.version>2.9.10.3</jackson-databind.version>
     <netty.version>4.1.45.Final</netty.version>
-    <public.project.version>2020-02.3-SNAPSHOT</public.project.version>
   </properties>
 
   <build>
@@ -99,7 +98,7 @@
       <dependency>
         <groupId>com.wavefront</groupId>
         <artifactId>java-lib</artifactId>
-        <version>${public.project.version}</version>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.guava</groupId>
