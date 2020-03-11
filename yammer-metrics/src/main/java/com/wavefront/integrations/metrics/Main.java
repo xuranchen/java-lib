@@ -30,9 +30,8 @@ public class Main {
     int secondaryPort = -1;
     int secondaryHistoPort = -1;
 
-    if (args.length == 4) {
+    if (args.length == 3) {
       secondaryPort = Integer.parseInt(args[2]);
-      secondaryHistoPort = Integer.parseInt(args[3]);
     }
 
     // Set up periodic reporting.
@@ -47,14 +46,12 @@ public class Main {
     WavefrontYammerHttpMetricsReporter httpMetricsReporter;
     WavefrontYammerHttpMetricsReporter.Builder builder = new WavefrontYammerHttpMetricsReporter.Builder().
         withName("wavefrontYammerHttpMetrics").
-        withHost("http://localhost").
-        withPorts(port, histoPort).
+        withEndpoint("http://localhost", port).
         withMetricsRegistry(httpMetricsRegistry).
         withTimeSupplier(System::currentTimeMillis);
 
     if (secondaryPort != -1 && secondaryHistoPort != -1) {
-      builder.withSecondaryHostname("http://localhost");
-      builder.withSecondaryPorts(secondaryPort, secondaryHistoPort);
+      builder.withSecondaryEndpoint("http://localhost", secondaryPort);
     }
 
     httpMetricsReporter = builder.build();

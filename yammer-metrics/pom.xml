@@ -46,6 +46,11 @@
             <artifactId>httpasyncclient</artifactId>
             <version>4.1.4</version>
         </dependency>
+        <dependency>
+            <groupId>com.wavefront</groupId>
+            <artifactId>wavefront-sdk-java</artifactId>
+            <version>1.16</version>
+        </dependency>
     </dependencies>
 
     <build>

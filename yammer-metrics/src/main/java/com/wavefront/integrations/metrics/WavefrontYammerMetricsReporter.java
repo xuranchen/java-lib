@@ -1,7 +1,6 @@
 package com.wavefront.integrations.metrics;
 
 import com.google.common.annotations.VisibleForTesting;
-
 import com.wavefront.common.MetricsToTimeseries;
 import com.wavefront.common.Pair;
 import com.wavefront.metrics.MetricTranslator;
@@ -15,6 +14,7 @@ import com.yammer.metrics.core.VirtualMachineMetrics;
 import com.yammer.metrics.core.WavefrontHistogram;
 import com.yammer.metrics.reporting.AbstractReporter;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,8 +24,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.annotation.Nullable;
 
 /**
  * @author Mori Bellamy (mori@wavefront.com)

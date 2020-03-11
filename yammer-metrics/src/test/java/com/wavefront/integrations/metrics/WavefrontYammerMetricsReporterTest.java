@@ -1,7 +1,6 @@
 package com.wavefront.integrations.metrics;
 
 import com.google.common.collect.Lists;
-
 import com.wavefront.common.Pair;
 import com.wavefront.common.TaggedMetricName;
 import com.wavefront.metrics.MetricTranslator;
@@ -13,7 +12,6 @@ import com.yammer.metrics.core.MetricName;
 import com.yammer.metrics.core.MetricsRegistry;
 import com.yammer.metrics.core.Timer;
 import com.yammer.metrics.core.WavefrontHistogram;
-
 import org.hamcrest.text.MatchesPattern;
 import org.junit.After;
 import org.junit.Before;

@@ -1,11 +1,17 @@
 package com.wavefront.integrations.metrics;
 
-import com.yammer.metrics.core.MetricsRegistry;
 import com.google.common.annotations.VisibleForTesting;
 import com.wavefront.common.MetricsToTimeseries;
 import com.wavefront.common.Pair;
 import com.wavefront.metrics.MetricTranslator;
-import com.yammer.metrics.core.*;
+import com.yammer.metrics.core.Clock;
+import com.yammer.metrics.core.Gauge;
+import com.yammer.metrics.core.Metric;
+import com.yammer.metrics.core.MetricName;
+import com.yammer.metrics.core.MetricsRegistry;
+import com.yammer.metrics.core.SafeVirtualMachineMetrics;
+import com.yammer.metrics.core.VirtualMachineMetrics;
+import com.yammer.metrics.core.WavefrontHistogram;
 import com.yammer.metrics.reporting.AbstractReporter;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.nio.reactor.IOReactorException;
@@ -45,78 +51,61 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
   public static class Builder {
     private MetricsRegistry metricsRegistry;
     private String name;
-
-    private int maxConnectionsPerRoute = 2;
+    private String defaultSource;
 
     // Primary
     private String hostname;
-    private int metricsPort;
-    private int histogramPort;
+    private int port;
 
     // Secondary
     private String secondaryHostname;
-    private int secondaryMetricsPort;
-    private int secondaryHistogramPort;
+    private int secondaryPort;
 
-    private Supplier<Long> timeSupplier;
+    private Supplier<Long> timeSupplier = System::currentTimeMillis;
     private boolean prependGroupName = false;
     private MetricTranslator metricTranslator = null;
     private boolean includeJvmMetrics = false;
     private boolean sendZeroCounters = false;
     private boolean sendEmptyHistograms = false;
     private boolean clear = false;
-    private int metricsQueueSize = 50_000;
-    private int metricsBatchSize = 10_000;
-    private int histogramQueueSize = 5_000;
-    private int histogramBatchSize = 1_000;
-    private boolean gzip = true;
+    private int queueSize = 50_000;
+    private int batchSize = 10_000;
 
     public Builder withMetricsRegistry(MetricsRegistry metricsRegistry) {
       this.metricsRegistry = metricsRegistry;
       return this;
     }
 
-    public Builder withHost(String hostname) {
-      this.hostname = hostname;
+    public Builder withName(String name) {
+      this.name = name;
       return this;
     }
 
-    public Builder withPorts(int metricsPort, int histogramPort) {
-      this.metricsPort = metricsPort;
-      this.histogramPort = histogramPort;
-      return this;
-    }
-
-    public Builder withSecondaryHostname(String hostname) {
-      this.secondaryHostname = hostname;
-      return this;
-    }
-
-    public Builder withSecondaryPorts(int metricsPort, int histogramPort) {
-      this.secondaryMetricsPort = metricsPort;
-      this.secondaryHistogramPort = histogramPort;
-      return this;
-    }
-
-    public Builder withMetricsQueueOptions(int batchSize, int queueSize) {
-      this.metricsBatchSize = batchSize;
-      this.metricsQueueSize = queueSize;
-      return this;
-    }
-
-    public Builder withHistogramQueueOptions(int batchSize, int queueSize) {
-      this.histogramBatchSize = batchSize;
-      this.histogramQueueSize = queueSize;
-      return this;
-    }
-
-    public Builder withMaxConnectionsPerRoute(int maxConnectionsPerRoute) {
-      this.maxConnectionsPerRoute = maxConnectionsPerRoute;
+    public Builder withDefaultSource(String defaultSource) {
+      this.defaultSource = defaultSource;
       return this;
     }
 
     public Builder withTimeSupplier(Supplier<Long> timeSupplier) {
       this.timeSupplier = timeSupplier;
+      return this;
+    }
+
+    public Builder withEndpoint(String hostname, int port) {
+      this.hostname = hostname;
+      this.port = port;
+      return this;
+    }
+
+    public Builder withSecondaryEndpoint(String hostname, int port) {
+      this.secondaryHostname = hostname;
+      this.secondaryPort = port;
+      return this;
+    }
+
+    public Builder withQueueOptions(int batchSize, int queueSize) {
+      this.batchSize = batchSize;
+      this.queueSize = queueSize;
       return this;
     }
 
@@ -140,11 +129,6 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
       return this;
     }
 
-    public Builder withName(String name) {
-      this.name = name;
-      return this;
-    }
-
     public Builder includeJvmMetrics(boolean include) {
       this.includeJvmMetrics = include;
       return this;
@@ -155,20 +139,12 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
       return this;
     }
 
-    public Builder withGZIPCompression(boolean gzip) {
-      this.gzip = gzip;
-      return this;
-    }
-
     public WavefrontYammerHttpMetricsReporter build() throws IOReactorException {
       if (StringUtils.isBlank(this.name)) {
         throw new IllegalArgumentException("Reporter must have a human readable name.");
       }
       if (StringUtils.isBlank(this.hostname)) {
         throw new IllegalArgumentException("Hostname may not be blank.");
-      }
-      if (timeSupplier == null) {
-        throw new IllegalArgumentException("Time Supplier must be specified.");
       }
       return new WavefrontYammerHttpMetricsReporter(this);
     }
@@ -180,23 +156,19 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
     this.executor = builder.metricsRegistry.newScheduledThreadPool(1, builder.name);
     this.metricTranslator = builder.metricTranslator;
     this.includeJvmMetrics = builder.includeJvmMetrics;
-
-    this.httpMetricsProcessor = new HttpMetricsProcessor.Builder().
-        withName(builder.name).
-        withHost(builder.hostname).
-        withPorts(builder.metricsPort, builder.histogramPort).
-        withSecondaryHostname(builder.secondaryHostname).
-        withSecondaryPorts(builder.secondaryMetricsPort, builder.secondaryHistogramPort).
-        withMetricsQueueOptions(builder.metricsBatchSize, builder.metricsQueueSize).
-        withHistogramQueueOptions(builder.histogramBatchSize, builder.histogramQueueSize).
-        withMaxConnectionsPerRoute(builder.maxConnectionsPerRoute).
-        withTimeSupplier(builder.timeSupplier).
+    HttpMetricsProcessor.Builder httpMetricsProcessorBuilder = new HttpMetricsProcessor.Builder().
+        withEndpoint(builder.hostname,builder.port).
         withPrependedGroupNames(builder.prependGroupName).
-        clearHistogramsAndTimers(builder.clear).
-        sendZeroCounters(builder.sendZeroCounters).
+        withQueueOptions(builder.batchSize,builder.queueSize).
         sendEmptyHistograms(builder.sendEmptyHistograms).
-        withGZIPCompression(builder.gzip).
-        build();
+        clearHistogramsAndTimers(builder.clear).
+        withTimeSupplier(builder.timeSupplier).
+        withDefaultSource(builder.defaultSource).
+        sendZeroCounters(builder.sendZeroCounters);
+    if (builder.secondaryHostname != null) {
+      httpMetricsProcessorBuilder.withSecondaryEndpoint(builder.secondaryHostname,builder.secondaryPort);
+    }
+    this.httpMetricsProcessor = httpMetricsProcessorBuilder.build();
     this.gaugeMap = new ConcurrentHashMap<>();
   }
 
@@ -272,7 +244,6 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
    * @throws InterruptedException if interrupted while waiting
    */
   public void shutdown(long timeout, TimeUnit unit) throws InterruptedException {
-    httpMetricsProcessor.shutdown(timeout,unit);
     executor.shutdown();
     executor.awaitTermination(timeout, unit);
     super.shutdown();
@@ -281,7 +252,6 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
   @Override
   public void shutdown() {
     executor.shutdown();
-    this.httpMetricsProcessor.shutdown();
     super.shutdown();
   }
 
@@ -290,14 +260,12 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
     metricsGeneratedLastPass.set(0);
     try {
       if (includeJvmMetrics) upsertJavaMetrics();
-
       // non-histograms go first
       getMetricsRegistry().allMetrics().entrySet().stream().filter(m -> !(m.getValue() instanceof WavefrontHistogram)).
           forEach(this::processEntry);
       // histograms go last
       getMetricsRegistry().allMetrics().entrySet().stream().filter(m -> m.getValue() instanceof WavefrontHistogram).
           forEach(this::processEntry);
-
     } catch (Exception e) {
       logger.log(Level.SEVERE, "Cannot report point to Wavefront! Trying again next iteration.", e);
     }
@@ -318,5 +286,12 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+  }
+
+  /**
+   * Force metrics enqueued for sending to be flushed immediately
+   */
+  public void flush() {
+    this.httpMetricsProcessor.flush();
   }
 }
