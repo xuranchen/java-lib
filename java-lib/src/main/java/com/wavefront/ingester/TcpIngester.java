@@ -55,12 +55,12 @@ public class TcpIngester extends Ingester {
     Class<? extends ServerChannel> socketChannelClass;
     if (Epoll.isAvailable()) {
       logger.fine("Using native socket transport for port " + listeningPort);
-      parentGroup = new EpollEventLoopGroup(1);
+      parentGroup = new EpollEventLoopGroup();
       childGroup = new EpollEventLoopGroup();
       socketChannelClass = EpollServerSocketChannel.class;
     } else {
       logger.fine("Using NIO socket transport for port " + listeningPort);
-      parentGroup = new NioEventLoopGroup(1);
+      parentGroup = new NioEventLoopGroup();
       childGroup = new NioEventLoopGroup();
       socketChannelClass = NioServerSocketChannel.class;
     }
