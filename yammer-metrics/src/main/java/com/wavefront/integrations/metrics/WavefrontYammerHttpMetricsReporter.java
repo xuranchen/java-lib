@@ -266,6 +266,9 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
       // histograms go last
       getMetricsRegistry().allMetrics().entrySet().stream().filter(m -> m.getValue() instanceof WavefrontHistogram).
           forEach(this::processEntry);
+
+      // Because we're not running the WavefrontSender as a "Runnable" we manage the flushing of it manually here
+      flush();
     } catch (Exception e) {
       logger.log(Level.SEVERE, "Cannot report point to Wavefront! Trying again next iteration.", e);
     }
