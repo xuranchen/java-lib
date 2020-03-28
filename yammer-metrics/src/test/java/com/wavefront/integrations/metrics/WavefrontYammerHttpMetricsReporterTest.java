@@ -41,6 +41,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.GZIPInputStream;
@@ -277,7 +279,51 @@ public class WavefrontYammerHttpMetricsReporterTest {
   }
 
   @Test(timeout = 2000)
+  public void testWavefrontHistogramThreaded() throws Exception {
+    AtomicLong clock = new AtomicLong(System.currentTimeMillis());
+    long timeBin = (clock.get() / 60000 * 60);
+    final WavefrontHistogram wavefrontHistogram = WavefrontHistogram.get(metricsRegistry, new TaggedMetricName(
+        "group", "myhisto", "tag1", "value1", "tag2", "value2"), 32, clock::get);
+
+    ThreadPoolExecutor e = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+    e.execute(() -> {
+      for (int i = 0; i < 500; i++) {
+        int[] samples = {100, 66, 37, 8, 7, 5, 1};
+        for (int sample : samples) {
+          if (i % sample == 0) {
+            wavefrontHistogram.update(sample);
+            break;
+          }
+        }
+      }
+    });
+    for (int i = 0; i < 500; i++) {
+      int[] samples = {100, 66, 37, 8, 7, 5, 1};
+      for (int sample : samples) {
+        if (i % sample == 0) {
+          wavefrontHistogram.update(sample);
+          break;
+        }
+      }
+    }
+    while (e.getActiveCount() > 0) {}
+
+    // Advance the clock by 1 min ...
+    clock.addAndGet(60000L + 1);
+
+    runReporter();
+    assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGeneratedLastPass()));
+    assertThat(inputMetrics, contains(
+        equalTo("!M " + timeBin +
+            " #574 1.0 #138 5.0 #122 7.0 #116 8.0 #26 37.0 #14 66.0 #10 100.0 \"myhisto\" source=\"test\" " +
+            "\"tag1\"=\"value1\" \"tag2\"=\"value2\"")
+    ));
+  }
+
+  @Test
   public void testWavefrontHistogram() throws Exception {
+    tearDown();
+    innerSetUp(false, null,false,true);
     AtomicLong clock = new AtomicLong(System.currentTimeMillis());
     long timeBin = (clock.get() / 60000 * 60);
     WavefrontHistogram wavefrontHistogram = WavefrontHistogram.get(metricsRegistry, new TaggedMetricName(
@@ -295,6 +341,24 @@ public class WavefrontYammerHttpMetricsReporterTest {
     // Advance the clock by 1 min ...
     clock.addAndGet(60000L + 1);
 
+    runReporter();
+    assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGeneratedLastPass()));
+    assertThat(inputMetrics, contains(equalTo("!M " + timeBin +
+        " #287 1.0 #69 5.0 #61 7.0 #58 8.0 #13 37.0 #7 66.0 #5 100.0 \"myhisto\" source=\"test\" " +
+        "\"tag1\"=\"value1\" \"tag2\"=\"value2\"")));
+
+    timeBin = (clock.get() / 60000 * 60);
+    for (int i = 0; i < 500; i++) {
+      int[] samples = {100, 66, 37, 8, 7, 5, 1};
+      for (int sample : samples) {
+        if (i % sample == 0) {
+          wavefrontHistogram.update(sample);
+          break;
+        }
+      }
+    }
+    // Advance the clock by 1 min ...
+    clock.addAndGet(60000L + 1);
     runReporter();
     assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGeneratedLastPass()));
     assertThat(inputMetrics, contains(equalTo("!M " + timeBin +
@@ -467,5 +531,6 @@ public class WavefrontYammerHttpMetricsReporterTest {
   private void runReporter() throws InterruptedException {
     inputMetrics.clear();
     wavefrontYammerHttpMetricsReporter.run();
+    wavefrontYammerHttpMetricsReporter.flush();
   }
 }

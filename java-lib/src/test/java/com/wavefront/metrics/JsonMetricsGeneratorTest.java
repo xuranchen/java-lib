@@ -188,7 +188,7 @@ public class JsonMetricsGeneratorTest {
     time.set(61 * 1000 * 2);
     String json = generate(false, false, false, null);
 
-    assertThat(json).isEqualTo("{\"test.metric\":{\"bins\":[{\"count\":2,\"startMillis\":0,\"durationMillis\":60000,\"means\":[10.0,100.0],\"counts\":[1,1]},{\"count\":1,\"startMillis\":60000,\"durationMillis\":60000,\"means\":[1000.0],\"counts\":[1]}]}}");
+    assertThat(json).isEqualTo("{\"test.metric\":{\"bins\":[{\"count\":1,\"startMillis\":60000,\"durationMillis\":60000,\"means\":[1000.0],\"counts\":[1]},{\"count\":2,\"startMillis\":0,\"durationMillis\":60000,\"means\":[10.0,100.0],\"counts\":[1,1]}]}}");
   }
 
   @Test

@@ -492,5 +492,6 @@ public class WavefrontYammerHttpMetricsReporterSecondaryTest {
   private void runReporter() throws InterruptedException {
     inputMetrics.clear();
     wavefrontYammerHttpMetricsReporter.run();
+    wavefrontYammerHttpMetricsReporter.flush();
   }
 }

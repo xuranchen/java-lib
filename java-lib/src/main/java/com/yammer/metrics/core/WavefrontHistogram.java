@@ -1,7 +1,6 @@
 package com.yammer.metrics.core;
 
 import com.google.common.annotations.VisibleForTesting;
-
 import com.tdunning.math.stats.AVLTreeDigest;
 import com.tdunning.math.stats.Centroid;
 import com.tdunning.math.stats.TDigest;
@@ -9,18 +8,15 @@ import com.yammer.metrics.Metrics;
 import com.yammer.metrics.stats.Sample;
 import com.yammer.metrics.stats.Snapshot;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
-import static com.google.common.collect.Iterables.getFirst;
-import static com.google.common.collect.Iterables.getLast;
-import static java.lang.Double.MAX_VALUE;
-import static java.lang.Double.MIN_VALUE;
 import static java.lang.Double.NaN;
 
 /**
@@ -83,10 +79,13 @@ public class WavefrontHistogram extends Histogram implements Metric {
    * @return returns aggregated collection of all the bins prior to the current minute
    */
   public List<MinuteBin> bins(boolean clear) {
-    List<MinuteBin> result = new ArrayList<>();
     final long cutoffMillis = minMillis();
-    perThreadHistogramBins.values().stream().flatMap(List::stream).
-        filter(i -> i.getMinMillis() < cutoffMillis).forEach(result::add);
+    List<MinuteBin> result = perThreadHistogramBins.values().stream().flatMap(List::stream).
+        filter(i -> i.getMinMillis() < cutoffMillis).
+        collect(Collectors.groupingBy(MinuteBin::getMinMillis,
+            Collectors.reducing((a, b) -> { a.getDist().add(b.getDist()); return a; }))).
+        values().stream().filter(Optional::isPresent).map(Optional::get).
+        collect(Collectors.toList());
 
     if (clear) {
       clearPriorCurrentMinuteBin(cutoffMillis);

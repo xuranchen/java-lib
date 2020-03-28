@@ -157,11 +157,11 @@ public class HttpMetricsProcessor extends WavefrontMetricsProcessor {
       List<WavefrontHistogram.MinuteBin> bins = histogram.bins(clear);
       if (bins.isEmpty()) return;
 
-      List<Pair<Double, Integer>> centroids = new ArrayList<>();
       Set<HistogramGranularity> granularities = new HashSet<>();
       granularities.add(HistogramGranularity.MINUTE);
       long timestamp;
       for (WavefrontHistogram.MinuteBin bin : bins) {
+        List<Pair<Double, Integer>> centroids = new ArrayList<>();
         timestamp = bin.getMinMillis() / 1000;
         Centroid accumulator = null;
         for (Centroid c : bin.getDist().centroids()) {
@@ -181,8 +181,6 @@ public class HttpMetricsProcessor extends WavefrontMetricsProcessor {
         }
         wavefrontSender.sendDistribution(getName(name), centroids, granularities, timestamp, defaultSource, tags);
       }
-
-
     } catch (IOException ex) {
       log.log(Level.SEVERE, "Unable to forward histogram to the wavefront service", ex);
     }

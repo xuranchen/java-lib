@@ -266,28 +266,25 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
       // histograms go last
       getMetricsRegistry().allMetrics().entrySet().stream().filter(m -> m.getValue() instanceof WavefrontHistogram).
           forEach(this::processEntry);
-
-      // Because we're not running the WavefrontSender as a "Runnable" we manage the flushing of it manually here
-      flush();
     } catch (Exception e) {
       logger.log(Level.SEVERE, "Cannot report point to Wavefront! Trying again next iteration.", e);
     }
   }
 
   private void processEntry(Map.Entry<MetricName, Metric> entry) {
+    MetricName metricName = entry.getKey();
+    Metric metric = entry.getValue();
+    if (metricTranslator != null) {
+      Pair<MetricName, Metric> pair = metricTranslator.apply(Pair.of(metricName, metric));
+      if (pair == null) return;
+      metricName = pair._1;
+      metric = pair._2;
+    }
     try {
-      MetricName metricName = entry.getKey();
-      Metric metric = entry.getValue();
-      if (metricTranslator != null) {
-        Pair<MetricName, Metric> pair = metricTranslator.apply(Pair.of(metricName, metric));
-        if (pair == null) return;
-        metricName = pair._1;
-        metric = pair._2;
-      }
       metric.processWith(httpMetricsProcessor, metricName, null);
       metricsGeneratedLastPass.incrementAndGet();
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      throw new RuntimeException("Unable to process entry provided and pass to the metrics processor", e);
     }
   }
 
