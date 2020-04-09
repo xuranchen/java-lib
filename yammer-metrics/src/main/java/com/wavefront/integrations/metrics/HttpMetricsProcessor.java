@@ -4,8 +4,7 @@ import com.tdunning.math.stats.Centroid;
 import com.wavefront.common.TaggedMetricName;
 import com.wavefront.sdk.common.Pair;
 import com.wavefront.sdk.common.WavefrontSender;
-import com.wavefront.sdk.common.clients.WavefrontMultiClient;
-import com.wavefront.sdk.direct.ingestion.WavefrontDirectIngestionClient;
+import com.wavefront.sdk.common.clients.WavefrontClientFactory;
 import com.wavefront.sdk.entities.histograms.HistogramGranularity;
 import com.yammer.metrics.core.MetricName;
 import com.yammer.metrics.core.WavefrontHistogram;
@@ -113,21 +112,16 @@ public class HttpMetricsProcessor extends WavefrontMetricsProcessor {
     this.timeSupplier = builder.timeSupplier;
     this.defaultSource = builder.defaultSource;
 
-    WavefrontMultiClient.Builder<WavefrontDirectIngestionClient> wmc = new WavefrontMultiClient.Builder<>();
-    WavefrontDirectIngestionClient primaryIngestionClient = new WavefrontDirectIngestionClient.Builder(
-        "http://" + builder.hostname + ":" + builder.metricsPort, "").
-        batchSize(builder.batchSize).
-        maxQueueSize(builder.queueSize).
-        build();
-    wmc.withWavefrontSender(primaryIngestionClient);
+    WavefrontClientFactory factory = new WavefrontClientFactory();
+    factory.addClient(
+        "proxy://" + builder.hostname + ":" + builder.metricsPort,
+        builder.batchSize, builder.queueSize, null);
+
     if (builder.secondaryHostname != null) {
-      wmc.withWavefrontSender(new WavefrontDirectIngestionClient.Builder(
-          "http://" + builder.secondaryHostname + ":" + builder.secondaryPort, "").
-          batchSize(builder.queueSize).
-          maxQueueSize(builder.batchSize).
-          build());
+      factory.addClient("proxy://" + builder.secondaryHostname + ":" + builder.secondaryPort,
+          builder.batchSize, builder.queueSize, null);
     }
-    this.wavefrontSender = wmc.build();
+    this.wavefrontSender = factory.getClient();
   }
 
   @Override

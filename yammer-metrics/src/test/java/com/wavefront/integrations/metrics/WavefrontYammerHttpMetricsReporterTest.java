@@ -47,6 +47,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.GZIPInputStream;
 
+import static junit.framework.TestCase.assertEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -68,7 +69,7 @@ public class WavefrontYammerHttpMetricsReporterTest {
   private Long stubbedTime = 1485224035000L;
 
   private void innerSetUp(boolean prependGroupName, MetricTranslator metricTranslator,
-                          boolean includeJvmMetrics, boolean clear) throws IOException {
+                          boolean includeJvmMetrics, boolean includeReporterMetrics, boolean clear) throws IOException {
 
     metricsRegistry = new MetricsRegistry();
     inputMetrics = new ArrayList<>();
@@ -142,13 +143,14 @@ public class WavefrontYammerHttpMetricsReporterTest {
         withPrependedGroupNames(prependGroupName).
         clearHistogramsAndTimers(clear).
         includeJvmMetrics(includeJvmMetrics).
+        includeReporterMetrics(includeReporterMetrics).
         withDefaultSource("test").
         build();
   }
 
   @Before
   public void setUp() throws Exception {
-    innerSetUp(false, null, false, false);
+    innerSetUp(false, null, false, false, false);
   }
 
   @After
@@ -162,7 +164,7 @@ public class WavefrontYammerHttpMetricsReporterTest {
 
   @Test(timeout = 2000)
   public void testJvmMetrics() throws Exception {
-    innerSetUp(true, null, true, false);
+    innerSetUp(true, null, true, false, false);
     runReporter();
     assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGeneratedLastPass()));
     assertThat(inputMetrics, not(hasItem(MatchesPattern.matchesPattern("\".* .*\".* source=\"test\""))));
@@ -171,6 +173,31 @@ public class WavefrontYammerHttpMetricsReporterTest {
     assertThat(inputMetrics, hasItem(startsWith("\"jvm.buffers.mapped.totalCapacity\"")));
     assertThat(inputMetrics, hasItem(startsWith("\"jvm.buffers.direct.totalCapacity\"")));
     assertThat(inputMetrics, hasItem(startsWith("\"jvm.thread-states.runnable\"")));
+  }
+
+  @Test(timeout = 2000)
+  public void testReporterMetrics() throws Exception {
+    innerSetUp(true, null, false, true, false);
+    runReporter();
+    assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGeneratedLastPass()));
+    assertThat(inputMetrics, not(hasItem(MatchesPattern.matchesPattern("\".* .*\".* source=\"test\""))));
+    assertThat(inputMetrics, hasItem(startsWith("\"java-lib.metrics.http.yammer-metrics.failed\"")));
+    assertThat(inputMetrics, hasItem(startsWith("\"java-lib.metrics.http.yammer-metrics.generated\"")));
+  }
+
+  @Test(timeout = 2000)
+  public void testSendPartialBundle() throws Exception {
+    innerSetUp(true, null, false, true, false);
+    TaggedMetricName taggedMetricName = new TaggedMetricName("group", "mycounter",
+        "tag1", "value1", "tag2", "");
+    Counter counter = metricsRegistry.newCounter(taggedMetricName);
+    counter.inc();
+    runReporter();
+    assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGeneratedLastPass()));
+    assertEquals(1, wavefrontYammerHttpMetricsReporter.getMetricsFailedToSend());
+    assertThat(inputMetrics, not(hasItem(MatchesPattern.matchesPattern("\".* .*\".* source=\"test\""))));
+    assertThat(inputMetrics, hasItem(startsWith("\"java-lib.metrics.http.yammer-metrics.failed\"")));
+    assertThat(inputMetrics, hasItem(startsWith("\"java-lib.metrics.http.yammer-metrics.generated\"")));
   }
 
   @Test(timeout = 2000)
@@ -186,7 +213,7 @@ public class WavefrontYammerHttpMetricsReporterTest {
   @Test(timeout = 2000)
   public void testTransformer() throws Exception {
     innerSetUp(false, pair -> Pair.of(new TaggedMetricName(
-        pair._1.getGroup(), pair._1.getName(), "tagA", "valueA"), pair._2), false, false);
+        pair._1.getGroup(), pair._1.getName(), "tagA", "valueA"), pair._2), false, false, false);
     TaggedMetricName taggedMetricName = new TaggedMetricName("group", "mycounter",
         "tag1", "value1", "tag2", "value2");
     Counter counter = metricsRegistry.newCounter(taggedMetricName);
@@ -215,7 +242,7 @@ public class WavefrontYammerHttpMetricsReporterTest {
 
   @Test(timeout = 2000)
   public void testPlainHistogramWithClear() throws Exception {
-    innerSetUp(false, null, false, true /* clear */);
+    innerSetUp(false, null, false, false, true);
     Histogram histogram = metricsRegistry.newHistogram(WavefrontYammerMetricsReporterTest.class, "myhisto");
     histogram.update(1);
     histogram.update(10);
@@ -241,7 +268,7 @@ public class WavefrontYammerHttpMetricsReporterTest {
 
   @Test(timeout = 2000)
   public void testPlainHistogramWithoutClear() throws Exception {
-    innerSetUp(false, null, false, false /* clear */);
+    innerSetUp(false, null, false, false, false);
     Histogram histogram = metricsRegistry.newHistogram(WavefrontYammerMetricsReporterTest.class, "myhisto");
     histogram.update(1);
     histogram.update(10);
@@ -323,7 +350,7 @@ public class WavefrontYammerHttpMetricsReporterTest {
   @Test
   public void testWavefrontHistogram() throws Exception {
     tearDown();
-    innerSetUp(false, null,false,true);
+    innerSetUp(false, null,false,false, true);
     AtomicLong clock = new AtomicLong(System.currentTimeMillis());
     long timeBin = (clock.get() / 60000 * 60);
     WavefrontHistogram wavefrontHistogram = WavefrontHistogram.get(metricsRegistry, new TaggedMetricName(
@@ -397,7 +424,7 @@ public class WavefrontYammerHttpMetricsReporterTest {
 
   @Test(timeout = 2000)
   public void testTimerWithClear() throws Exception {
-    innerSetUp(false, null, false, true /* clear */);
+    innerSetUp(false, null, false, false, true);
     Timer timer = metricsRegistry.newTimer(new TaggedMetricName("", "mytimer", "foo", "bar"),
         TimeUnit.SECONDS, TimeUnit.SECONDS);
     timer.time().stop();
@@ -428,7 +455,7 @@ public class WavefrontYammerHttpMetricsReporterTest {
 
   @Test(timeout = 2000)
   public void testPlainTimerWithoutClear() throws Exception {
-    innerSetUp(false, null, false, false /* clear */);
+    innerSetUp(false, null, false, false, false);
     Timer timer = metricsRegistry.newTimer(WavefrontYammerMetricsReporterTest.class, "mytimer");
     timer.time().stop();
     runReporter();
@@ -475,7 +502,7 @@ public class WavefrontYammerHttpMetricsReporterTest {
 
   @Test(timeout = 2000)
   public void testPrependGroupName() throws Exception {
-    innerSetUp(true, null, false, false);
+    innerSetUp(true, null, false, false, false);
 
     // Counter
     TaggedMetricName taggedMetricName = new TaggedMetricName("group", "mycounter",

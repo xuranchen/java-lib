@@ -165,6 +165,7 @@ public class WavefrontYammerHttpMetricsReporterSecondaryTest {
         withPrependedGroupNames(prependGroupName).
         clearHistogramsAndTimers(clear).
         includeJvmMetrics(includeJvmMetrics).
+        includeReporterMetrics(false).
         withDefaultSource("test2").
         build();
   }

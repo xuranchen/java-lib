@@ -16,6 +16,7 @@ import com.yammer.metrics.reporting.AbstractReporter;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.nio.reactor.IOReactorException;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
@@ -39,6 +40,7 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
   private final ScheduledExecutorService executor;
 
   private final boolean includeJvmMetrics;
+  private final boolean includeReporterMetrics;
   private final ConcurrentHashMap<String, Double> gaugeMap;
   private final MetricTranslator metricTranslator;
   private final HttpMetricsProcessor httpMetricsProcessor;
@@ -46,7 +48,12 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
   /**
    * How many metrics were emitted in the last call to run()
    */
-  private AtomicInteger metricsGeneratedLastPass = new AtomicInteger();
+  private final AtomicInteger metricsGeneratedLastPass = new AtomicInteger();
+
+  /**
+   * How many metrics were attempted but failed in the last call to run()
+   */
+  private final AtomicInteger metricsFailedToSend = new AtomicInteger();
 
   public static class Builder {
     private MetricsRegistry metricsRegistry;
@@ -65,6 +72,7 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
     private boolean prependGroupName = false;
     private MetricTranslator metricTranslator = null;
     private boolean includeJvmMetrics = false;
+    private boolean includeReporterMetrics = true;
     private boolean sendZeroCounters = false;
     private boolean sendEmptyHistograms = false;
     private boolean clear = false;
@@ -134,6 +142,11 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
       return this;
     }
 
+    public Builder includeReporterMetrics(boolean include) {
+      this.includeReporterMetrics = include;
+      return this;
+    }
+
     public Builder withMetricTranslator(MetricTranslator metricTranslator) {
       this.metricTranslator = metricTranslator;
       return this;
@@ -156,6 +169,7 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
     this.executor = builder.metricsRegistry.newScheduledThreadPool(1, builder.name);
     this.metricTranslator = builder.metricTranslator;
     this.includeJvmMetrics = builder.includeJvmMetrics;
+    this.includeReporterMetrics = builder.includeReporterMetrics;
     HttpMetricsProcessor.Builder httpMetricsProcessorBuilder = new HttpMetricsProcessor.Builder().
         withEndpoint(builder.hostname,builder.port).
         withPrependedGroupNames(builder.prependGroupName).
@@ -206,12 +220,27 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
     }
   }
 
+  private void upsertReporterMetrics() {
+    Map<String, Double> gauges = new HashMap<>();
+    gauges.put("yammer-metrics.failed", metricsFailedToSend.doubleValue());
+    gauges.put("yammer-metrics.generated", metricsGeneratedLastPass.doubleValue());
+    upsertGauges("java-lib.metrics.http", gauges);
+  }
+
   /**
    * @return How many metrics were processed during the last call to {@link #run()}.
    */
   @VisibleForTesting
   int getMetricsGeneratedLastPass() {
     return metricsGeneratedLastPass.get();
+  }
+
+  /**
+   * @return How many metrics were failed to be processed during the last call to {@link #run()}.
+   */
+  @VisibleForTesting
+  int getMetricsFailedToSend() {
+    return metricsFailedToSend.get();
   }
 
   /**
@@ -258,17 +287,14 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
   @Override
   public void run() {
     metricsGeneratedLastPass.set(0);
-    try {
-      if (includeJvmMetrics) upsertJavaMetrics();
-      // non-histograms go first
-      getMetricsRegistry().allMetrics().entrySet().stream().filter(m -> !(m.getValue() instanceof WavefrontHistogram)).
-          forEach(this::processEntry);
-      // histograms go last
-      getMetricsRegistry().allMetrics().entrySet().stream().filter(m -> m.getValue() instanceof WavefrontHistogram).
-          forEach(this::processEntry);
-    } catch (Exception e) {
-      logger.log(Level.SEVERE, "Cannot report point to Wavefront! Trying again next iteration.", e);
-    }
+    if (includeJvmMetrics) upsertJavaMetrics();
+    if (includeReporterMetrics) upsertReporterMetrics();
+    // non-histograms go first
+    getMetricsRegistry().allMetrics().entrySet().stream().filter(m -> !(m.getValue() instanceof WavefrontHistogram)).
+        forEach(this::processEntry);
+    // histograms go last
+    getMetricsRegistry().allMetrics().entrySet().stream().filter(m -> m.getValue() instanceof WavefrontHistogram).
+        forEach(this::processEntry);
   }
 
   private void processEntry(Map.Entry<MetricName, Metric> entry) {
@@ -284,7 +310,8 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
       metric.processWith(httpMetricsProcessor, metricName, null);
       metricsGeneratedLastPass.incrementAndGet();
     } catch (Exception e) {
-      throw new RuntimeException("Unable to process entry provided and pass to the metrics processor", e);
+      metricsFailedToSend.incrementAndGet();
+      logger.log(Level.WARNING, "Unable to process entry and pass to the metrics processor", e);
     }
   }
 
