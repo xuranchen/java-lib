@@ -126,7 +126,7 @@ public class WavefrontYammerMetricsReporterTest {
     wavefrontYammerMetricsReporter.run();
     assertThat(
         receiveFromSocket(1, fromMetrics),
-        contains(equalTo("\"mycounter\" 2.0 1485224035 tagA=\"valueA\"")));
+        contains(equalTo("\"mycounter\" 2.0 1485224035 \"tagA\"=\"valueA\"")));
   }
 
   @Test(timeout = 1000)
@@ -139,7 +139,7 @@ public class WavefrontYammerMetricsReporterTest {
     wavefrontYammerMetricsReporter.run();
     assertThat(
         receiveFromSocket(1, fromMetrics),
-        contains(equalTo("\"mycounter\" 2.0 1485224035 tag1=\"value1\" tag2=\"value2\"")));
+        contains(equalTo("\"mycounter\" 2.0 1485224035 \"tag1\"=\"value1\" \"tag2\"=\"value2\"")));
   }
 
   @Test(timeout = 1000)
@@ -224,7 +224,7 @@ public class WavefrontYammerMetricsReporterTest {
     wavefrontYammerMetricsReporter.run();
     assertThat(receiveFromSocket(1, fromHistograms), contains(equalTo("!M " + timeBin +
         " #287 1.0 #69 5.0 #61 7.0 #58 8.0 #13 37.0 #7 66.0 #5 100.0 \"myhisto\" " +
-        "tag1=\"value1\" tag2=\"value2\"")));
+        "\"tag1\"=\"value1\" \"tag2\"=\"value2\"")));
   }
 
   @Test(timeout = 1000)
@@ -263,7 +263,7 @@ public class WavefrontYammerMetricsReporterTest {
     timer.time().stop();
     wavefrontYammerMetricsReporter.run();
     assertThat(receiveFromSocket(15, fromMetrics), containsInAnyOrder(
-        equalTo("\"mytimer.rate.count\" 1.0 1485224035 foo=\"bar\""),
+        equalTo("\"mytimer.rate.count\" 1.0 1485224035 \"foo\"=\"bar\""),
         startsWith("\"mytimer.duration.min\""),
         startsWith("\"mytimer.duration.max\""),
         startsWith("\"mytimer.duration.mean\""),
@@ -281,7 +281,8 @@ public class WavefrontYammerMetricsReporterTest {
     ));
 
     wavefrontYammerMetricsReporter.run();
-    assertThat(receiveFromSocket(15, fromMetrics), hasItem("\"mytimer.rate.count\" 0.0 1485224035 foo=\"bar\""));
+    assertThat(receiveFromSocket(15, fromMetrics), hasItem("\"mytimer.rate.count\" 0.0 1485224035" +
+        " \"foo\"=\"bar\""));
   }
 
   @Test(timeout = 1000)
@@ -367,7 +368,7 @@ public class WavefrontYammerMetricsReporterTest {
     assertThat(
         receiveFromSocket(12, fromMetrics),
         containsInAnyOrder(
-            equalTo("\"group.mycounter\" 2.0 1485224035 tag1=\"value1\" tag2=\"value2\""),
+            equalTo("\"group.mycounter\" 2.0 1485224035 \"tag1\"=\"value1\" \"tag2\"=\"value2\""),
             equalTo("\"group2.myhisto.count\" 2.0 1485224035"),
             equalTo("\"group2.myhisto.min\" 1.0 1485224035"),
             equalTo("\"group2.myhisto.max\" 10.0 1485224035"),
@@ -384,7 +385,7 @@ public class WavefrontYammerMetricsReporterTest {
         receiveFromSocket(1, fromHistograms),
         contains(equalTo("!M " + timeBin +
             " #287 1.0 #69 5.0 #61 7.0 #58 8.0 #13 37.0 #7 66.0 #5 100.0 \"group3.myhisto\" " +
-            "tag1=\"value1\" tag2=\"value2\"")));
+            "\"tag1\"=\"value1\" \"tag2\"=\"value2\"")));
   }
 
 }

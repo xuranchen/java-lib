@@ -2,6 +2,7 @@ package com.wavefront.integrations.metrics;
 
 import com.tdunning.math.stats.Centroid;
 import com.wavefront.common.MetricsToTimeseries;
+import com.wavefront.common.SerializerUtils;
 import com.wavefront.common.TaggedMetricName;
 import com.yammer.metrics.core.Counter;
 import com.yammer.metrics.core.DeltaCounter;
@@ -76,8 +77,10 @@ abstract class WavefrontMetricsProcessor implements MetricProcessor<Void> {
     if (nameSuffix != null && !nameSuffix.equals(""))
       sb.append(".").append(nameSuffix);
 
-    String tags = tagsForMetricName(name);
-    sb.append("\" ").append(value).append(" ").append(timeSupplier.get() / 1000).append(tags);
+    sb.append("\" ").append(value).append(" ").append(timeSupplier.get() / 1000);
+    if (name instanceof TaggedMetricName) {
+      SerializerUtils.appendTagMap(sb, ((TaggedMetricName) name).getTags());
+    }
     return sb.append("\n").toString();
   }
 
@@ -88,17 +91,17 @@ abstract class WavefrontMetricsProcessor implements MetricProcessor<Void> {
    */
   List<String> toWavefrontHistogramLines(MetricName name, WavefrontHistogram histogram) {
     List<WavefrontHistogram.MinuteBin> bins = histogram.bins(clear);
-
     if (bins.isEmpty()) return Collections.emptyList();
-
     List<String> histogramLines = new ArrayList<>();
-    String tags = tagsForMetricName(name);
-
     for (WavefrontHistogram.MinuteBin minuteBin : bins) {
       StringBuilder sb = new StringBuilder();
       sb.append("!M ").append(minuteBin.getMinMillis() / 1000);
       appendCompactedCentroids(sb, minuteBin.getDist().centroids());
-      sb.append(" \"").append(getName(name)).append("\"").append(tags).append("\n");
+      sb.append(" \"").append(getName(name)).append("\"");
+      if (name instanceof TaggedMetricName) {
+        SerializerUtils.appendTagMap(sb, ((TaggedMetricName) name).getTags());
+      }
+      sb.append("\n");
       histogramLines.add(sb.toString());
     }
     return histogramLines;
@@ -110,19 +113,7 @@ abstract class WavefrontMetricsProcessor implements MetricProcessor<Void> {
    * @return           A single string entity containing all of the wavefront histogram data.
    */
   String toBatchedWavefrontHistogramLines(MetricName name, WavefrontHistogram histogram) {
-    List<WavefrontHistogram.MinuteBin> bins = histogram.bins(clear);
-
-    if (bins.isEmpty()) return "";
-
-    String tags = tagsForMetricName(name);
-
-    StringBuilder sb = new StringBuilder();
-    for (WavefrontHistogram.MinuteBin minuteBin : bins) {
-      sb.append("!M ").append(minuteBin.getMinMillis() / 1000);
-      appendCompactedCentroids(sb, minuteBin.getDist().centroids());
-      sb.append(" \"").append(getName(name)).append("\"").append(tags).append("\n");
-    }
-    return sb.toString();
+    return String.join("\n", toWavefrontHistogramLines(name, histogram));
   }
 
   private static void appendCompactedCentroids(StringBuilder sb, Collection<Centroid> centroids) {
@@ -162,17 +153,6 @@ abstract class WavefrontMetricsProcessor implements MetricProcessor<Void> {
     }
   }
 
-  /**
-   * @return " k1=v1 k2=v2 ..." if metricName is an instance of TaggedMetricName. "" otherwise.
-   */
-  private String tagsForMetricName(MetricName name) {
-    if (name instanceof TaggedMetricName) {
-      TaggedMetricName taggedMetricName = (TaggedMetricName) name;
-      return tagsToLineFormat(taggedMetricName.getTags());
-    }
-    return "";
-  }
-
   String getName(MetricName name) {
     if (prependGroupName && name.getGroup() != null && !name.getGroup().equals("")) {
       return sanitize(name.getGroup() + "." + name.getName());
@@ -188,16 +168,6 @@ abstract class WavefrontMetricsProcessor implements MetricProcessor<Void> {
     if (!clear) return;
     if (histogram != null) histogram.clear();
     if (timer != null) timer.clear();
-  }
-
-  private String tagsToLineFormat(Map<String, String> tags) {
-    if (tags.isEmpty()) return "";
-
-    StringBuilder sb = new StringBuilder();
-    for (Map.Entry<String, String> entry : tags.entrySet()) {
-      sb.append(" ").append(entry.getKey()).append("=\"").append(entry.getValue()).append("\"");
-    }
-    return sb.toString();
   }
 
   @Override

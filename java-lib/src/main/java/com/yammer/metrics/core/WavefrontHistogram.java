@@ -8,10 +8,10 @@ import com.yammer.metrics.Metrics;
 import com.yammer.metrics.stats.Sample;
 import com.yammer.metrics.stats.Snapshot;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
@@ -80,12 +80,15 @@ public class WavefrontHistogram extends Histogram implements Metric {
    */
   public List<MinuteBin> bins(boolean clear) {
     final long cutoffMillis = minMillis();
-    List<MinuteBin> result = perThreadHistogramBins.values().stream().flatMap(List::stream).
+    List<MinuteBin> result =
+        new ArrayList<>(perThreadHistogramBins.values().stream().flatMap(List::stream).
         filter(i -> i.getMinMillis() < cutoffMillis).
         collect(Collectors.groupingBy(MinuteBin::getMinMillis,
-            Collectors.reducing((a, b) -> { a.getDist().add(b.getDist()); return a; }))).
-        values().stream().filter(Optional::isPresent).map(Optional::get).
-        collect(Collectors.toList());
+            Collectors.reducing(null, (a, b) -> {
+              MinuteBin minuteBin = a == null ? new MinuteBin(b.getMinMillis(), compression) : a;
+              minuteBin.getDist().add(b.getDist());
+              return minuteBin;
+            }))).values());
 
     if (clear) {
       clearPriorCurrentMinuteBin(cutoffMillis);
@@ -121,14 +124,8 @@ public class WavefrontHistogram extends Histogram implements Metric {
    */
   private MinuteBin getCurrent() {
     long key = Thread.currentThread().getId();
-    LinkedList<MinuteBin> bins = perThreadHistogramBins.get(key);
-    if (bins == null) {
-      bins = new LinkedList<>();
-      LinkedList<MinuteBin> existing = perThreadHistogramBins.putIfAbsent(key, bins);
-      if (existing != null) {
-        bins = existing;
-      }
-    }
+    LinkedList<MinuteBin> bins = perThreadHistogramBins.computeIfAbsent(key,
+        x -> new LinkedList<>());
 
     long currMinMillis = minMillis();
 

@@ -29,6 +29,7 @@ import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.hamcrest.text.MatchesPattern;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -312,8 +313,8 @@ public class WavefrontYammerHttpMetricsReporterTest {
     final WavefrontHistogram wavefrontHistogram = WavefrontHistogram.get(metricsRegistry, new TaggedMetricName(
         "group", "myhisto", "tag1", "value1", "tag2", "value2"), 32, clock::get);
 
-    ThreadPoolExecutor e = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
-    e.execute(() -> {
+    ThreadPoolExecutor e = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
+    Runnable updateHisto = () -> {
       for (int i = 0; i < 500; i++) {
         int[] samples = {100, 66, 37, 8, 7, 5, 1};
         for (int sample : samples) {
@@ -323,17 +324,12 @@ public class WavefrontYammerHttpMetricsReporterTest {
           }
         }
       }
-    });
-    for (int i = 0; i < 500; i++) {
-      int[] samples = {100, 66, 37, 8, 7, 5, 1};
-      for (int sample : samples) {
-        if (i % sample == 0) {
-          wavefrontHistogram.update(sample);
-          break;
-        }
-      }
-    }
-    while (e.getActiveCount() > 0) {}
+    };
+    e.execute(updateHisto);
+    e.execute(updateHisto);
+    e.execute(updateHisto);
+    updateHisto.run();
+    while (e.getCompletedTaskCount() < 3) {}
 
     // Advance the clock by 1 min ...
     clock.addAndGet(60000L + 1);
@@ -342,8 +338,8 @@ public class WavefrontYammerHttpMetricsReporterTest {
     assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGeneratedLastPass()));
     assertThat(inputMetrics, contains(
         equalTo("!M " + timeBin +
-            " #574 1.0 #138 5.0 #122 7.0 #116 8.0 #26 37.0 #14 66.0 #10 100.0 \"myhisto\" source=\"test\" " +
-            "\"tag1\"=\"value1\" \"tag2\"=\"value2\"")
+            " #1148 1.0 #276 5.0 #244 7.0 #232 8.0 #52 37.0 #28 66.0 #20 100.0 \"myhisto\" " +
+            "source=\"test\" \"tag1\"=\"value1\" \"tag2\"=\"value2\"")
     ));
   }
 
