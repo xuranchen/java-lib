@@ -148,14 +148,13 @@ public class JsonMetricsReporter extends AbstractPollingReporter {
         builder.port(sunnylabsPort);
       }
       builder.queryParam("h", host);
-      builder.queryParam("t", table);
       for (Map.Entry<String, String> tag : tags.entrySet()) {
         builder.queryParam(tag.getKey(), tag.getValue());
       }
       URL http = builder.build().toURL();
       logger.info("Reporting metrics (JSON) to: " + http);
       Request request = new Request.Builder().
-          url(http).
+          url(http).addHeader("Authorization", "Bearer " + table).
           post(new RequestBody() {
             @Nullable
             @Override
