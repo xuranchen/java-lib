@@ -115,11 +115,11 @@ public class HttpMetricsProcessor extends WavefrontMetricsProcessor {
     WavefrontClientFactory factory = new WavefrontClientFactory();
     factory.addClient(
         "proxy://" + builder.hostname + ":" + builder.metricsPort,
-        builder.batchSize, builder.queueSize, null);
+        builder.batchSize, builder.queueSize, null, null);
 
     if (builder.secondaryHostname != null) {
       factory.addClient("proxy://" + builder.secondaryHostname + ":" + builder.secondaryPort,
-          builder.batchSize, builder.queueSize, null);
+          builder.batchSize, builder.queueSize, null, null);
     }
     this.wavefrontSender = factory.getClient();
   }
