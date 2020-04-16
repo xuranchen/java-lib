@@ -126,6 +126,11 @@ public class AgentConfiguration {
    */
   private List<String> systemMetrics;
 
+  /**
+   * Sampling rate to enforce for spans. This value ranges between 0.0 to 1.0.
+   */
+  private Double spanSamplingRate;
+
   public boolean getCollectorSetsRetryBackoff() {
     return collectorSetsRetryBackoff;
   }
@@ -345,6 +350,15 @@ public class AgentConfiguration {
 
   public void setSystemMetrics(@Nullable List<String> systemMetrics) {
     this.systemMetrics = systemMetrics;
+  }
+
+  @Nullable
+  public Double getSpanSamplingRate() {
+    return spanSamplingRate;
+  }
+
+  public void setSpanSamplingRate(@Nullable Double spanSamplingRate) {
+    this.spanSamplingRate = spanSamplingRate;
   }
 
   @Override
