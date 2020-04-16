@@ -1,7 +1,6 @@
 package com.wavefront.ingester;
 
 import com.wavefront.common.Clock;
-import com.wavefront.common.MetricConstants;
 import wavefront.report.ReportPoint;
 
 import javax.annotation.Nullable;
@@ -50,16 +49,6 @@ public class ReportPointIngesterFormatter extends AbstractIngesterFormatter<Repo
     }
     if (parser.hasNext()) {
       throw new RuntimeException("Unexpected extra input: " + parser.next());
-    }
-
-    // Delta metrics cannot have negative values
-    if ((point.getMetric().charAt(0) == MetricConstants.DELTA_PREFIX_CHAR ||
-        point.getMetric().charAt(0) == MetricConstants.DELTA_PREFIX_CHAR_2) &&
-        point.getValue() instanceof Number) {
-      double v = ((Number) point.getValue()).doubleValue();
-      if (v <= 0) {
-        throw new RuntimeException("Delta metrics cannot be non-positive: " + input);
-      }
     }
 
     String host = null;

@@ -482,18 +482,6 @@ public class GraphiteDecoderTest {
   }
 
   @Test
-  public void testNegativeDeltas() throws Exception {
-    GraphiteDecoder decoder = new GraphiteDecoder("localhost", emptyCustomSourceTags);
-    List<ReportPoint> out = new ArrayList<>();
-    try {
-      decoder.decodeReportPoints("∆request.count -1 source=test.wavefront.com", out);
-      decoder.decodeReportPoints("Δrequest.count -1 source=test.wavefront.com", out);
-      fail("should throw");
-    } catch (RuntimeException ignored) {
-    }
-  }
-
-  @Test
   public void testPositiveDeltas() throws Exception {
     GraphiteDecoder decoder = new GraphiteDecoder("localhost", emptyCustomSourceTags);
     List<ReportPoint> out = new ArrayList<>();
@@ -502,18 +490,6 @@ public class GraphiteDecoderTest {
       decoder.decodeReportPoints("Δrequest.count 1 source=test.wavefront.com", out);
     } catch (RuntimeException e) {
       fail("should not throw");
-    }
-  }
-
-  @Test
-  public void testZeroDeltaValue() throws Exception {
-    GraphiteDecoder decoder = new GraphiteDecoder("localhost", emptyCustomSourceTags);
-    List<ReportPoint> out = new ArrayList<>();
-    try {
-      decoder.decodeReportPoints("∆request.count 0 source=test.wavefront.com", out);
-      decoder.decodeReportPoints("Δrequest.count 0 source=test.wavefront.com", out);
-      fail("should throw");
-    } catch (RuntimeException ignored) {
     }
   }
 }

@@ -19,7 +19,6 @@ import java.util.Map;
 
 import wavefront.report.Annotation;
 import wavefront.report.Histogram;
-import wavefront.report.HistogramType;
 import wavefront.report.ReportPoint;
 import wavefront.report.Span;
 
@@ -200,7 +199,7 @@ public class ValidationTest {
     try {
       Validation.validatePoint(point, config);
       fail();
-    } catch (IllegalArgumentException iae) {
+    } catch (DeltaCounterValueException iae) {
       assertTrue(iae.getMessage().contains("WF-404"));
     }
     point.setValue(0.0d);
@@ -226,7 +225,7 @@ public class ValidationTest {
     try {
       Validation.validatePoint(point, config);
       fail();
-    } catch (IllegalArgumentException iae) {
+    } catch (EmptyHistogramException iae) {
       assertTrue(iae.getMessage().contains("WF-405"));
     }
     point = getValidHistogram();
@@ -337,6 +336,32 @@ public class ValidationTest {
     } catch (IllegalArgumentException iae) {
       assertTrue(iae.getMessage().contains("WF-413"));
     }
+
+    // point tag value empty: WF-414
+    point = getValidPoint();
+    point.getAnnotations().put("tagk4", "");
+    try {
+      Validation.validatePoint(point, config);
+      fail();
+    } catch (EmptyTagValueException iae) {
+      assertTrue(iae.getMessage().contains("WF-414"));
+    }
+  }
+
+  @Test(expected = DeltaCounterValueException.class)
+  public void testZeroDeltaValue() throws Exception {
+    GraphiteDecoder decoder = new GraphiteDecoder("localhost", ImmutableList.of());
+    List<ReportPoint> out = new ArrayList<>();
+    decoder.decodeReportPoints("Δrequest.count 0 source=test.wfc", out);
+    Validation.validatePoint(out.get(0), config);
+  }
+
+  @Test(expected = DeltaCounterValueException.class)
+  public void testNegativeDeltas() throws Exception {
+    GraphiteDecoder decoder = new GraphiteDecoder("localhost", ImmutableList.of());
+    List<ReportPoint> out = new ArrayList<>();
+    decoder.decodeReportPoints("∆request.count -1 source=test.wfc", out);
+    Validation.validatePoint(out.get(0), config);
   }
 
   @Test
