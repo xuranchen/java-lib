@@ -25,6 +25,16 @@ public abstract class Constants {
   public static final String PUSH_FORMAT_HISTOGRAM = "histogram";
 
   /**
+   * Line-delimited format for source tag commands
+   */
+  public static final String PUSH_FORMAT_SOURCETAGS = "sourceTag";
+
+  /**
+   * Line-delimited format for events
+   */
+  public static final String PUSH_FORMAT_EVENTS = "event";
+
+  /**
    * Wavefront tracing format
    */
   public static final String PUSH_FORMAT_TRACING = "trace";
