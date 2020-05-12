@@ -53,6 +53,7 @@ public class SpanLogsDecoder implements ReportableEntityDecoder<JsonNode, SpanLo
                 setFields(JSON_PARSER.convertValue(x.get("fields"), Map.class)).
                 build()
             ).collect(Collectors.toList())).
+        setSpan(msg.get("span") == null ? null : msg.get("span").textValue()).
         build();
     if (out != null) {
       out.add(spanLogs);

@@ -64,6 +64,8 @@ protocol Reporting {
     union{null, string} spanSecondaryId = null;
     // span log entries
     array<SpanLog> logs;
+    // span in line data format, for sampling and filterings
+    union{null, string} span = null;
   }
 
 // Collection of spans with the same traceId.
