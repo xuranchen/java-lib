@@ -4,14 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.wavefront.common.MetricsToTimeseries;
 import com.wavefront.common.Pair;
 import com.wavefront.metrics.MetricTranslator;
-import com.yammer.metrics.core.Clock;
-import com.yammer.metrics.core.Gauge;
-import com.yammer.metrics.core.Metric;
-import com.yammer.metrics.core.MetricName;
-import com.yammer.metrics.core.MetricsRegistry;
-import com.yammer.metrics.core.SafeVirtualMachineMetrics;
-import com.yammer.metrics.core.VirtualMachineMetrics;
-import com.yammer.metrics.core.WavefrontHistogram;
+import com.yammer.metrics.core.*;
 import com.yammer.metrics.reporting.AbstractReporter;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.nio.reactor.IOReactorException;
@@ -287,14 +280,18 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
   @Override
   public void run() {
     metricsGeneratedLastPass.set(0);
-    if (includeJvmMetrics) upsertJavaMetrics();
-    if (includeReporterMetrics) upsertReporterMetrics();
-    // non-histograms go first
-    getMetricsRegistry().allMetrics().entrySet().stream().filter(m -> !(m.getValue() instanceof WavefrontHistogram)).
-        forEach(this::processEntry);
-    // histograms go last
-    getMetricsRegistry().allMetrics().entrySet().stream().filter(m -> m.getValue() instanceof WavefrontHistogram).
-        forEach(this::processEntry);
+    try {
+      if (includeJvmMetrics) upsertJavaMetrics();
+      if (includeReporterMetrics) upsertReporterMetrics();
+      // non-histograms go first
+      getMetricsRegistry().allMetrics().entrySet().stream().filter(m -> !(m.getValue() instanceof WavefrontHistogram)).
+          forEach(this::processEntry);
+      // histograms go last
+      getMetricsRegistry().allMetrics().entrySet().stream().filter(m -> m.getValue() instanceof WavefrontHistogram).
+          forEach(this::processEntry);
+    } catch (Exception e) {
+      logger.log(Level.SEVERE, "Cannot report point to Wavefront! Trying again next iteration.", e);
+    }
   }
 
   private void processEntry(Map.Entry<MetricName, Metric> entry) {
