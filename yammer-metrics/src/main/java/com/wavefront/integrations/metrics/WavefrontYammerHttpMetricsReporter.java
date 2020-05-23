@@ -1,10 +1,18 @@
 package com.wavefront.integrations.metrics;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.AtomicDouble;
 import com.wavefront.common.MetricsToTimeseries;
 import com.wavefront.common.Pair;
 import com.wavefront.metrics.MetricTranslator;
-import com.yammer.metrics.core.*;
+import com.yammer.metrics.core.Clock;
+import com.yammer.metrics.core.Gauge;
+import com.yammer.metrics.core.Metric;
+import com.yammer.metrics.core.MetricName;
+import com.yammer.metrics.core.MetricsRegistry;
+import com.yammer.metrics.core.SafeVirtualMachineMetrics;
+import com.yammer.metrics.core.VirtualMachineMetrics;
+import com.yammer.metrics.core.WavefrontHistogram;
 import com.yammer.metrics.reporting.AbstractReporter;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.nio.reactor.IOReactorException;
@@ -42,6 +50,7 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
    * How many metrics were emitted in the last call to run()
    */
   private final AtomicInteger metricsGeneratedLastPass = new AtomicInteger();
+  private final AtomicDouble metricsGenerated = new AtomicDouble();
 
   /**
    * How many metrics were attempted but failed in the last call to run()
@@ -216,7 +225,7 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
   private void upsertReporterMetrics() {
     Map<String, Double> gauges = new HashMap<>();
     gauges.put("yammer-metrics.failed", metricsFailedToSend.doubleValue());
-    gauges.put("yammer-metrics.generated", metricsGeneratedLastPass.doubleValue());
+    gauges.put("yammer-metrics.generated", metricsGenerated.addAndGet(metricsGeneratedLastPass.longValue()));
     upsertGauges("java-lib.metrics.http", gauges);
   }
 
