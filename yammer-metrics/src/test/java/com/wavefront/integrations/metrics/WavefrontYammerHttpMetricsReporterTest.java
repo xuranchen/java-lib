@@ -29,7 +29,6 @@ import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.hamcrest.text.MatchesPattern;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -167,7 +166,7 @@ public class WavefrontYammerHttpMetricsReporterTest {
   public void testJvmMetrics() throws Exception {
     innerSetUp(true, null, true, false, false);
     runReporter();
-    assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGeneratedLastPass()));
+    assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGenerated()));
     assertThat(inputMetrics, not(hasItem(MatchesPattern.matchesPattern("\".* .*\".* source=\"test\""))));
     assertThat(inputMetrics, hasItem(startsWith("\"jvm.memory.heapCommitted\"")));
     assertThat(inputMetrics, hasItem(startsWith("\"jvm.fd_usage\"")));
@@ -180,10 +179,11 @@ public class WavefrontYammerHttpMetricsReporterTest {
   public void testReporterMetrics() throws Exception {
     innerSetUp(true, null, false, true, false);
     runReporter();
-    assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGeneratedLastPass()));
+    assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGenerated()));
     assertThat(inputMetrics, not(hasItem(MatchesPattern.matchesPattern("\".* .*\".* source=\"test\""))));
     assertThat(inputMetrics, hasItem(startsWith("\"java-lib.metrics.http.yammer-metrics.failed\"")));
-    assertThat(inputMetrics, hasItem(startsWith("\"java-lib.metrics.http.yammer-metrics.generated\"")));
+    assertThat(inputMetrics, hasItem(startsWith("\"java-lib.metrics.http.yammer-metrics.points.generated\"")));
+    assertThat(inputMetrics, hasItem(startsWith("\"java-lib.metrics.http.yammer-metrics.histos.generated\"")));
   }
 
   @Test(timeout = 2000)
@@ -194,11 +194,12 @@ public class WavefrontYammerHttpMetricsReporterTest {
     Counter counter = metricsRegistry.newCounter(taggedMetricName);
     counter.inc();
     runReporter();
-    assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGeneratedLastPass()));
+    assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGenerated()));
     assertEquals(1, wavefrontYammerHttpMetricsReporter.getMetricsFailedToSend());
     assertThat(inputMetrics, not(hasItem(MatchesPattern.matchesPattern("\".* .*\".* source=\"test\""))));
     assertThat(inputMetrics, hasItem(startsWith("\"java-lib.metrics.http.yammer-metrics.failed\"")));
-    assertThat(inputMetrics, hasItem(startsWith("\"java-lib.metrics.http.yammer-metrics.generated\"")));
+    assertThat(inputMetrics, hasItem(startsWith("\"java-lib.metrics.http.yammer-metrics.points.generated\"")));
+    assertThat(inputMetrics, hasItem(startsWith("\"java-lib.metrics.http.yammer-metrics.histos.generated\"")));
   }
 
   @Test(timeout = 2000)
@@ -207,7 +208,7 @@ public class WavefrontYammerHttpMetricsReporterTest {
     counter.inc();
     counter.inc();
     runReporter();
-    assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGeneratedLastPass()));
+    assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGenerated()));
     assertThat(inputMetrics, contains(equalTo("\"mycount\" 2.0 1485224035 source=\"test\"")));
   }
 
@@ -221,7 +222,7 @@ public class WavefrontYammerHttpMetricsReporterTest {
     counter.inc();
     counter.inc();
     runReporter();
-    assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGeneratedLastPass()));
+    assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGenerated()));
     assertThat(
         inputMetrics,
         contains(equalTo("\"mycounter\" 2.0 1485224035 source=\"test\" \"tagA\"=\"valueA\"")));
@@ -235,7 +236,7 @@ public class WavefrontYammerHttpMetricsReporterTest {
     counter.inc();
     counter.inc();
     runReporter();
-    assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGeneratedLastPass()));
+    assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGenerated()));
     assertThat(
         inputMetrics,
         contains(equalTo("\"mycounter\" 2.0 1485224035 source=\"test\" \"tag1\"=\"value1\" \"tag2\"=\"value2\"")));
@@ -335,7 +336,7 @@ public class WavefrontYammerHttpMetricsReporterTest {
     clock.addAndGet(60000L + 1);
 
     runReporter();
-    assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGeneratedLastPass()));
+    assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getHistogramsGenerated()));
     assertThat(inputMetrics, contains(
         equalTo("!M " + timeBin +
             " #1148 1.0 #276 5.0 #244 7.0 #232 8.0 #52 37.0 #28 66.0 #20 100.0 \"myhisto\" " +
@@ -365,7 +366,8 @@ public class WavefrontYammerHttpMetricsReporterTest {
     clock.addAndGet(60000L + 1);
 
     runReporter();
-    assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGeneratedLastPass()));
+    int histogramsGenerated = wavefrontYammerHttpMetricsReporter.getHistogramsGenerated();
+    assertThat(inputMetrics, hasSize(histogramsGenerated));
     assertThat(inputMetrics, contains(equalTo("!M " + timeBin +
         " #287 1.0 #69 5.0 #61 7.0 #58 8.0 #13 37.0 #7 66.0 #5 100.0 \"myhisto\" source=\"test\" " +
         "\"tag1\"=\"value1\" \"tag2\"=\"value2\"")));
@@ -383,7 +385,7 @@ public class WavefrontYammerHttpMetricsReporterTest {
     // Advance the clock by 1 min ...
     clock.addAndGet(60000L + 1);
     runReporter();
-    assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGeneratedLastPass()));
+    assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getHistogramsGenerated() - histogramsGenerated));
     assertThat(inputMetrics, contains(equalTo("!M " + timeBin +
         " #287 1.0 #69 5.0 #61 7.0 #58 8.0 #13 37.0 #7 66.0 #5 100.0 \"myhisto\" source=\"test\" " +
         "\"tag1\"=\"value1\" \"tag2\"=\"value2\"")));
@@ -414,7 +416,7 @@ public class WavefrontYammerHttpMetricsReporterTest {
           }
         });
     runReporter();
-    assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGeneratedLastPass()));
+    assertThat(inputMetrics, hasSize(wavefrontYammerHttpMetricsReporter.getMetricsGenerated()));
     assertThat(inputMetrics, contains(equalTo("\"mygauge\" 13.0 1485224035 source=\"test\"")));
   }
 
