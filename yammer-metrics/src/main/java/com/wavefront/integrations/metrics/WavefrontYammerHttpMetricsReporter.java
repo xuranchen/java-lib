@@ -79,8 +79,8 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
     private boolean sendZeroCounters = false;
     private boolean sendEmptyHistograms = false;
     private boolean clear = false;
-    private int queueSize = 50_000;
-    private int batchSize = 10_000;
+    private int queueSize = 0;
+    private int batchSize = 0;
     private TimeUnit timeUnit = TimeUnit.SECONDS;
     private int flushInterval = 1;
 
@@ -186,10 +186,10 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
     this.metricTranslator = builder.metricTranslator;
     this.includeJvmMetrics = builder.includeJvmMetrics;
     this.includeReporterMetrics = builder.includeReporterMetrics;
+
     HttpMetricsProcessor.Builder httpMetricsProcessorBuilder = new HttpMetricsProcessor.Builder().
         withEndpoint(builder.hostname,builder.port).
         withPrependedGroupNames(builder.prependGroupName).
-        withQueueOptions(builder.batchSize,builder.queueSize).
         sendEmptyHistograms(builder.sendEmptyHistograms).
         clearHistogramsAndTimers(builder.clear).
         withTimeSupplier(builder.timeSupplier).
@@ -197,9 +197,14 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
         withSdkInternalTags(builder.sdkInternalTags).
         withFlushInterval(builder.timeUnit, builder.flushInterval).
         sendZeroCounters(builder.sendZeroCounters);
+
+    if (builder.queueSize > 0 && builder.batchSize > 0) {
+      httpMetricsProcessorBuilder.withQueueOptions(builder.batchSize, builder.queueSize);
+    }
     if (builder.secondaryHostname != null) {
       httpMetricsProcessorBuilder.withSecondaryEndpoint(builder.secondaryHostname,builder.secondaryPort);
     }
+
     this.httpMetricsProcessor = httpMetricsProcessorBuilder.build();
     this.gaugeMap = new ConcurrentHashMap<>();
   }

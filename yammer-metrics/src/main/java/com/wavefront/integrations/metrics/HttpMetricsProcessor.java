@@ -40,8 +40,8 @@ public class HttpMetricsProcessor extends WavefrontMetricsProcessor {
   private final String defaultSource;
 
   public static class Builder {
-    private int queueSize = 50_000;
-    private int batchSize = 10_000;
+    private Integer queueSize = null;
+    private Integer batchSize = null;
     private boolean prependGroupName = false;
     private boolean clear = false;
     private boolean sendZeroCounters = true;
@@ -116,7 +116,7 @@ public class HttpMetricsProcessor extends WavefrontMetricsProcessor {
     }
 
     public HttpMetricsProcessor build() {
-      if (this.batchSize > this.queueSize)
+      if (this.batchSize != null && this.queueSize != null && this.batchSize > this.queueSize)
         throw new IllegalArgumentException("Batch size cannot be larger than queue sizes");
 
       return new HttpMetricsProcessor(this);
