@@ -242,7 +242,7 @@ public class WavefrontYammerHttpMetricsReporter extends AbstractReporter impleme
     Map<String, Double> gauges = new HashMap<>();
     gauges.put("yammer-metrics.failed", metricsFailedToSend.doubleValue());
     gauges.put("yammer-metrics.points.generated", metricsGenerated.doubleValue());
-    gauges.put("yammer-metrics.histos.generated", metricsGenerated.doubleValue());
+    gauges.put("yammer-metrics.histos.generated", histogramsGenerated.doubleValue());
     upsertGauges("java-lib.metrics.http", gauges);
   }
 
