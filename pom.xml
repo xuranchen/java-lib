@@ -57,9 +57,9 @@
     <!-- target java 8 compatibility -->
     <java.version>1.8</java.version>
     <log4j.version>2.11.1</log4j.version>
-    <jackson.version>2.9.10</jackson.version>
-    <jackson-databind.version>2.9.10.4</jackson-databind.version>
-    <netty.version>4.1.45.Final</netty.version>
+    <jackson.version>2.11.0</jackson.version>
+    <jackson-databind.version>2.11.0</jackson-databind.version>
+    <netty.version>4.1.50.Final</netty.version>
   </properties>
 
   <build>
@@ -95,6 +95,11 @@
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>javax.validation</groupId>
+        <artifactId>validation-api</artifactId>
+        <version>1.1.0.Final</version>
+      </dependency>
       <dependency>
         <groupId>com.wavefront</groupId>
         <artifactId>java-lib</artifactId>
@@ -187,7 +192,7 @@
       <dependency>
         <groupId>org.apache.avro</groupId>
         <artifactId>avro</artifactId>
-        <version>1.8.2</version>
+        <version>1.9.2</version>
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>

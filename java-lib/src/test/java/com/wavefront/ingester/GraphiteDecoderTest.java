@@ -169,7 +169,7 @@ public class GraphiteDecoderTest {
     decoder.decodeReportPoints("tsdb.vehicle.charge.battery_level 93 1234567890.246 host=vehicle_2554", out);
     ReportPoint point = out.get(0);
     assertEquals("tsdb", point.getTable());
-    assertEquals(1234567890246L, point.getTimestamp().longValue());
+    assertEquals(1234567890246L, point.getTimestamp());
     assertEquals("vehicle.charge.battery_level", point.getMetric());
     assertEquals(93.0, point.getValue());
     assertEquals("vehicle_2554", point.getHost());
@@ -195,7 +195,7 @@ public class GraphiteDecoderTest {
     assertEquals("tsdb", point.getTable());
     assertEquals("vehicle.charge.battery_level", point.getMetric());
     assertEquals(93.0, point.getValue());
-    assertEquals(1234567890246L, point.getTimestamp().longValue());
+    assertEquals(1234567890246L, point.getTimestamp());
   }
 
   @Test
@@ -217,7 +217,7 @@ public class GraphiteDecoderTest {
     decoder.decodeReportPoints("vehicle.charge.battery_level 93 1234567890.246 host=vehicle_2554", out, "customer");
     ReportPoint point = out.get(0);
     assertEquals("customer", point.getTable());
-    assertEquals(1234567890246L, point.getTimestamp().longValue());
+    assertEquals(1234567890246L, point.getTimestamp());
     assertEquals("vehicle.charge.battery_level", point.getMetric());
     assertEquals(93.0, point.getValue());
     assertEquals("vehicle_2554", point.getHost());
@@ -243,7 +243,7 @@ public class GraphiteDecoderTest {
     assertEquals("customer", point.getTable());
     assertEquals("vehicle.charge.battery_level", point.getMetric());
     assertEquals(93.0, point.getValue());
-    assertEquals(1234567890246L, point.getTimestamp().longValue());
+    assertEquals(1234567890246L, point.getTimestamp());
   }
 
   @Test
@@ -255,7 +255,7 @@ public class GraphiteDecoderTest {
     assertEquals("customer", point.getTable());
     assertEquals("vehicle.charge.battery_level", point.getMetric());
     assertEquals(93.0, point.getValue());
-    assertEquals(1234567892468L, point.getTimestamp().longValue());
+    assertEquals(1234567892468L, point.getTimestamp());
   }
 
   @Test
@@ -267,7 +267,7 @@ public class GraphiteDecoderTest {
     assertEquals("customer", point.getTable());
     assertEquals("1vehicle.charge.battery_level", point.getMetric());
     assertEquals(93.0, point.getValue());
-    assertEquals(1234567890246L, point.getTimestamp().longValue());
+    assertEquals(1234567890246L, point.getTimestamp());
   }
 
   @Test
@@ -281,7 +281,7 @@ public class GraphiteDecoderTest {
     assertEquals("1vehicle.charge.$()+battery_level", point.getMetric());
     assertEquals("12345", point.getHost());
     assertEquals(93.0, point.getValue());
-    assertEquals(1234567890246L, point.getTimestamp().longValue());
+    assertEquals(1234567890246L, point.getTimestamp());
     assertEquals("test hello", point.getAnnotations().get("blah"));
     assertEquals("test", point.getAnnotations().get("hello world"));
   }
@@ -297,7 +297,7 @@ public class GraphiteDecoderTest {
     assertEquals("1vehicle.charge.battery_level", point.getMetric());
     assertEquals("12345", point.getHost());
     assertEquals(93.0, point.getValue());
-    assertEquals(1234567890246L, point.getTimestamp().longValue());
+    assertEquals(1234567890246L, point.getTimestamp());
     assertEquals("test hello", point.getAnnotations().get("blah"));
     assertEquals("test", point.getAnnotations().get("hello world"));
   }
@@ -313,7 +313,7 @@ public class GraphiteDecoderTest {
     assertEquals("1vehicle.charge.'battery_level", point.getMetric());
     assertEquals("12345", point.getHost());
     assertEquals(93.0, point.getValue());
-    assertEquals(1234567890246L, point.getTimestamp().longValue());
+    assertEquals(1234567890246L, point.getTimestamp());
     assertEquals("test'\"hello\"", point.getAnnotations().get("blah"));
     assertEquals("\"test'", point.getAnnotations().get("hello world"));
   }
