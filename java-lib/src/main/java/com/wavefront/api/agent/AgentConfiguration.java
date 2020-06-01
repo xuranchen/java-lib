@@ -62,6 +62,11 @@ public class AgentConfiguration {
   private boolean showTrialExpired = false;
 
   /**
+   * A custom message to display before shutting down the proxy
+   */
+  private String shutOffMessage;
+
+  /**
    * If the value is true, then histogram feature is disabled
    */
   private boolean histogramDisabled = false;
@@ -241,6 +246,14 @@ public class AgentConfiguration {
 
   public boolean getHistogramDisabled() {
     return histogramDisabled;
+  }
+
+  public String getShutOffMessage() {
+    return shutOffMessage;
+  }
+
+  public void setShutOffMessage(String shutOffMessage) {
+    this.shutOffMessage = shutOffMessage;
   }
 
   public void setHistogramDisabled(boolean histogramDisabled) {
