@@ -2,7 +2,6 @@ package com.wavefront.ingester;
 
 import static org.junit.Assert.assertEquals;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
@@ -62,14 +61,7 @@ public class SpanLogsSerializerTest {
   }
 
   @Test
-  public void testSpanLogsToStringWithSpan() throws Exception {
-    SpanLog spanLog = new SpanLog(1554363517965L, ImmutableMap.of("event", "error",
-        "error.kind", "exception"));
-    ObjectMapper om = new ObjectMapper();
-    om.addMixIn(SpanLogs.class, SpanLogsSerializer.IgnoreSchemaProperty.class);
-    om.addMixIn(SpanLog.class, SpanLogsSerializer.IgnoreSchemaProperty.class);
-    String s = om.writeValueAsString(spanLog);
-    System.out.println(s);
+  public void testSpanLogsToStringWithSpan() {
     SpanLogs spanLogs = SpanLogs.newBuilder()
         .setCustomer("dummy")
         .setTraceId("d5355bf7-fc8d-48d1-b761-75b170f396e0")
@@ -81,8 +73,6 @@ public class SpanLogsSerializerTest {
             "\"traceId\"=\"d5355bf7-fc8d-48d1-b761-75b170f396e0\" " +
             "\"tagkey1\"=\"tagvalue1\" \"t2\"=\"v2\" 1532012145123 1532012146234")
         .build();
-    String sl = spanLogs.toString();
-    System.out.println(sl);
     assertEquals("{" +
         "\"customer\":\"dummy\"," +
         "\"traceId\":\"d5355bf7-fc8d-48d1-b761-75b170f396e0\"," +
