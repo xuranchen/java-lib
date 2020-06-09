@@ -28,7 +28,7 @@ public class OpenTSDBDecoderTest {
     assertEquals("dummy", point.getTable());
     assertEquals("tsdb.vehicle.charge.battery_level", point.getMetric());
     assertEquals(93123.0, point.getValue());
-    assertEquals(12345678L, point.getTimestamp().longValue());
+    assertEquals(12345678L, point.getTimestamp());
     assertEquals("vehicle_2554", point.getHost());
 
     try {
@@ -58,7 +58,7 @@ public class OpenTSDBDecoderTest {
     assertEquals("dummy", point.getTable());
     assertEquals("tsdb.vehicle.charge.battery_level", point.getMetric());
     assertEquals(93123.0, point.getValue());
-    assertEquals(12345678L, point.getTimestamp().longValue());
+    assertEquals(12345678L, point.getTimestamp());
     assertEquals("localhost", point.getHost());
 
     // adaptive timestamp (13-char timestamp is millis).
@@ -70,7 +70,7 @@ public class OpenTSDBDecoderTest {
     assertEquals("dummy", point.getTable());
     assertEquals("tsdb.vehicle.charge.battery_level", point.getMetric());
     assertEquals(93123.0, point.getValue());
-    assertEquals(now, point.getTimestamp().longValue());
+    assertEquals(now, point.getTimestamp());
     assertEquals("localhost", point.getHost());
 
     out = new ArrayList<>();
@@ -79,7 +79,7 @@ public class OpenTSDBDecoderTest {
     assertEquals("dummy", point.getTable());
     assertEquals("tail.kernel.counter.errors", point.getMetric());
     assertEquals(0.0, point.getValue());
-    assertEquals(1447394143000L, point.getTimestamp().longValue());
+    assertEquals(1447394143000L, point.getTimestamp());
     assertEquals("li250-160.members.linode.com", point.getHost());
 
     out = new ArrayList<>();
@@ -88,7 +88,7 @@ public class OpenTSDBDecoderTest {
     assertEquals("dummy", point.getTable());
     assertEquals("df.home-ubuntu-efs.df_complex.free", point.getMetric());
     assertEquals(9.22337186120781e+18, point.getValue());
-    assertEquals(1447985300000L, point.getTimestamp().longValue());
+    assertEquals(1447985300000L, point.getTimestamp());
     assertEquals("ip-172-20-0-236.us-west-2.compute.internal", point.getHost());
   }
 
@@ -103,7 +103,7 @@ public class OpenTSDBDecoderTest {
     assertEquals("dummy", point.getTable());
     assertEquals("tsdb.vehicle.charge.battery_level", point.getMetric());
     assertEquals(93123.0, point.getValue());
-    assertEquals(12345678L, point.getTimestamp().longValue());
+    assertEquals(12345678L, point.getTimestamp());
     assertEquals("/vehicle_2554-test/GOOD", point.getHost());
     assertEquals("/vehicle_2554-test/BAD", point.getAnnotations().get("some_tag"));
   }

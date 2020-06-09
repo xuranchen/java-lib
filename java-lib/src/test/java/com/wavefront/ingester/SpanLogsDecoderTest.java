@@ -37,7 +37,7 @@ public class SpanLogsDecoderTest {
     assertEquals("0313bafe-9457-11e8-9eb6-529269fb1459", out.get(0).getSpanId());
     assertNull(out.get(0).getSpanSecondaryId());
     assertEquals(1, out.get(0).getLogs().size());
-    assertEquals(1554363517965L, out.get(0).getLogs().get(0).getTimestamp().longValue());
+    assertEquals(1554363517965L, out.get(0).getLogs().get(0).getTimestamp());
     assertEquals(2, out.get(0).getLogs().get(0).getFields().size());
     assertEquals("error", out.get(0).getLogs().get(0).getFields().get("event"));
     assertEquals("exception", out.get(0).getLogs().get(0).getFields().get("error.kind"));
@@ -61,7 +61,7 @@ public class SpanLogsDecoderTest {
     assertEquals("0313bafe-9457-11e8-9eb6-529269fb1459", out.get(0).getSpanId());
     assertEquals("server", out.get(0).getSpanSecondaryId());
     assertEquals(1, out.get(0).getLogs().size());
-    assertEquals(1554363517965L, out.get(0).getLogs().get(0).getTimestamp().longValue());
+    assertEquals(1554363517965L, out.get(0).getLogs().get(0).getTimestamp());
     assertEquals(2, out.get(0).getLogs().get(0).getFields().size());
     assertEquals("error", out.get(0).getLogs().get(0).getFields().get("event"));
     assertEquals("exception", out.get(0).getLogs().get(0).getFields().get("error.kind"));
@@ -89,7 +89,7 @@ public class SpanLogsDecoderTest {
     assertEquals("0313bafe-9457-11e8-9eb6-529269fb1459", out.get(0).getSpanId());
     assertNull(out.get(0).getSpanSecondaryId());
     assertEquals(1, out.get(0).getLogs().size());
-    assertEquals(1554363517965L, out.get(0).getLogs().get(0).getTimestamp().longValue());
+    assertEquals(1554363517965L, out.get(0).getLogs().get(0).getTimestamp());
     assertEquals(2, out.get(0).getLogs().get(0).getFields().size());
     assertEquals("error", out.get(0).getLogs().get(0).getFields().get("event"));
     assertEquals("exception", out.get(0).getLogs().get(0).getFields().get("error.kind"));

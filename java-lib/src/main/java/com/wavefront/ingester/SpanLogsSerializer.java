@@ -1,14 +1,18 @@
 package com.wavefront.ingester;
 
+import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.apache.avro.specific.SpecificData;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+
 import wavefront.report.SpanLog;
 import wavefront.report.SpanLogs;
-
-import java.util.function.Function;
-import java.util.logging.Logger;
 
 /**
  * Convert {@link SpanLogs} to its string representation in a canonical format.
@@ -36,7 +40,7 @@ public class SpanLogsSerializer implements Function<SpanLogs, String> {
     try {
       return JSON_PARSER.writeValueAsString(spanLogs);
     } catch (JsonProcessingException e) {
-      logger.warning("Serialization error!");
+      logger.log(Level.WARNING, "Serialization error!", e);
       return null;
     }
   }
@@ -44,5 +48,8 @@ public class SpanLogsSerializer implements Function<SpanLogs, String> {
   abstract static class IgnoreSchemaProperty {
     @JsonIgnore
     abstract void getSchema();
+
+    @JsonIgnore
+    abstract SpecificData getSpecificData();
   }
 }
