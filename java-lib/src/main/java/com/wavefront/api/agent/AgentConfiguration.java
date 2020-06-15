@@ -136,6 +136,11 @@ public class AgentConfiguration {
    */
   private Double spanSamplingRate;
 
+  /**
+   * Drop spans at proxy that completed more than configured minutes ago before reporting.
+   */
+  private Integer dropSpansDelayedMinutes;
+
   public boolean getCollectorSetsRetryBackoff() {
     return collectorSetsRetryBackoff;
   }
@@ -372,6 +377,15 @@ public class AgentConfiguration {
 
   public void setSpanSamplingRate(@Nullable Double spanSamplingRate) {
     this.spanSamplingRate = spanSamplingRate;
+  }
+
+  @Nullable
+  public Integer getDropSpansDelayedMinutes() {
+    return dropSpansDelayedMinutes;
+  }
+
+  public void setDropSpansDelayedMinutes(int dropSpansDelayedMinutes) {
+    this.dropSpansDelayedMinutes = dropSpansDelayedMinutes;
   }
 
   @Override
