@@ -1,6 +1,7 @@
 package com.wavefront.ingester;
 
 import com.wavefront.common.Clock;
+
 import wavefront.report.ReportPoint;
 
 import javax.annotation.Nullable;
@@ -33,7 +34,8 @@ public class ReportPointIngesterFormatter extends AbstractIngesterFormatter<Repo
 
   @Override
   public ReportPoint drive(String input, Supplier<String> defaultHostNameSupplier,
-                           String customerId, @Nullable List<String> customSourceTags) {
+                           String customerId, @Nullable List<String> customSourceTags,
+                           @Nullable IngesterContext ingesterContext) {
     ReportPoint point = new ReportPoint();
     point.setTable(customerId);
     // if the point has a timestamp, this would be overriden
@@ -42,8 +44,14 @@ public class ReportPointIngesterFormatter extends AbstractIngesterFormatter<Repo
 
     try {
       for (FormatterElement<ReportPoint> element : elements) {
-        element.consume(parser, point);
+        if (ingesterContext != null) {
+          element.consume(parser, point, ingesterContext);
+        } else {
+          element.consume(parser, point);
+        }
       }
+    } catch (TooManyCentroidException ex) {
+      throw new TooManyCentroidException("Could not parse: " + input, ex);
     } catch (Exception ex) {
       throw new RuntimeException("Could not parse: " + input, ex);
     }

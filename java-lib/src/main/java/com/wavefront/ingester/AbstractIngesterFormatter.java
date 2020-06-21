@@ -2,6 +2,11 @@ package com.wavefront.ingester;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
+import com.tdunning.math.stats.AVLTreeDigest;
+import com.tdunning.math.stats.Centroid;
+import com.tdunning.math.stats.TDigest;
+
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.commons.lang.StringUtils;
 import wavefront.report.Annotation;
@@ -17,6 +22,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import static com.wavefront.ingester.IngesterContext.DEFAULT_HISTOGRAM_COMPRESS_LIMIT_RATIO;
 import static org.apache.commons.lang.StringUtils.containsAny;
 import static org.apache.commons.lang.StringUtils.replace;
 
@@ -36,6 +42,8 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
   private static final String DOUBLE_QUOTE_STR = "\"";
   private static final String ESCAPED_DOUBLE_QUOTE_STR = "\\\"";
 
+  private static final IngesterContext DEFAULT_INGESTER_CONTEXT = new IngesterContext.Builder().build();
+
   protected final List<FormatterElement<T>> elements;
 
   protected AbstractIngesterFormatter(List<FormatterElement<T>> elements) {
@@ -43,7 +51,11 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
   }
 
   protected interface FormatterElement<T> {
-    void consume(StringParser parser, T target);
+    default void consume(StringParser parser, T target) {
+      consume(parser, target, DEFAULT_INGESTER_CONTEXT);
+    }
+
+    void consume(StringParser parser, T target, IngesterContext ingesterContext);
   }
 
   /**
@@ -153,7 +165,7 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     }
 
     @Override
-    public void consume(StringParser parser, T target) {
+    public void consume(StringParser parser, T target, IngesterContext ingesterContext) {
       String text = parser.next();
       if (!isAllowedLiteral(text)) throw new RuntimeException("'" + text +
           "' is not allowed here!");
@@ -178,7 +190,7 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     }
 
     @Override
-    public void consume(StringParser parser, T target) {
+    public void consume(StringParser parser, T target, IngesterContext ingesterContext) {
       String token = parser.next();
       if (token == null)
         throw new RuntimeException("Value is missing");
@@ -190,19 +202,88 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     }
   }
 
+  /**
+   * Optimize the means/counts pair if necessary .
+   *
+   * @param means  centroids means
+   * @param counts centroid counts
+   */
+  public static void optimizeForStorage(@Nullable List<Double> means,
+                                        @Nullable List<Integer> counts,
+                                        int size, int storageAccuracy) {
+    if (means == null || means.isEmpty() || counts == null || counts.isEmpty()) {
+      return;
+    }
+
+    if /*Too many centroids*/ (size > DEFAULT_HISTOGRAM_COMPRESS_LIMIT_RATIO * storageAccuracy) {
+      rewrite(means, counts, size, storageAccuracy);
+    }
+
+    if /*Bogus counts*/ (counts.stream().anyMatch(i -> i < 1)) {
+      rewrite(means, counts, size, storageAccuracy);
+    } else {
+      int strictlyIncreasingLength = 1;
+      for (; strictlyIncreasingLength < means.size(); ++strictlyIncreasingLength) {
+        if (means.get(strictlyIncreasingLength - 1) >= means.get(strictlyIncreasingLength)) {
+          break;
+        }
+      }
+
+      if /*Not ordered*/ (strictlyIncreasingLength != means.size()) {
+        rewrite(means, counts, size, storageAccuracy);
+      }
+    }
+  }
+
+  /**
+   * Reorganizes a mean/count array pair (such that centroids) are in strictly ascending order.
+   *
+   * @param means  centroids means
+   * @param counts centroid counts
+   * @param size  limit for means and counters to rewrite, usually min(means.size(), counts.size())
+   */
+  private static void rewrite(List<Double> means, List<Integer> counts,
+                              int size, int storageAccuracy) {
+    TDigest temp = new AVLTreeDigest(storageAccuracy);
+    for (int i = 0; i < size; ++i) {
+      int count = counts.get(i);
+      if (count > 0) {
+        temp.add(means.get(i), count);
+      }
+    }
+    temp.compress();
+
+    means.clear();
+    counts.clear();
+    for (Centroid c : temp.centroids()) {
+      means.add(c.mean());
+      counts.add(c.count());
+    }
+  }
+
   public static class Centroids<T extends SpecificRecordBase> implements FormatterElement<T> {
     private static final String WEIGHT = "#";
 
     @Override
-    public void consume(StringParser parser, T target) {
+    public void consume(StringParser parser, T target, IngesterContext ingesterContext) {
       List<Integer> counts = new ArrayList<>();
       List<Double> bins = new ArrayList<>();
+
+      int size = 0;
       while (WEIGHT.equals(parser.peek())) {
+        size++;
+        if (size > ingesterContext.getHistogramCentroidsLimit()) {
+          throw new TooManyCentroidException();
+        }
         parser.next(); // skip the # token
         counts.add(parse(parser.next(), "centroid weight", true).intValue());
         bins.add(parse(parser.next(), "centroid value", false).doubleValue());
       }
-      if (counts.size() == 0) throw new RuntimeException("Empty histogram (no centroids)");
+
+      if (size == 0) throw new RuntimeException("Empty histogram (no centroids)");
+
+      optimizeForStorage(bins, counts, size, ingesterContext.getTargetHistogramAccuracy());
+
       Histogram histogram = (Histogram) target.get("value");
       histogram.setCounts(counts);
       histogram.setBins(bins);
@@ -232,7 +313,7 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     }
 
     @Override
-    public void consume(StringParser parser, T target) {
+    public void consume(StringParser parser, T target, IngesterContext ingesterContext) {
       Long timestamp = parseTimestamp(parser, optional, raw);
       if (timestamp != null) timestampConsumer.accept(target, timestamp);
     }
@@ -246,7 +327,7 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     }
 
     @Override
-    public void consume(StringParser parser, T target) {
+    public void consume(StringParser parser, T target, IngesterContext ingesterContext) {
       List<String> list = new ArrayList<>();
       while (parser.hasNext()) {
         list.add(parser.next());
@@ -276,7 +357,7 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     }
 
     @Override
-    public void consume(StringParser parser, T target) {
+    public void consume(StringParser parser, T target, IngesterContext ingesterContext) {
       Map<String, String> stringMap = null;
       if (stringMapProvider != null) {
         stringMap = stringMapProvider.apply(target);
@@ -302,7 +383,7 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     }
 
     @Override
-    public void consume(StringParser parser, T target) {
+    public void consume(StringParser parser, T target, IngesterContext ingesterContext) {
       Map<String, List<String>> multimap = new HashMap<>();
       while (parser.hasNext()) {
         parseKeyValuePair(parser, (k, v) -> {
@@ -324,7 +405,7 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     }
 
     @Override
-    public void consume(StringParser parser, T target) {
+    public void consume(StringParser parser, T target, IngesterContext ingesterContext) {
       List<Annotation> annotationList = new ArrayList<>();
       while (parser.hasNext() && predicate.test(parser.peek())) {
         parseKeyValuePair(parser, (k, v) -> annotationList.add(new Annotation(k, v)));
@@ -411,9 +492,15 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
 
   public T drive(String input, @Nullable Supplier<String> defaultHostNameSupplier,
                  String customerId) {
-    return drive(input, defaultHostNameSupplier, customerId, null);
+    return drive(input, defaultHostNameSupplier, customerId, null, null);
+  }
+
+  public T drive(String input, @Nullable Supplier<String> defaultHostNameSupplier,
+                 String customerId, IngesterContext ingesterContext) {
+    return drive(input, defaultHostNameSupplier, customerId, null, ingesterContext);
   }
 
   public abstract T drive(String input, @Nullable Supplier<String> defaultHostNameSupplier,
-                          String customerId, @Nullable List<String> customSourceTags);
+                          String customerId, @Nullable List<String> customSourceTags,
+                          @Nullable IngesterContext ingesterContext);
 }

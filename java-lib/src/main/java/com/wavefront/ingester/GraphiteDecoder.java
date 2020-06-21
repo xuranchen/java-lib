@@ -44,6 +44,11 @@ public class GraphiteDecoder implements Decoder<String> {
   }
 
   @Override
+  public void decodeReportPoints(String msg, List<ReportPoint> out, String customerId, IngesterContext ingesterContext) {
+    pointDecoder.decode(msg, out, customerId);
+  }
+
+  @Override
   public void decodeReportPoints(String msg, List<ReportPoint> out) {
     List<ReportPoint> output = Lists.newArrayList();
     decodeReportPoints(msg, output, "dummy");

@@ -26,7 +26,15 @@ public class WFTopDecoder implements Decoder<String> {
 
   @Override
   public void decodeReportPoints(String msg, List<ReportPoint> out, String customerId) {
-    ReportPoint point = FORMAT.drive(msg, hostNameSupplier, customerId, Collections.emptyList());
+    ReportPoint point = FORMAT.drive(msg, hostNameSupplier, customerId, Collections.emptyList(), null);
+    if (out != null) {
+      out.add(point);
+    }
+  }
+
+  @Override
+  public void decodeReportPoints(String msg, List<ReportPoint> out, String customerId, IngesterContext ingesterContext) {
+    ReportPoint point = FORMAT.drive(msg, hostNameSupplier, customerId, Collections.emptyList(), ingesterContext);
     if (out != null) {
       out.add(point);
     }

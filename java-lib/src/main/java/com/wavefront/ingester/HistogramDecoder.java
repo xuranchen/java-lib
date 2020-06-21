@@ -53,6 +53,17 @@ public class HistogramDecoder implements Decoder<String> {
   }
 
   @Override
+  public void decodeReportPoints(String msg, List<ReportPoint> out, String customerId, IngesterContext ingesterContext) {
+    ReportPoint point = FORMAT.drive(msg, defaultHostNameSupplier, customerId, ingesterContext);
+    if (point != null) {
+      // adjust timestamp according to histogram bin first
+      long duration = ((Histogram) point.getValue()).getDuration();
+      point.setTimestamp((point.getTimestamp() / duration) * duration);
+      out.add(ReportPoint.newBuilder(point).build());
+    }
+  }
+
+  @Override
   public void decodeReportPoints(String msg, List<ReportPoint> out) {
     throw new UnsupportedOperationException("Customer ID extraction is not supported");
   }

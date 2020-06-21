@@ -32,13 +32,18 @@ public class SpanIngesterFormatter extends AbstractIngesterFormatter<Span> {
 
   @Override
   public Span drive(String input, @Nullable Supplier<String> defaultHostNameSupplier,
-                    String customerId, @Nullable List<String> customSourceTags) {
+                    String customerId, @Nullable List<String> customSourceTags,
+                    @Nullable IngesterContext ingesterContext) {
     Span span = new Span();
     span.setCustomer(customerId);
     StringParser parser = new StringParser(input);
     try {
       for (FormatterElement<Span> element : elements) {
-        element.consume(parser, span);
+        if (ingesterContext != null) {
+          element.consume(parser, span, ingesterContext);
+        } else {
+          element.consume(parser, span);
+        }
       }
     } catch (Exception ex) {
       throw new RuntimeException("Could not parse: " + input, ex);
