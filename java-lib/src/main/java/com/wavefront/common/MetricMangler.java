@@ -56,7 +56,7 @@ public class MetricMangler {
    * @param delimiters   characters to be interpreted as dots
    * @param removeFields comma separated field index(es) (1-based) of fields to remove from the
    *                     metric name
-   * @throws IllegalArgumentException when one of the field index is <= 0
+   * @throws IllegalArgumentException when one of the field index is &lt;= 0
    */
   public MetricMangler(@Nullable String sourceFields,
                        @Nullable String delimiters,

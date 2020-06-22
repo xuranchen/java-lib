@@ -126,7 +126,7 @@ public class EvictingRingBuffer<T> extends AbstractCollection<T>
    * Add a value at the end of the ring buffer.
    *
    * @param value element to be appended to the end of the buffer
-   * @return true (as specified by {@link Collection#add(T)})
+   * @return true (as specified by {@link Collection#add(Object)})
    * @throws IllegalStateException if the element cannot be added at this
    *         time due to capacity restrictions
    */
