@@ -9,6 +9,7 @@ import javax.annotation.Nullable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * A counter that accurately tracks burst rate, 1-minute rate and 5-minute rate, with
@@ -25,8 +26,10 @@ public class BurstRateTrackingCounter extends Counter implements Metric {
   private final Counter delegate;
   private final int granularityMillis;
   private final Histogram burstRateHistogram;
-  private long previousCount = 0;
-  private long currentRate = 0;
+  private final AtomicLong validSampleCount = new AtomicLong();
+  private volatile long previousCount = 0;
+  private volatile long currentRate = 0;
+
   private final EvictingRingBuffer<Long> perPeriodStats;
 
   /**
@@ -53,6 +56,9 @@ public class BurstRateTrackingCounter extends Counter implements Metric {
       this.burstRateHistogram.update(this.currentRate);
       this.previousCount = currentCount;
       this.perPeriodStats.add(this.currentRate);
+      if (currentCount > 0) {
+        validSampleCount.incrementAndGet();
+      }
     }, granularityMillis, granularityMillis, TimeUnit.MILLISECONDS);
   }
 
@@ -120,6 +126,15 @@ public class BurstRateTrackingCounter extends Counter implements Metric {
    */
   public long getFiveMinuteCount() {
     return perPeriodStats.toList().stream().mapToLong(i -> i).sum();
+  }
+
+  /**
+   * Get the number of samples since the counter received its first non-zero sample.
+   *
+   * @return number of samples.
+   */
+  public long getSampleCount() {
+    return validSampleCount.get();
   }
 
   /**
