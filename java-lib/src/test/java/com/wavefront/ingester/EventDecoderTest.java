@@ -56,8 +56,8 @@ public class EventDecoderTest {
         "description=\"Really long description with a line break here: \n end of description\" " +
         "tag=eventtag2 host=app4 somerandomannotation=value", out);
     assertEquals(1, out.size());
-    assertEquals(startTs, out.get(0).getStartTime());
-    assertEquals(endTs, out.get(0).getEndTime());
+    assertEquals(startTs, out.get(0).getStartTime().longValue());
+    assertEquals(endTs, out.get(0).getEndTime().longValue());
     assertEquals("Event name for testing", out.get(0).getName());
     assertEquals(4, out.get(0).getHosts().size());
     assertArrayEquals(new String[] {"app1", "app2", "app3", "app4"}, out.get(0).getHosts().toArray());
@@ -79,8 +79,8 @@ public class EventDecoderTest {
         "type=deployment-event multi=foo host=app1 multi=bar multi2=foo2 severity=INFO " +
         "multi2=bar2 host=app2 multi=baz", out);
     assertEquals(1, out.size());
-    assertEquals(startTs, out.get(0).getStartTime());
-    assertEquals(endTs, out.get(0).getEndTime());
+    assertEquals(startTs, out.get(0).getStartTime().longValue());
+    assertEquals(endTs, out.get(0).getEndTime().longValue());
     assertEquals("Event name for testing", out.get(0).getName());
     assertEquals(2, out.get(0).getHosts().size());
     assertArrayEquals(new String[] {"app1", "app2"}, out.get(0).getHosts().toArray());
@@ -100,8 +100,8 @@ public class EventDecoderTest {
         "description=\"Really long description with a line break here: \n end of description\" " +
         "\"tag\"=\"eventtag2\" host=\"app4\" \"somerandomannotation\"=value", out);
     assertEquals(1, out.size());
-    assertEquals(startTs, out.get(0).getStartTime());
-    assertEquals(endTs, out.get(0).getEndTime());
+    assertEquals(startTs, out.get(0).getStartTime().longValue());
+    assertEquals(endTs, out.get(0).getEndTime().longValue());
     assertEquals("Event name for testing", out.get(0).getName());
     assertEquals(4, out.get(0).getHosts().size());
     assertArrayEquals(new String[] {"app1", "app2", "app3", "app4"}, out.get(0).getHosts().toArray());
@@ -123,8 +123,8 @@ public class EventDecoderTest {
         "description=\"Really long description with a line break here: \n end of description\" " +
         "tag=eventtag2 host=app4 somerandomannotation=value", out);
     assertEquals(1, out.size());
-    assertEquals(startTs, out.get(0).getStartTime());
-    assertEquals(startTs + 1, out.get(0).getEndTime());
+    assertEquals(startTs, out.get(0).getStartTime().longValue());
+    assertEquals(startTs + 1, out.get(0).getEndTime().longValue());
     assertEquals("Event name for testing", out.get(0).getName());
     assertEquals(4, out.get(0).getHosts().size());
     assertArrayEquals(new String[] {"app1", "app2", "app3", "app4"}, out.get(0).getHosts().toArray());
@@ -143,8 +143,8 @@ public class EventDecoderTest {
     List<ReportEvent> out = new ArrayList<>();
     decoder.decode("@Event 1569423200123 1569423260123 \"Event name for testing\"", out);
     assertEquals(1, out.size());
-    assertEquals(startTs, out.get(0).getStartTime());
-    assertEquals(endTs, out.get(0).getEndTime());
+    assertEquals(startTs, out.get(0).getStartTime().longValue());
+    assertEquals(endTs, out.get(0).getEndTime().longValue());
     assertEquals("Event name for testing", out.get(0).getName());
     assertEquals(0, out.get(0).getHosts().size());
     assertNull(out.get(0).getTags());
@@ -156,8 +156,8 @@ public class EventDecoderTest {
     List<ReportEvent> out = new ArrayList<>();
     decoder.decode("@Event 1569423200123 1569423260123 Event_name_for_testing", out);
     assertEquals(1, out.size());
-    assertEquals(startTs, out.get(0).getStartTime());
-    assertEquals(endTs, out.get(0).getEndTime());
+    assertEquals(startTs, out.get(0).getStartTime().longValue());
+    assertEquals(endTs, out.get(0).getEndTime().longValue());
     assertEquals("Event_name_for_testing", out.get(0).getName());
     assertEquals(0, out.get(0).getHosts().size());
     assertNull(out.get(0).getTags());
@@ -169,8 +169,8 @@ public class EventDecoderTest {
     List<ReportEvent> out = new ArrayList<>();
     decoder.decode("@Event 1569423200123 \"Event name for testing\"", out);
     assertEquals(1, out.size());
-    assertEquals(startTs, out.get(0).getStartTime());
-    assertEquals(startTs + 1, out.get(0).getEndTime());
+    assertEquals(startTs, out.get(0).getStartTime().longValue());
+    assertEquals(startTs + 1, out.get(0).getEndTime().longValue());
     assertEquals("Event name for testing", out.get(0).getName());
     assertEquals(0, out.get(0).getHosts().size());
     assertNull(out.get(0).getTags());

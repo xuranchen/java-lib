@@ -45,7 +45,7 @@ protocol Reporting {
     // the customer of the span
     string customer;
     // annotations (indexed and unindexed).
-    array<Annotation> annotations = [];
+    array<Annotation> annotations = {};
   }
 
   record SpanLog {
@@ -98,7 +98,7 @@ protocol Reporting {
     SourceOperationType operation;
     SourceTagAction action;
     string source;
-    array<string> annotations = []; // might be empty
+    array<string> annotations = {}; // might be empty
   }
 
   record ReportEvent {

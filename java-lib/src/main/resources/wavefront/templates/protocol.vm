@@ -7,7 +7,7 @@
 ## "License"); you may not use this file except in compliance
 ## with the License.  You may obtain a copy of the License at
 ##
-##     https://www.apache.org/licenses/LICENSE-2.0
+##     http://www.apache.org/licenses/LICENSE-2.0
 ##
 ## Unless required by applicable law or agreed to in writing, software
 ## distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@
 package $protocol.getNamespace();
 #end
 
+@SuppressWarnings("all")
 #if ($protocol.getDoc())
 /** $protocol.getDoc() */
 #end
@@ -44,17 +45,16 @@ public interface $this.mangle($protocol.getName()) {
 #foreach ($annotation in $this.javaAnnotations($message))
   @$annotation
 #end
-  #if ($message.isOneWay())void#else${this.javaUnbox($response, true)}#end
+  #if ($message.isOneWay())void#else${this.javaUnbox($response)}#end
  ${this.mangle($name)}(##
 #foreach ($p in $message.getRequest().getFields())##
-#*      *#${this.javaUnbox($p.schema())} ${this.mangle($p.name())}#if ($foreach.hasNext), #end
+#*      *#${this.javaUnbox($p.schema())} ${this.mangle($p.name())}#if ($velocityHasNext), #end
 #end
-)#if (! $message.isOneWay() && $message.getErrors().getTypes().size() > 1)
- throws ##
+)#if (! $message.isOneWay())
+ throws org.apache.avro.AvroRemoteException##
 ## The first error is always "string", so we skip it.
 #foreach ($error in $message.getErrors().getTypes().subList(1, $message.getErrors().getTypes().size()))
-${this.mangle($error.getFullName())}##
-#if ($foreach.hasNext), #end
+, ${this.mangle($error.getFullName())}##
 #end##    (error list)
 #end##    (one way)
 ;
@@ -85,7 +85,7 @@ ${this.mangle($error.getFullName())}##
      */
     void ${this.mangle($name)}(##
 #foreach ($p in $message.getRequest().getFields())##
-#*      *#${this.javaUnbox($p.schema())} ${this.mangle($p.name())}#if ($foreach.hasNext), #end
+#*      *#${this.javaUnbox($p.schema())} ${this.mangle($p.name())}#if ($velocityHasNext), #end
 #end
 #if ($message.getRequest().getFields().size() > 0), #end
 org.apache.avro.ipc.Callback<${this.javaType($response)}> callback) throws java.io.IOException;
