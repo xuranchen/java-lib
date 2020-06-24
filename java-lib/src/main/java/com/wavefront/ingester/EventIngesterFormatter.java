@@ -78,7 +78,7 @@ public class EventIngesterFormatter extends AbstractIngesterFormatter<ReportEven
       event.setDimensions(null);
     }
     // if no end time specified, we assume it's an instant event
-    if (event.getEndTime() == null || event.getEndTime() == 0) {
+    if (event.getEndTime() == 0 || event.getEndTime() <= event.getStartTime()) {
       event.setEndTime(event.getStartTime() + 1);
     }
     return event;
