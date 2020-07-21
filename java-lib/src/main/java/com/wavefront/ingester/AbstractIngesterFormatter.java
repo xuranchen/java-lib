@@ -216,11 +216,11 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     }
 
     if /*Too many centroids*/ (size > DEFAULT_HISTOGRAM_COMPRESS_LIMIT_RATIO * storageAccuracy) {
-      rewrite(means, counts, size, storageAccuracy);
+      rewrite(means, counts, storageAccuracy);
     }
 
     if /*Bogus counts*/ (counts.stream().anyMatch(i -> i < 1)) {
-      rewrite(means, counts, size, storageAccuracy);
+      rewrite(means, counts, storageAccuracy);
     } else {
       int strictlyIncreasingLength = 1;
       for (; strictlyIncreasingLength < means.size(); ++strictlyIncreasingLength) {
@@ -230,7 +230,7 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
       }
 
       if /*Not ordered*/ (strictlyIncreasingLength != means.size()) {
-        rewrite(means, counts, size, storageAccuracy);
+        rewrite(means, counts, storageAccuracy);
       }
     }
   }
@@ -240,10 +240,9 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
    *
    * @param means  centroids means
    * @param counts centroid counts
-   * @param size  limit for means and counters to rewrite, usually min(means.size(), counts.size())
    */
-  private static void rewrite(List<Double> means, List<Integer> counts,
-                              int size, int storageAccuracy) {
+  private static void rewrite(List<Double> means, List<Integer> counts, int storageAccuracy) {
+    int size = means.size();
     TDigest temp = new AVLTreeDigest(storageAccuracy);
     for (int i = 0; i < size; ++i) {
       int count = counts.get(i);

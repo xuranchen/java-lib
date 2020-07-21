@@ -391,4 +391,39 @@ public class HistogramDecoderTest {
     // Verify we have less centroids after compression.
     assertThat(centroidsLimit).isGreaterThan(h.getBins().size());
   }
+
+  @Test
+  public void testMultipleRewrites() {
+    HistogramDecoder decoder = new HistogramDecoder();
+    List<ReportPoint> out = new ArrayList<>();
+
+    IngesterContext ingesterContext =
+            new IngesterContext.Builder().withTargetHistogramAccuracy(32).
+                    throwIfTooManyHistogramCentroids(100).build();
+
+    String s = "!M 1471988653 #16456 1591 #747 2 #8436 81 #12418 104 #13033 1496 #7012 112583 #811 298964 #4922 46 " +
+            "#10531 1056 #1248 1875 #1340 297186 #18784 424 #12377 3328 #4050 276614 #6082 27 #16895 1273 #6054 " +
+            "244180 #15411 191 #17177 1096 #4467 270371 #9570 62 #17097 1223 #6037 234635 #18607 437 #7627 36 #13492 " +
+            "171 #18478 1156 #10438 1803 #281 4 #9509 119 #16272 792 #2001 1137 #6601 224814 #7985 51 #11230 161 " +
+            "#17005 364 #13822 2037 #9733 125256 #6459 31 #6788 68 #12295 72705 #1707 3 #14993 387 #14178 1845 #13144 " +
+            "35250 #17580 376 #17257 398 #10746 1453 #13539 14069 #3645 24 #16091 250 #12815 260 #17397 280 #7425 " +
+            "191493 #605 265747 #11772 1323 #3008 287442 #1237 1 #10035 111 #14229 145 #17960 316 #7964 42 #16197 " +
+            "1540 #9629 140006 #9235 1688 #14510 1719 #2227 4 #3373 8 #16455 304 #15426 340 #4502 21 #9764 155555 " +
+            "#11299 155 #3054 1213 #15864 1643 #5354 261841 #254 299646 #12264 125 #11590 200 #16778 239 #13997 1766 " +
+            "#2477 291390 #1868 294842 #10653 87 #13820 136 #15529 1368 #15642 1414 #4466 14 #18079 352 #17426 451 " +
+            "#3244 282363 #593 10 #8006 56 #3946 11 #18072 504 #9261 169634 #11343 95 #8404 100533 #6378 214476 " +
+            "TestMetric source=Test key=value";
+
+    decoder.decodeReportPoints(s, out, "customer", ingesterContext);
+
+    assertThat(out).isNotEmpty();
+    ReportPoint p = out.get(0);
+    assertThat(p.getValue()).isNotNull();
+    assertThat(p.getValue().getClass()).isEqualTo(Histogram.class);
+
+    Histogram h = (Histogram) p.getValue();
+
+    // Verify we have less centroids after compression.
+    assertThat(99).isGreaterThan(h.getBins().size());
+  }
 }
