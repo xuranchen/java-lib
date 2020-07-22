@@ -3,18 +3,14 @@ package com.wavefront.ingester;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import com.tdunning.math.stats.AVLTreeDigest;
-import com.tdunning.math.stats.Centroid;
-import com.tdunning.math.stats.TDigest;
-
 import org.apache.avro.specific.SpecificRecordBase;
-import org.apache.commons.lang.StringUtils;
 import wavefront.report.Annotation;
 import wavefront.report.Histogram;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -22,7 +18,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import static com.wavefront.ingester.IngesterContext.DEFAULT_HISTOGRAM_COMPRESS_LIMIT_RATIO;
 import static org.apache.commons.lang.StringUtils.containsAny;
 import static org.apache.commons.lang.StringUtils.replace;
 
@@ -42,8 +37,6 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
   private static final String DOUBLE_QUOTE_STR = "\"";
   private static final String ESCAPED_DOUBLE_QUOTE_STR = "\\\"";
 
-  private static final IngesterContext DEFAULT_INGESTER_CONTEXT = new IngesterContext.Builder().build();
-
   protected final List<FormatterElement<T>> elements;
 
   protected AbstractIngesterFormatter(List<FormatterElement<T>> elements) {
@@ -51,16 +44,11 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
   }
 
   protected interface FormatterElement<T> {
-    default void consume(StringParser parser, T target) {
-      consume(parser, target, DEFAULT_INGESTER_CONTEXT);
-    }
-
-    void consume(StringParser parser, T target, IngesterContext ingesterContext);
+    void consume(StringParser parser, T target);
   }
 
   /**
-   * This class can be used to create a parser for a content that the proxy receives - e.g.,
-   * ReportPoint and ReportSourceTag.
+   * This class can be used to create a parser for content that proxy receives.
    */
   public abstract static class IngesterFormatBuilder<T extends SpecificRecordBase> {
     final List<FormatterElement<T>> elements = Lists.newArrayList();
@@ -129,7 +117,25 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     }
 
     public IngesterFormatBuilder<T> annotationList(BiConsumer<T, List<Annotation>> listConsumer) {
-      elements.add(new AnnotationList<>(listConsumer, x -> !StringUtils.isNumeric(x)));
+      elements.add(new AnnotationList<>(listConsumer, null));
+      return this;
+    }
+
+    public IngesterFormatBuilder<T> annotationList(BiConsumer<T, List<Annotation>> listConsumer,
+                                                   Predicate<String> stringPredicate) {
+      elements.add(new AnnotationList<>(listConsumer, stringPredicate));
+      return this;
+    }
+
+    public IngesterFormatBuilder<T> annotationList(Function<T, List<Annotation>> listProvider,
+                                                   BiConsumer<T, List<Annotation>> listConsumer) {
+      elements.add(new AnnotationList<>(listConsumer, listProvider, null, null));
+      return this;
+    }
+
+    public IngesterFormatBuilder<T> annotationList(BiConsumer<T, List<Annotation>> listConsumer,
+                                                   int limit) {
+      elements.add(new AnnotationList<>(listConsumer, null, limit, null));
       return this;
     }
 
@@ -165,7 +171,7 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     }
 
     @Override
-    public void consume(StringParser parser, T target, IngesterContext ingesterContext) {
+    public void consume(StringParser parser, T target) {
       String text = parser.next();
       if (!isAllowedLiteral(text)) throw new RuntimeException("'" + text +
           "' is not allowed here!");
@@ -190,7 +196,7 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     }
 
     @Override
-    public void consume(StringParser parser, T target, IngesterContext ingesterContext) {
+    public void consume(StringParser parser, T target) {
       String token = parser.next();
       if (token == null)
         throw new RuntimeException("Value is missing");
@@ -202,86 +208,21 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     }
   }
 
-  /**
-   * Optimize the means/counts pair if necessary .
-   *
-   * @param means  centroids means
-   * @param counts centroid counts
-   */
-  public static void optimizeForStorage(@Nullable List<Double> means,
-                                        @Nullable List<Integer> counts,
-                                        int size, int storageAccuracy) {
-    if (means == null || means.isEmpty() || counts == null || counts.isEmpty()) {
-      return;
-    }
-
-    if /*Too many centroids*/ (size > DEFAULT_HISTOGRAM_COMPRESS_LIMIT_RATIO * storageAccuracy) {
-      rewrite(means, counts, storageAccuracy);
-    }
-
-    if /*Bogus counts*/ (counts.stream().anyMatch(i -> i < 1)) {
-      rewrite(means, counts, storageAccuracy);
-    } else {
-      int strictlyIncreasingLength = 1;
-      for (; strictlyIncreasingLength < means.size(); ++strictlyIncreasingLength) {
-        if (means.get(strictlyIncreasingLength - 1) >= means.get(strictlyIncreasingLength)) {
-          break;
-        }
-      }
-
-      if /*Not ordered*/ (strictlyIncreasingLength != means.size()) {
-        rewrite(means, counts, storageAccuracy);
-      }
-    }
-  }
-
-  /**
-   * Reorganizes a mean/count array pair (such that centroids) are in strictly ascending order.
-   *
-   * @param means  centroids means
-   * @param counts centroid counts
-   */
-  private static void rewrite(List<Double> means, List<Integer> counts, int storageAccuracy) {
-    int size = means.size();
-    TDigest temp = new AVLTreeDigest(storageAccuracy);
-    for (int i = 0; i < size; ++i) {
-      int count = counts.get(i);
-      if (count > 0) {
-        temp.add(means.get(i), count);
-      }
-    }
-    temp.compress();
-
-    means.clear();
-    counts.clear();
-    for (Centroid c : temp.centroids()) {
-      means.add(c.mean());
-      counts.add(c.count());
-    }
-  }
-
   public static class Centroids<T extends SpecificRecordBase> implements FormatterElement<T> {
     private static final String WEIGHT = "#";
 
     @Override
-    public void consume(StringParser parser, T target, IngesterContext ingesterContext) {
+    public void consume(StringParser parser, T target) {
       List<Integer> counts = new ArrayList<>();
       List<Double> bins = new ArrayList<>();
 
-      int size = 0;
       while (WEIGHT.equals(parser.peek())) {
-        size++;
-        if (size > ingesterContext.getHistogramCentroidsLimit()) {
-          throw new TooManyCentroidException();
-        }
         parser.next(); // skip the # token
         counts.add(parse(parser.next(), "centroid weight", true).intValue());
         bins.add(parse(parser.next(), "centroid value", false).doubleValue());
       }
 
-      if (size == 0) throw new RuntimeException("Empty histogram (no centroids)");
-
-      optimizeForStorage(bins, counts, size, ingesterContext.getTargetHistogramAccuracy());
+      if (counts.size() == 0) throw new RuntimeException("Empty histogram (no centroids)");
 
       Histogram histogram = (Histogram) target.get("value");
       histogram.setCounts(counts);
@@ -312,7 +253,7 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     }
 
     @Override
-    public void consume(StringParser parser, T target, IngesterContext ingesterContext) {
+    public void consume(StringParser parser, T target) {
       Long timestamp = parseTimestamp(parser, optional, raw);
       if (timestamp != null) timestampConsumer.accept(target, timestamp);
     }
@@ -326,7 +267,7 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     }
 
     @Override
-    public void consume(StringParser parser, T target, IngesterContext ingesterContext) {
+    public void consume(StringParser parser, T target) {
       List<String> list = new ArrayList<>();
       while (parser.hasNext()) {
         list.add(parser.next());
@@ -356,7 +297,7 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     }
 
     @Override
-    public void consume(StringParser parser, T target, IngesterContext ingesterContext) {
+    public void consume(StringParser parser, T target) {
       Map<String, String> stringMap = null;
       if (stringMapProvider != null) {
         stringMap = stringMapProvider.apply(target);
@@ -382,7 +323,7 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     }
 
     @Override
-    public void consume(StringParser parser, T target, IngesterContext ingesterContext) {
+    public void consume(StringParser parser, T target) {
       Map<String, List<String>> multimap = new HashMap<>();
       while (parser.hasNext()) {
         parseKeyValuePair(parser, (k, v) -> {
@@ -395,19 +336,40 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
 
   public static class AnnotationList<T extends SpecificRecordBase> implements FormatterElement<T> {
     private final BiConsumer<T, List<Annotation>> annotationListConsumer;
+    private final Function<T, List<Annotation>> annotationListProvider;
+    private final Integer limit;
     private final Predicate<String> predicate;
 
     AnnotationList(BiConsumer<T, List<Annotation>> annotationListConsumer,
                    Predicate<String> predicate) {
+      this(annotationListConsumer, null, null, predicate);
+    }
+
+    AnnotationList(BiConsumer<T, List<Annotation>> annotationListConsumer,
+                   @Nullable Function<T, List<Annotation>> annotationListProvider,
+                   @Nullable Integer limit,
+                   @Nullable Predicate<String> predicate) {
       this.annotationListConsumer = annotationListConsumer;
+      this.annotationListProvider = annotationListProvider;
+      this.limit = limit;
       this.predicate = predicate;
     }
 
     @Override
-    public void consume(StringParser parser, T target, IngesterContext ingesterContext) {
-      List<Annotation> annotationList = new ArrayList<>();
-      while (parser.hasNext() && predicate.test(parser.peek())) {
+    public void consume(StringParser parser, T target) {
+      List<Annotation> annotations = null;
+      if (annotationListProvider != null) {
+        annotations = annotationListProvider.apply(target);
+      }
+      if (annotations == null) {
+        annotations = new ArrayList<>();
+      }
+      List<Annotation> annotationList = annotations;
+      int i = 0;
+      while (parser.hasNext() && (limit == null || i < limit) &&
+          (predicate == null || predicate.test(parser.peek()))) {
         parseKeyValuePair(parser, (k, v) -> annotationList.add(new Annotation(k, v)));
+        i++;
       }
       annotationListConsumer.accept(target, annotationList);
     }
@@ -489,14 +451,52 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     return text;
   }
 
-  public T drive(String input, @Nullable Supplier<String> defaultHostNameSupplier,
-                 String customerId) {
-    return drive(input, defaultHostNameSupplier, customerId, null, null);
+  @Nullable
+  public static String getHost(@Nullable List<Annotation> annotations,
+                               @Nullable List<String> customSourceTags) {
+    String source = null;
+    String host = null;
+    if (annotations != null) {
+      Iterator<Annotation> iter = annotations.iterator();
+      while (iter.hasNext()) {
+        Annotation annotation = iter.next();
+        if (annotation.getKey().equals("source")) {
+          iter.remove();
+          source = annotation.getValue();
+        } else if (annotation.getKey().equals("host")) {
+          iter.remove();
+          host = annotation.getValue();
+        } else if (annotation.getKey().equals("tag")) {
+          annotation.setKey("_tag");
+        }
+      }
+      if (host != null) {
+        if (source == null) {
+          source = host;
+        } else {
+          annotations.add(new Annotation("_host", host));
+        }
+      }
+      if (source == null && customSourceTags != null) {
+        // iterate over the set of custom tags, breaking when one is found
+        for (String tag : customSourceTags) {
+          // nested loops are not pretty but we need to ensure the order of customSourceTags
+          for (Annotation annotation : annotations) {
+            if (annotation.getKey().equals(tag)) {
+              source = annotation.getValue();
+              break;
+            }
+          }
+          if (source != null) break;
+        }
+      }
+    }
+    return source;
   }
 
   public T drive(String input, @Nullable Supplier<String> defaultHostNameSupplier,
-                 String customerId, IngesterContext ingesterContext) {
-    return drive(input, defaultHostNameSupplier, customerId, null, ingesterContext);
+                 String customerId) {
+    return drive(input, defaultHostNameSupplier, customerId, null, null);
   }
 
   public abstract T drive(String input, @Nullable Supplier<String> defaultHostNameSupplier,

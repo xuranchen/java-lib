@@ -26,8 +26,8 @@ public class EventDecoder implements ReportableEntityDecoder<String, ReportEvent
           build();
 
   @Override
-  public void decode(String msg, List<ReportEvent> out, String customerId) {
-    ReportEvent event = FORMAT.drive(msg, null, "default");
+  public void decode(String msg, List<ReportEvent> out, String customerId, IngesterContext ctx) {
+    ReportEvent event = FORMAT.drive(msg, null, "default", null, ctx);
     if (out != null) {
       out.add(event);
     }

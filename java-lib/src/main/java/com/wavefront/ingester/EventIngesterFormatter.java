@@ -43,11 +43,7 @@ public class EventIngesterFormatter extends AbstractIngesterFormatter<ReportEven
 
     try {
       for (FormatterElement<ReportEvent> element : elements) {
-        if (ingesterContext != null) {
-          element.consume(parser, event, ingesterContext);
-        } else {
-          element.consume(parser, event);
-        }
+        element.consume(parser, event);
       }
     } catch (Exception ex) {
       throw new RuntimeException("Could not parse: " + input, ex);

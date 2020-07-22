@@ -5,6 +5,8 @@ import com.google.common.base.Preconditions;
 import java.util.List;
 import java.util.function.Supplier;
 
+import org.apache.commons.lang.StringUtils;
+
 import wavefront.report.Span;
 
 /**
@@ -18,7 +20,7 @@ public class SpanDecoder implements ReportableEntityDecoder<String, Span> {
 
   private static final AbstractIngesterFormatter<Span> FORMAT = SpanIngesterFormatter.newBuilder().
       text(Span::setName).
-      annotationList(Span::setAnnotations).
+      annotationList(Span::setAnnotations, x -> !StringUtils.isNumeric(x)).
       rawTimestamp(Span::setStartMillis).
       rawTimestamp(SpanDecoder::setDuration).
       build();
@@ -35,8 +37,8 @@ public class SpanDecoder implements ReportableEntityDecoder<String, Span> {
   }
 
   @Override
-  public void decode(String msg, List<Span> out, String customerId) {
-    Span span = FORMAT.drive(msg, hostNameSupplier, customerId);
+  public void decode(String msg, List<Span> out, String customerId, IngesterContext ctx) {
+    Span span = FORMAT.drive(msg, hostNameSupplier, customerId, null, ctx);
     if (out != null) {
       out.add(span);
     }

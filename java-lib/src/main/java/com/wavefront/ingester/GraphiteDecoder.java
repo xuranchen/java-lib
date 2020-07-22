@@ -13,12 +13,15 @@ import wavefront.report.ReportPoint;
 import javax.annotation.Nullable;
 
 /**
+ * DEPRECATED: use {@link ReportMetricDecoder} instead.
+ *
  * Graphite decoder that takes in a point of the type:
  *
  * [metric] [value] [timestamp] [annotations]
  *
  * @author Clement Pang (clement@wavefront.com).
  */
+@Deprecated
 public class GraphiteDecoder implements Decoder<String> {
 
   private static final Pattern CUSTOMERID = Pattern.compile("[a-z]+");
@@ -44,8 +47,9 @@ public class GraphiteDecoder implements Decoder<String> {
   }
 
   @Override
-  public void decodeReportPoints(String msg, List<ReportPoint> out, String customerId, IngesterContext ingesterContext) {
-    pointDecoder.decode(msg, out, customerId);
+  public void decodeReportPoints(String msg, List<ReportPoint> out, String customerId,
+                                 IngesterContext ctx) {
+    pointDecoder.decode(msg, out, customerId, null);
   }
 
   @Override

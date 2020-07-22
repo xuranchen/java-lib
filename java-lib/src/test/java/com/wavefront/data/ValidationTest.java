@@ -4,8 +4,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 import com.wavefront.api.agent.ValidationConfiguration;
-import com.wavefront.ingester.GraphiteDecoder;
-import com.wavefront.ingester.HistogramDecoder;
+import com.wavefront.ingester.ReportMetricDecoder;
+import com.wavefront.ingester.ReportHistogramDecoder;
 import com.wavefront.ingester.SpanDecoder;
 
 import org.junit.Assert;
@@ -13,13 +13,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import wavefront.report.Annotation;
-import wavefront.report.Histogram;
-import wavefront.report.ReportPoint;
+import wavefront.report.ReportHistogram;
+import wavefront.report.ReportMetric;
 import wavefront.report.Span;
 
 import static org.junit.Assert.assertEquals;
@@ -32,11 +30,11 @@ import static org.junit.Assert.fail;
 public class ValidationTest {
 
   private ValidationConfiguration config;
-  private GraphiteDecoder decoder;
+  private ReportMetricDecoder decoder;
 
   @Before
   public void testSetup() {
-    this.decoder = new GraphiteDecoder(ImmutableList.of());
+    this.decoder = new ReportMetricDecoder(null, ImmutableList.of());
     this.config = new ValidationConfiguration().
         setMetricLengthLimit(15).
         setHostLengthLimit(10).
@@ -127,27 +125,24 @@ public class ValidationTest {
 
   @Test
   public void testPointAnnotationKeyValidation() {
-    Map<String, String> goodMap = new HashMap<String, String>();
-    goodMap.put("key", "value");
+    List<Annotation> good = ImmutableList.of(new Annotation("key", "value"));
+    List<Annotation> bad = ImmutableList.of(new Annotation("k:ey", "value"));
 
-    Map<String, String> badMap = new HashMap<String, String>();
-    badMap.put("k:ey", "value");
+    ReportMetric rp = new ReportMetric("some metric", System.currentTimeMillis(), 10.0, "host",
+        "table", good);
+    Assert.assertTrue(Validation.annotationKeysAreValid(rp.getAnnotations()));
 
-    ReportPoint rp = new ReportPoint("some metric", System.currentTimeMillis(), 10L, "host", "table",
-        goodMap);
-    Assert.assertTrue(Validation.annotationKeysAreValid(rp));
-
-    rp.setAnnotations(badMap);
-    Assert.assertFalse(Validation.annotationKeysAreValid(rp));
+    rp.setAnnotations(bad);
+    Assert.assertFalse(Validation.annotationKeysAreValid(rp.getAnnotations()));
   }
 
   @Test
   public void testValidationConfig() {
-    ReportPoint point = getValidPoint();
-    Validation.validatePoint(point, config);
+    ReportMetric point = getValidPoint();
+    Validation.validateMetric(point, config);
 
-    ReportPoint histogram = getValidHistogram();
-    Validation.validatePoint(histogram, config);
+    ReportHistogram histogram = getValidHistogram();
+    Validation.validateHistogram(histogram, config);
 
     Span span = getValidSpan();
     Validation.validateSpan(span, config);
@@ -155,13 +150,13 @@ public class ValidationTest {
 
   @Test
   public void testInvalidPointsWithValidationConfig() {
-    ReportPoint point = getValidPoint();
-    Validation.validatePoint(point, config);
+    ReportMetric point = getValidPoint();
+    Validation.validateMetric(point, config);
 
     // metric has invalid characters: WF-400
     point.setMetric("metric78@901234");
     try {
-      Validation.validatePoint(point, config);
+      Validation.validateMetric(point, config);
       fail();
     } catch (IllegalArgumentException iae) {
       assertTrue(iae.getMessage().contains("WF-400"));
@@ -169,70 +164,60 @@ public class ValidationTest {
 
     // point tag key has invalid characters: WF-401
     point = getValidPoint();
-    point.getAnnotations().remove("tagk4");
-    point.getAnnotations().put("tag!4", "value");
+    point.getAnnotations().removeIf(k -> k.getKey().equals("tagk4"));
+    point.getAnnotations().add(new Annotation("tag!4", "value"));
     try {
-      Validation.validatePoint(point, config);
+      Validation.validateMetric(point, config);
       fail();
     } catch (IllegalArgumentException iae) {
       assertTrue(iae.getMessage().contains("WF-401"));
-    }
-
-    // string values are not allowed: WF-403
-    point = getValidPoint();
-    point.setValue("stringValue");
-    try {
-      Validation.validatePoint(point, config);
-      fail();
-    } catch (IllegalArgumentException iae) {
-      assertTrue(iae.getMessage().contains("WF-403"));
     }
 
     // delta metrics can't be non-positive: WF-404
     point = getValidPoint();
     point.setMetric("∆delta");
     point.setValue(1.0d);
-    Validation.validatePoint(point, config);
+    Validation.validateMetric(point, config);
     point.setValue(1L);
-    Validation.validatePoint(point, config);
+    Validation.validateMetric(point, config);
     point.setValue(-0.1d);
     try {
-      Validation.validatePoint(point, config);
+      Validation.validateMetric(point, config);
       fail();
     } catch (DeltaCounterValueException iae) {
       assertTrue(iae.getMessage().contains("WF-404"));
     }
     point.setValue(0.0d);
     try {
-      Validation.validatePoint(point, config);
+      Validation.validateMetric(point, config);
       fail();
     } catch (IllegalArgumentException iae) {
       assertTrue(iae.getMessage().contains("WF-404"));
     }
     point.setValue(-1L);
     try {
-      Validation.validatePoint(point, config);
+      Validation.validateMetric(point, config);
       fail();
     } catch (IllegalArgumentException iae) {
       assertTrue(iae.getMessage().contains("WF-404"));
     }
 
     // empty histogram: WF-405
-    point = getValidHistogram();
-    Validation.validatePoint(point, config);
+    ReportHistogram histo = getValidHistogram();
+    Validation.validateHistogram(histo, config);
 
-    ((Histogram) point.getValue()).setCounts(ImmutableList.of(0, 0, 0));
+    histo.getValue().setCounts(ImmutableList.of(0, 0, 0));
     try {
-      Validation.validatePoint(point, config);
+      Validation.validateHistogram(histo, config);
       fail();
     } catch (EmptyHistogramException iae) {
       assertTrue(iae.getMessage().contains("WF-405"));
     }
-    point = getValidHistogram();
-    ((Histogram) point.getValue()).setBins(ImmutableList.of());
-    ((Histogram) point.getValue()).setCounts(ImmutableList.of());
+    histo = getValidHistogram();
+    histo.getValue().setBins(ImmutableList.of());
+    histo.getValue().setCounts(ImmutableList.of());
     try {
-      Validation.validatePoint(point, config);
+      Validation.validateHistogram(histo, config);
       fail();
     } catch (IllegalArgumentException iae) {
       assertTrue(iae.getMessage().contains("WF-405"));
@@ -242,7 +227,7 @@ public class ValidationTest {
     point = getValidPoint();
     point.setHost("");
     try {
-      Validation.validatePoint(point, config);
+      Validation.validateMetric(point, config);
       fail();
     } catch (IllegalArgumentException iae) {
       assertTrue(iae.getMessage().contains("WF-406"));
@@ -251,11 +236,11 @@ public class ValidationTest {
     // source name too long: WF-407
     point = getValidPoint();
     point.setHost("host567890");
-    Validation.validatePoint(point, config);
+    Validation.validateMetric(point, config);
     point = getValidPoint();
     point.setHost("host5678901");
     try {
-      Validation.validatePoint(point, config);
+      Validation.validateMetric(point, config);
       fail();
     } catch (IllegalArgumentException iae) {
       assertTrue(iae.getMessage().contains("WF-407"));
@@ -264,24 +249,24 @@ public class ValidationTest {
     // metric too long: WF-408
     point = getValidPoint();
     point.setMetric("metric789012345");
-    Validation.validatePoint(point, config);
+    Validation.validateMetric(point, config);
     point = getValidPoint();
     point.setMetric("metric7890123456");
     try {
-      Validation.validatePoint(point, config);
+      Validation.validateMetric(point, config);
       fail();
     } catch (IllegalArgumentException iae) {
       assertTrue(iae.getMessage().contains("WF-408"));
     }
 
     // histogram name too long: WF-409
-    point = getValidHistogram();
-    point.setMetric("metric7890");
-    Validation.validatePoint(point, config);
-    point = getValidHistogram();
-    point.setMetric("metric78901");
+    histo = getValidHistogram();
+    histo.setMetric("metric7890");
+    Validation.validateHistogram(histo, config);
+    histo = getValidHistogram();
+    histo.setMetric("metric78901");
     try {
-      Validation.validatePoint(point, config);
+      Validation.validateHistogram(histo, config);
       fail();
     } catch (IllegalArgumentException iae) {
       assertTrue(iae.getMessage().contains("WF-409"));
@@ -289,9 +274,9 @@ public class ValidationTest {
 
     // too many point tags: WF-410
     point = getValidPoint();
-    point.getAnnotations().put("newtag", "newtagV");
+    point.getAnnotations().add(new Annotation("newtag", "newtagV"));
     try {
-      Validation.validatePoint(point, config);
+      Validation.validateMetric(point, config);
       fail();
     } catch (IllegalArgumentException iae) {
       assertTrue(iae.getMessage().contains("WF-410"));
@@ -299,15 +284,15 @@ public class ValidationTest {
 
     // point tag (key+value) too long: WF-411
     point = getValidPoint();
-    point.getAnnotations().remove("tagk4");
-    point.getAnnotations().put(Strings.repeat("k", 100), Strings.repeat("v", 154));
+    point.getAnnotations().removeIf(k -> k.getKey().equals("tagk4"));
+    point.getAnnotations().add(new Annotation(Strings.repeat("k", 100), Strings.repeat("v", 154)));
     ValidationConfiguration tagConfig = new ValidationConfiguration().
         setAnnotationsKeyLengthLimit(255).
         setAnnotationsValueLengthLimit(255);
-    Validation.validatePoint(point, tagConfig);
-    point.getAnnotations().put(Strings.repeat("k", 100), Strings.repeat("v", 155));
+    Validation.validateMetric(point, tagConfig);
+    point.getAnnotations().add(new Annotation(Strings.repeat("k", 100), Strings.repeat("v", 155)));
     try {
-      Validation.validatePoint(point, tagConfig);
+      Validation.validateMetric(point, tagConfig);
       fail();
     } catch (IllegalArgumentException iae) {
       assertTrue(iae.getMessage().contains("WF-411"));
@@ -315,10 +300,10 @@ public class ValidationTest {
 
     // point tag key too long: WF-412
     point = getValidPoint();
-    point.getAnnotations().remove("tagk4");
-    point.getAnnotations().put("tagk44", "v");
+    point.getAnnotations().removeIf(k -> k.getKey().equals("tagk4"));
+    point.getAnnotations().add(new Annotation("tagk44", "v"));
     try {
-      Validation.validatePoint(point, config);
+      Validation.validateMetric(point, config);
       fail();
     } catch (IllegalArgumentException iae) {
       assertTrue(iae.getMessage().contains("WF-412"));
@@ -326,12 +311,14 @@ public class ValidationTest {
 
     // point tag value too long: WF-413
     point = getValidPoint();
-    point.getAnnotations().put("tagk4", "value67890");
-    Validation.validatePoint(point, config);
+    point.getAnnotations().removeIf(x -> x.getKey().equals("tagk4"));
+    point.getAnnotations().add(new Annotation("tagk4", "value67890"));
+    Validation.validateMetric(point, config);
     point = getValidPoint();
-    point.getAnnotations().put("tagk4", "value678901");
+    point.getAnnotations().removeIf(x -> x.getKey().equals("tagk4"));
+    point.getAnnotations().add(new Annotation("tagk4", "value678901"));
     try {
-      Validation.validatePoint(point, config);
+      Validation.validateMetric(point, config);
       fail();
     } catch (IllegalArgumentException iae) {
       assertTrue(iae.getMessage().contains("WF-413"));
@@ -339,9 +326,10 @@ public class ValidationTest {
 
     // point tag value empty: WF-414
     point = getValidPoint();
-    point.getAnnotations().put("tagk4", "");
+    point.getAnnotations().removeIf(x -> x.getKey().equals("tagk4"));
+    point.getAnnotations().add(new Annotation("tagk4", ""));
     try {
-      Validation.validatePoint(point, config);
+      Validation.validateMetric(point, config);
       fail();
     } catch (EmptyTagValueException iae) {
       assertTrue(iae.getMessage().contains("WF-414"));
@@ -350,18 +338,18 @@ public class ValidationTest {
 
   @Test(expected = DeltaCounterValueException.class)
   public void testZeroDeltaValue() throws Exception {
-    GraphiteDecoder decoder = new GraphiteDecoder("localhost", ImmutableList.of());
-    List<ReportPoint> out = new ArrayList<>();
-    decoder.decodeReportPoints("Δrequest.count 0 source=test.wfc", out);
-    Validation.validatePoint(out.get(0), config);
+    ReportMetricDecoder decoder = new ReportMetricDecoder(() -> "localhost", ImmutableList.of());
+    List<ReportMetric> out = new ArrayList<>();
+    decoder.decode("Δrequest.count 0 source=test.wfc", out);
+    Validation.validateMetric(out.get(0), config);
   }
 
   @Test(expected = DeltaCounterValueException.class)
   public void testNegativeDeltas() throws Exception {
-    GraphiteDecoder decoder = new GraphiteDecoder("localhost", ImmutableList.of());
-    List<ReportPoint> out = new ArrayList<>();
-    decoder.decodeReportPoints("∆request.count -1 source=test.wfc", out);
-    Validation.validatePoint(out.get(0), config);
+    ReportMetricDecoder decoder = new ReportMetricDecoder(() -> "localhost", ImmutableList.of());
+    List<ReportMetric> out = new ArrayList<>();
+    decoder.decode("∆request.count -1 source=test.wfc", out);
+    Validation.validateMetric(out.get(0), config);
   }
 
   @Test
@@ -454,32 +442,33 @@ public class ValidationTest {
 
   @Test
   public void testValidHistogram() {
-    HistogramDecoder decoder = new HistogramDecoder();
-    List<ReportPoint> out = new ArrayList<>();
-    decoder.decodeReportPoints("!M 1533849540 #1 0.0 #2 1.0 #3 3.0 TestMetric source=Test key=value", out, "dummy");
-    Validation.validatePoint(out.get(0), "test", Validation.Level.NUMERIC_ONLY);
+    ReportHistogramDecoder decoder = new ReportHistogramDecoder();
+    List<ReportHistogram> out = new ArrayList<>();
+    decoder.decode("!M 1533849540 #1 0.0 #2 1.0 #3 3.0 TestMetric source=Test key=value", out, 
+        "dummy");
+    Validation.validateHistogram(out.get(0), new ValidationConfiguration());
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testEmptyHistogramThrows() {
-    HistogramDecoder decoder = new HistogramDecoder();
-    List<ReportPoint> out = new ArrayList<>();
-    decoder.decodeReportPoints("!M 1533849540 #0 0.0 #0 1.0 #0 3.0 TestMetric source=Test key=value", out, "dummy");
-    Validation.validatePoint(out.get(0), "test", Validation.Level.NUMERIC_ONLY);
+    ReportHistogramDecoder decoder = new ReportHistogramDecoder();
+    List<ReportHistogram> out = new ArrayList<>();
+    decoder.decode("!M 1533849540 #0 0.0 #0 1.0 #0 3.0 TestMetric source=Test key=value", out, "dummy");
+    Validation.validateHistogram(out.get(0), new ValidationConfiguration());
     Assert.fail("Empty Histogram should fail validation!");
   }
 
-  private ReportPoint getValidPoint() {
-    List<ReportPoint> out = new ArrayList<>();
-    decoder.decodeReportPoints("metric789012345 1 source=source7890 tagk1=tagv1 tagk2=tagv2 tagk3=tagv3 tagk4=tagv4",
+  private ReportMetric getValidPoint() {
+    List<ReportMetric> out = new ArrayList<>();
+    decoder.decode("metric789012345 1 source=source7890 tagk1=tagv1 tagk2=tagv2 tagk3=tagv3 tagk4=tagv4",
         out, "dummy");
     return out.get(0);
   }
 
-  private ReportPoint getValidHistogram() {
-    HistogramDecoder decoder = new HistogramDecoder();
-    List<ReportPoint> out = new ArrayList<>();
-    decoder.decodeReportPoints("!M 1533849540 #1 0.0 #2 1.0 #3 3.0 TestMetric source=Test key=value", out, "dummy");
+  private ReportHistogram getValidHistogram() {
+    ReportHistogramDecoder decoder = new ReportHistogramDecoder();
+    List<ReportHistogram> out = new ArrayList<>();
+    decoder.decode("!M 1533849540 #1 0.0 #2 1.0 #3 3.0 TestMetric source=Test key=value", out, "dummy");
     return out.get(0);
   }
 
@@ -491,5 +480,4 @@ public class ValidationTest {
         spanOut);
     return spanOut.get(0);
   }
-
 }

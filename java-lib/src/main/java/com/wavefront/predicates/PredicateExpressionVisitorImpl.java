@@ -13,6 +13,8 @@ import com.wavefront.common.TimeProvider;
 
 import condition.parser.PredicateExpressionParser;
 import condition.parser.PredicateExpressionBaseVisitor;
+import wavefront.report.ReportHistogram;
+import wavefront.report.ReportMetric;
 import wavefront.report.ReportPoint;
 import wavefront.report.Span;
 
@@ -315,20 +317,26 @@ public class PredicateExpressionVisitorImpl extends PredicateExpressionBaseVisit
     switch (property) {
       case "value":
         return entity -> {
-          if (entity instanceof ReportPoint) {
+          if (entity instanceof ReportMetric) {
+            return ((ReportMetric) entity).getValue();
+          } else if (entity instanceof ReportPoint) {
             return ((ReportPoint) entity).getValue() instanceof Number ?
                 ((Number) ((ReportPoint) entity).getValue()).doubleValue() : 0;
           }
-          throw new IllegalArgumentException("$value can only be used on a ReportPoint, got " +
+          throw new IllegalArgumentException("$value can only be used on a metric, got " +
               entity.getClass().getCanonicalName());
         };
       case "timestamp":
         return entity -> {
-          if (entity instanceof ReportPoint) {
+          if (entity instanceof ReportMetric) {
+            return ((ReportMetric) entity).getTimestamp();
+          } else if (entity instanceof ReportHistogram) {
+            return ((ReportHistogram) entity).getTimestamp();
+          } else if (entity instanceof ReportPoint) {
             return ((ReportPoint) entity).getTimestamp();
           }
-          throw new IllegalArgumentException("$timestamp can only be used on a ReportPoint, got " +
-              entity.getClass().getCanonicalName());
+          throw new IllegalArgumentException("$timestamp can only be used on a metric or a " +
+              "histogram, got " + entity.getClass().getCanonicalName());
         };
       case "startMillis":
         return entity -> {

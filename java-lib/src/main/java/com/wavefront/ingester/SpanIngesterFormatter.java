@@ -39,11 +39,7 @@ public class SpanIngesterFormatter extends AbstractIngesterFormatter<Span> {
     StringParser parser = new StringParser(input);
     try {
       for (FormatterElement<Span> element : elements) {
-        if (ingesterContext != null) {
-          element.consume(parser, span, ingesterContext);
-        } else {
-          element.consume(parser, span);
-        }
+        element.consume(parser, span);
       }
     } catch (Exception ex) {
       throw new RuntimeException("Could not parse: " + input, ex);

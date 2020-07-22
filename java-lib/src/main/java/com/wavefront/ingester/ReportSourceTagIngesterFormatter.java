@@ -32,11 +32,7 @@ public class ReportSourceTagIngesterFormatter extends AbstractIngesterFormatter<
     StringParser parser = new StringParser(input);
     try {
       for (FormatterElement<ReportSourceTag> element : elements) {
-        if (ingesterContext != null) {
-          element.consume(parser, sourceTag, ingesterContext);
-        } else {
-          element.consume(parser, sourceTag);
-        }
+        element.consume(parser, sourceTag);
       }
     } catch (Exception ex) {
       throw new RuntimeException("Could not parse: " + input, ex);

@@ -8,7 +8,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import wavefront.report.Annotation;
+import wavefront.report.Histogram;
+import wavefront.report.HistogramType;
 import wavefront.report.ReportEvent;
+import wavefront.report.ReportHistogram;
+import wavefront.report.ReportMetric;
 import wavefront.report.ReportPoint;
 import wavefront.report.Span;
 
@@ -30,6 +34,27 @@ public class PredicateEvalExpressionTest {
       setHost("testHost").
       setAnnotations(ImmutableMap.of("tagk1", "tagv1", "tagk2", "tagv2",
           "env", "prod", "dc", "us-west-2")).
+      build();
+  private final ReportMetric metric = ReportMetric.newBuilder().
+      setCustomer("test").
+      setValue(1234.5).
+      setTimestamp(1592837162000L).
+      setMetric("testMetric").
+      setHost("testHost").
+      setAnnotations(ImmutableList.of(
+          new Annotation("tagk1", "tagv1"), new Annotation("tagk2", "tagv2"),
+          new Annotation("env", "prod"), new Annotation("dc", "us-west-2"))).
+      build();
+  private final ReportHistogram histogram = ReportHistogram.newBuilder().
+      setCustomer("test").
+      setValue(Histogram.newBuilder().setBins(ImmutableList.of(1.0)).
+          setCounts(ImmutableList.of(1)).setDuration(60).setType(HistogramType.TDIGEST).build()).
+      setTimestamp(1592837162000L).
+      setMetric("testMetric").
+      setHost("testHost").
+      setAnnotations(ImmutableList.of(
+          new Annotation("tagk1", "tagv1"), new Annotation("tagk2", "tagv2"),
+          new Annotation("env", "prod"), new Annotation("dc", "us-west-2"))).
       build();
   private final Span span = Span.newBuilder().
       setCustomer("test").
@@ -54,6 +79,8 @@ public class PredicateEvalExpressionTest {
   public void testAsPredicate() {
     assertTrue(Predicates.fromPredicateEvalExpression("$value = 1234.5").test(point));
     assertFalse(Predicates.fromPredicateEvalExpression("$value != 1234.5").test(point));
+    assertTrue(Predicates.fromPredicateEvalExpression("$value = 1234.5").test(metric));
+    assertFalse(Predicates.fromPredicateEvalExpression("$value != 1234.5").test(metric));
     assertTrue(Predicates.fromPredicateEvalExpression("$duration = 1111").test(span));
     assertFalse(Predicates.fromPredicateEvalExpression("$duration != 1111").test(span));
   }
@@ -286,6 +313,52 @@ public class PredicateEvalExpressionTest {
     parseAndAssertEq(1, "$timestamp < time('now')", point);
     parseAndAssertEq(0, "$timestamp > time('31 seconds ago')", point);
     parseAndAssertEq(1, "$timestamp < time('2020-06-23', 'UTC')", point);
+  }
+
+  @Test
+  public void testMetricExpression() {
+    parseAndAssertEq(1, "$value = 1234.5", metric);
+    parseAndAssertEq(0, "$value = 1234.0", metric);
+    parseAndAssertEq(1, "$timestamp = 1592837162000", metric);
+    parseAndAssertEq(1, "{{sourceName}} contains 'test'", metric);
+    parseAndAssertEq(1, "'{{sourceName}}' contains 'test'", metric);
+    parseAndAssertEq(1, "\"{{sourceName}}\" contains 'test'", metric);
+    parseAndAssertEq(0, "{{sourceName}} contains 'sourceName'", metric);
+    parseAndAssertEq(1, "{{sourceName}} contains 'sourceName'", null);
+    parseAndAssertEq(1, "{{metricName}} contains 'test'", metric);
+    parseAndAssertEq(1, "{{sourceName}} all startsWith 'test'", metric);
+    parseAndAssertEq(1, "{{metricName}} all startsWith 'test'", metric);
+    parseAndAssertEq(1, "{{tagk1}} equals 'tagv1'", metric);
+    parseAndAssertEq(1, "{{tagk1}} all equals 'tagv1'", metric);
+    parseAndAssertEq(0, "{{tagk1}} all equals 'tagv1'", null);
+    parseAndAssertEq(1, "parse({{tagk2}}.replace('tagv', ''), 3) = 2", metric);
+    parseAndAssertEq(1, "{{doesNotExist}}.isEmpty()", metric);
+    parseAndAssertEq(1, "\"{{env}}:{{dc}}\" equals 'prod:us-west-2'", metric);
+    parseAndAssertEq(1, "$timestamp < time('now')", metric);
+    parseAndAssertEq(0, "$timestamp > time('31 seconds ago')", metric);
+    parseAndAssertEq(1, "$timestamp < time('2020-06-23', 'UTC')", metric);
+  }
+
+  @Test
+  public void testHistogramExpression() {
+    parseAndAssertEq(1, "$timestamp = 1592837162000", histogram);
+    parseAndAssertEq(1, "{{sourceName}} contains 'test'", histogram);
+    parseAndAssertEq(1, "'{{sourceName}}' contains 'test'", histogram);
+    parseAndAssertEq(1, "\"{{sourceName}}\" contains 'test'", histogram);
+    parseAndAssertEq(0, "{{sourceName}} contains 'sourceName'", histogram);
+    parseAndAssertEq(1, "{{sourceName}} contains 'sourceName'", null);
+    parseAndAssertEq(1, "{{metricName}} contains 'test'", histogram);
+    parseAndAssertEq(1, "{{sourceName}} all startsWith 'test'", histogram);
+    parseAndAssertEq(1, "{{metricName}} all startsWith 'test'", histogram);
+    parseAndAssertEq(1, "{{tagk1}} equals 'tagv1'", histogram);
+    parseAndAssertEq(1, "{{tagk1}} all equals 'tagv1'", histogram);
+    parseAndAssertEq(0, "{{tagk1}} all equals 'tagv1'", null);
+    parseAndAssertEq(1, "parse({{tagk2}}.replace('tagv', ''), 3) = 2", histogram);
+    parseAndAssertEq(1, "{{doesNotExist}}.isEmpty()", histogram);
+    parseAndAssertEq(1, "\"{{env}}:{{dc}}\" equals 'prod:us-west-2'", histogram);
+    parseAndAssertEq(1, "$timestamp < time('now')", histogram);
+    parseAndAssertEq(0, "$timestamp > time('31 seconds ago')", histogram);
+    parseAndAssertEq(1, "$timestamp < time('2020-06-23', 'UTC')", histogram);
   }
 
   @Test(expected = ExpressionSyntaxException.class)

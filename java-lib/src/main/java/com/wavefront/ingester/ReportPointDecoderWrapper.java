@@ -11,6 +11,7 @@ import wavefront.report.ReportPoint;
  *
  * @author vasily@wavefront.com
  */
+@Deprecated
 public class ReportPointDecoderWrapper implements ReportableEntityDecoder<String, ReportPoint> {
 
   private final Decoder<String> delegate;
@@ -22,5 +23,11 @@ public class ReportPointDecoderWrapper implements ReportableEntityDecoder<String
   @Override
   public void decode(String msg, List<ReportPoint> out, String customerId) {
     delegate.decodeReportPoints(msg, out, customerId);
+  }
+
+  @Override
+  public void decode(String msg, List<ReportPoint> out, String customerId,
+                     IngesterContext ctx) {
+    delegate.decodeReportPoints(msg, out, customerId, ctx);
   }
 }

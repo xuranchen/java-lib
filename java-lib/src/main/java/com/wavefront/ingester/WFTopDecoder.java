@@ -13,6 +13,7 @@ import java.util.function.Supplier;
  *
  * @author vasily@wavefront.com
  */
+@Deprecated
 public class WFTopDecoder implements Decoder<String> {
   private static final AbstractIngesterFormatter<ReportPoint> FORMAT =
       ReportPointIngesterFormatter.newBuilder().

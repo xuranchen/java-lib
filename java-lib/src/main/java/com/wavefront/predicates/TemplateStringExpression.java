@@ -3,6 +3,8 @@ package com.wavefront.predicates;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import wavefront.report.ReportHistogram;
+import wavefront.report.ReportMetric;
 import wavefront.report.ReportPoint;
 import wavefront.report.Span;
 
@@ -24,6 +26,10 @@ public class TemplateStringExpression implements StringExpression {
   public String getString(@Nullable Object entity) {
     if (entity == null) {
       return template;
+    } else if (entity instanceof ReportMetric) {
+      return Util.expandPlaceholders(template, (ReportMetric) entity);
+    } else if (entity instanceof ReportHistogram) {
+      return Util.expandPlaceholders(template, (ReportHistogram) entity);
     } else if (entity instanceof ReportPoint) {
       return Util.expandPlaceholders(template, (ReportPoint) entity);
     } else if (entity instanceof Span) {

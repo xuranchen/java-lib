@@ -15,9 +15,12 @@ import java.util.regex.Pattern;
 
 import wavefront.report.Histogram;
 import wavefront.report.HistogramType;
+import wavefront.report.ReportHistogram;
+import wavefront.report.ReportMetric;
 import wavefront.report.ReportPoint;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static com.wavefront.data.AnnotationUtils.toAnnotationList;
 
 /**
  * Helper methods to turn json nodes into actual Wavefront report points
@@ -28,12 +31,22 @@ public class JsonMetricsParser {
   private static final Pattern SIMPLE_NAMES = Pattern.compile("[^a-zA-Z0-9_.-]");
   private static final Pattern TAGGED_METRIC = Pattern.compile("(.*)\\$[0-9-]+");
 
-  public static void report(String table, String path, JsonNode node, List<ReportPoint> points, String host,
-                            long timestamp) {
+  @Deprecated
+  public static void report(String table, String path, JsonNode node,
+                            List<ReportPoint> points, String host, long timestamp) {
     report(table, path, node, points, host, timestamp, Collections.<String, String>emptyMap());
   }
 
-  public static void report(String table, String path, JsonNode node, List<ReportPoint> points, String host,
+  public static void report(String table, String path, JsonNode node,
+                            List<ReportMetric> metrics, List<ReportHistogram> histograms,
+                            String host, long timestamp) {
+    report(table, path, node, metrics, histograms, host, timestamp,
+        Collections.<String, String>emptyMap());
+  }
+
+  @Deprecated
+  public static void report(String table, String path, JsonNode node,
+                            List<ReportPoint> points, String host,
                             long timestamp, Map<String, String> tags) {
     List<Map.Entry<String, JsonNode>> fields = newArrayList(node.fields());
     // if the node only has the follow nodes: "value" and "tags", parse the node as a value with tags.
@@ -68,8 +81,47 @@ public class JsonMetricsParser {
     }
   }
 
-  public static void processValueNode(JsonNode value, String table, String metric, String host, long timestamp,
-                                      List<ReportPoint> points, Map<String, String> tags) {
+  public static void report(String table, String path, JsonNode node,
+                            List<ReportMetric> metrics, List<ReportHistogram> histograms,
+                            String host, long timestamp, Map<String, String> tags) {
+    List<Map.Entry<String, JsonNode>> fields = newArrayList(node.fields());
+    // if the node only has the follow nodes: "value" and "tags", parse the node as a value with tags.
+    if (fields.size() == 2) {
+      JsonNode valueNode = null;
+      JsonNode tagsNode = null;
+      for (Map.Entry<String, JsonNode> next : fields) {
+        if (next.getKey().equals("value")) {
+          valueNode = next.getValue();
+        } else if (next.getKey().equals("tags")) {
+          tagsNode = next.getValue();
+        }
+      }
+      if (valueNode != null && tagsNode != null) {
+        Map<String, String> combinedTags = Maps.newHashMap(tags);
+        combinedTags.putAll(makeTags(tagsNode));
+        processValueNode(valueNode, table, path, host, timestamp, metrics, histograms,
+            combinedTags);
+        return;
+      }
+    }
+    for (Map.Entry<String, JsonNode> next : fields) {
+      String key;
+      Matcher taggedMetricMatcher = TAGGED_METRIC.matcher(next.getKey());
+      if (taggedMetricMatcher.matches()) {
+        key = SIMPLE_NAMES.matcher(taggedMetricMatcher.group(1)).replaceAll("_");
+      } else {
+        key = SIMPLE_NAMES.matcher(next.getKey()).replaceAll("_");
+      }
+      String metric = path == null ? key : path + "." + key;
+      JsonNode value = next.getValue();
+      processValueNode(value, table, metric, host, timestamp, metrics, histograms, tags);
+    }
+  }
+
+  @Deprecated
+  public static void processValueNode(JsonNode value, String table, String metric, String host,
+                                      long timestamp, List<ReportPoint> points,
+                                      Map<String, String> tags) {
     if (value.isNumber()) {
       if (value.isLong()) {
         points.add(makePoint(table, metric, host, value.longValue(), timestamp, tags));
@@ -105,6 +157,44 @@ public class JsonMetricsParser {
       }
     } else if (value.isBoolean()) {
       points.add(makePoint(table, metric, host, value.booleanValue() ? 1.0 : 0.0, timestamp, tags));
+    }
+  }
+
+  public static void processValueNode(JsonNode value, String table, String metric, String host,
+                                      long timestamp, List<ReportMetric> metrics,
+                                      List<ReportHistogram> histograms, Map<String, String> tags) {
+    if (value.isNumber()) {
+      if (value.isLong()) {
+        metrics.add(makeMetric(table, metric, host, value.longValue(), timestamp, tags));
+      } else {
+        metrics.add(makeMetric(table, metric, host, value.doubleValue(), timestamp, tags));
+      }
+    } else if (value.isObject()) {
+      if /*wavefront histogram*/ (value.has("bins")) {
+        Iterator<JsonNode> binIt = ((ArrayNode) value.get("bins")).elements();
+        while (binIt.hasNext()) {
+          JsonNode bin = binIt.next();
+          List<Integer> counts = newArrayList();
+          bin.get("counts").elements().forEachRemaining(v -> counts.add(v.intValue()));
+          List<Double> means = newArrayList();
+          bin.get("means").elements().forEachRemaining(v -> means.add(v.doubleValue()));
+
+          histograms.add(makeHistogram(
+              table,
+              metric,
+              host,
+              tags,
+              bin.get("startMillis").longValue(),
+              bin.get("durationMillis").intValue(),
+              means,
+              counts));
+        }
+      } else {
+        report(table, metric, value, metrics, histograms, host, timestamp, tags);
+      }
+    } else if (value.isBoolean()) {
+      metrics.add(makeMetric(table, metric, host, value.booleanValue() ? 1.0 : 0.0, timestamp,
+          tags));
     }
   }
 
@@ -162,6 +252,51 @@ public class JsonMetricsParser {
         .setAnnotations(annotations)
         .setMetric(metric)
         .setTable(table)
+        .setTimestamp(timestamp)
+        .setHost(host);
+  }
+
+  public static ReportHistogram makeHistogram(
+      String customer,
+      String metric,
+      String host,
+      Map<String, String> annotations,
+      long startMillis,
+      int durationMillis,
+      List<Double> bins,
+      List<Integer> counts) {
+    Histogram histogram = Histogram.newBuilder()
+        .setType(HistogramType.TDIGEST)
+        .setDuration(durationMillis)
+        .setCounts(counts)
+        .setBins(bins).build();
+    return ReportHistogram.newBuilder().
+        setCustomer(customer).
+        setMetric(metric).
+        setHost(host).
+        setTimestamp(startMillis).
+        setAnnotations(toAnnotationList(annotations)).
+        setValue(histogram).
+        build();
+  }
+
+  public static ReportMetric makeMetric(String table, String metric, String host, double value,
+                                        long timestamp) {
+    return makeMetric(table, metric, host, value, timestamp, Collections.<String, String>emptyMap());
+  }
+
+  public static ReportMetric makeMetric(String table, String metric, String host, double value,
+                                        long timestamp, Map<String, String> annotations) {
+    ReportMetric.Builder builder = makeMetric(table, metric, host, timestamp, annotations);
+    return builder.setValue(value).build();
+  }
+
+  private static ReportMetric.Builder makeMetric(String table, String metric, String host,
+                                                 long timestamp, Map<String, String> annotations) {
+    return ReportMetric.newBuilder()
+        .setAnnotations(toAnnotationList(annotations))
+        .setMetric(metric)
+        .setCustomer(table)
         .setTimestamp(timestamp)
         .setHost(host);
   }

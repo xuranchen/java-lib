@@ -22,10 +22,13 @@ public class IngesterContext {
 
   private int histogramCentroidsLimit;
   private int targetHistogramAccuracy;
+  private boolean optimizeHistograms;
 
   public static class Builder {
-    private int histogramCentroidsLimit = DEFAULT_CENTROIDS_COUNT_LIMIT;
+    private int histogramCentroidsLimit = Integer.MAX_VALUE;
     private int targetHistogramAccuracy = DEFAULT_HISTOGRAM_ACCURACY;
+
+    private boolean optimizeHistograms = false;
 
     public Builder withTargetHistogramAccuracy(int targetHistogramAccuracy) {
       this.targetHistogramAccuracy = targetHistogramAccuracy;
@@ -37,20 +40,20 @@ public class IngesterContext {
       return this;
     }
 
+    public Builder withOptimizeHistograms(boolean optimizeHistograms) {
+      this.optimizeHistograms = optimizeHistograms;
+      return this;
+    }
+
     public IngesterContext build() {
       return new IngesterContext(this);
     }
-
   }
 
   private IngesterContext(Builder builder) {
     this.histogramCentroidsLimit = builder.histogramCentroidsLimit;
     this.targetHistogramAccuracy = builder.targetHistogramAccuracy;
-  }
-
-  public void reset() {
-    this.histogramCentroidsLimit = DEFAULT_CENTROIDS_COUNT_LIMIT;
-    this.targetHistogramAccuracy = DEFAULT_HISTOGRAM_ACCURACY;
+    this.optimizeHistograms = builder.optimizeHistograms;
   }
 
   public int getHistogramCentroidsLimit() {
@@ -67,5 +70,13 @@ public class IngesterContext {
 
   public void setTargetHistogramAccuracy(int targetHistogramAccuracy) {
     this.targetHistogramAccuracy = targetHistogramAccuracy;
+  }
+
+  public boolean isOptimizeHistograms() {
+    return optimizeHistograms;
+  }
+
+  public void setOptimizeHistograms(boolean optimizeHistograms) {
+    this.optimizeHistograms = optimizeHistograms;
   }
 }

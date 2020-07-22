@@ -36,8 +36,9 @@ public class ReportSourceTagDecoder implements ReportableEntityDecoder<String, R
           build();
 
   @Override
-  public void decode(String msg, List<ReportSourceTag> out, String customerId) {
-    ReportSourceTag tag = FORMAT.drive(msg, null, customerId, null);
+  public void decode(String msg, List<ReportSourceTag> out, String customerId,
+                     IngesterContext ctx) {
+    ReportSourceTag tag = FORMAT.drive(msg, null, customerId, null, ctx);
     if (out == null) return;
     if ((tag.getAction() == SourceTagAction.ADD || tag.getAction() == SourceTagAction.DELETE) &&
         tag.getAnnotations().size() > 1) {

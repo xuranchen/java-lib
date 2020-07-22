@@ -38,7 +38,7 @@ public class SpanLogsDecoder implements ReportableEntityDecoder<JsonNode, SpanLo
   }
 
   @Override
-  public void decode(JsonNode msg, List<SpanLogs> out, String customerId) {
+  public void decode(JsonNode msg, List<SpanLogs> out, String customerId, IngesterContext ctx) {
     Iterable<JsonNode> iterable = () -> msg.get("logs").elements();
     //noinspection unchecked
     SpanLogs spanLogs = SpanLogs.newBuilder().

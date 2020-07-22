@@ -110,4 +110,22 @@ protocol Reporting {
     union {null, array<string>} tags = null;
     union {null, map<array<string>>} dimensions = null;
   }
+
+  record ReportMetric {
+    string metric;
+    long timestamp;
+    double value;
+    string host = "unknown";
+    string customer = "unknown";
+    array<Annotation> annotations = [];
+  }
+
+  record ReportHistogram {
+    string metric;
+    long timestamp;
+    Histogram value;
+    string host = "unknown";
+    string customer = "unknown";
+    array<Annotation> annotations = [];
+  }
 }

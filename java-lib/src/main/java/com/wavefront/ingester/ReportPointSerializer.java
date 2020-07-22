@@ -11,11 +11,14 @@ import static com.wavefront.common.SerializerUtils.appendQuoted;
 import static com.wavefront.common.SerializerUtils.appendTagMap;
 
 /**
+ * DEPRECATED: use {@link ReportMetricSerializer} instead.
+ *
  * Convert a {@link ReportPoint} to its string representation in a canonical format (quoted metric name,
  * tag values and keys (except for "source"). Supports numeric and {@link wavefront.report.Histogram} values.
  *
  * @author vasily@wavefront.com
  */
+@Deprecated
 public class ReportPointSerializer implements Function<ReportPoint, String> {
 
   @Override

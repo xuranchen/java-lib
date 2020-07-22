@@ -12,7 +12,7 @@ import com.tdunning.math.stats.TDigest;
 import org.apache.commons.lang.time.DateUtils;
 import wavefront.report.Histogram;
 import wavefront.report.HistogramType;
-import wavefront.report.ReportPoint;
+import wavefront.report.ReportHistogram;
 
 import static com.wavefront.ingester.IngesterContext.DEFAULT_HISTOGRAM_COMPRESS_LIMIT_RATIO;
 
@@ -23,43 +23,38 @@ import static com.wavefront.ingester.IngesterContext.DEFAULT_HISTOGRAM_COMPRESS_
  *
  * @author Tim Schmidt (tim@wavefront.com).
  */
-@Deprecated
-public class HistogramDecoder implements Decoder<String> {
+public class ReportHistogramDecoder implements ReportableEntityDecoder<String, ReportHistogram> {
 
-  private static final AbstractIngesterFormatter<ReportPoint> FORMAT =
-      ReportPointIngesterFormatter.newBuilder().
-          caseSensitiveLiterals(ImmutableList.of("!M", "!H", "!D"), HistogramDecoder::setBinType).
-          optionalTimestamp(ReportPoint::setTimestamp).
+  private static final AbstractIngesterFormatter<ReportHistogram> FORMAT =
+      ReportHistogramIngesterFormatter.newBuilder().
+          caseSensitiveLiterals(ImmutableList.of("!M", "!H", "!D"),
+              ReportHistogramDecoder::setBinType).
+          optionalTimestamp(ReportHistogram::setTimestamp).
           centroids().
-          text(ReportPoint::setMetric).
-          annotationMap(ReportPoint::setAnnotations).
+          text(ReportHistogram::setMetric).
+          annotationList(ReportHistogram::setAnnotations).
           build();
 
   private final Supplier<String> defaultHostNameSupplier;
 
-  public HistogramDecoder() {
+  public ReportHistogramDecoder() {
     this("unknown");
   }
 
-  public HistogramDecoder(String defaultHostName) {
+  public ReportHistogramDecoder(String defaultHostName) {
     this(() -> defaultHostName);
   }
 
-  public HistogramDecoder(Supplier<String> defaultHostNameSupplier) {
+  public ReportHistogramDecoder(Supplier<String> defaultHostNameSupplier) {
     this.defaultHostNameSupplier = defaultHostNameSupplier;
   }
 
   @Override
-  public void decodeReportPoints(String msg, List<ReportPoint> out, String customerId) {
-    decodeReportPoints(msg, out, customerId, null);
-  }
-
-  @Override
-  public void decodeReportPoints(String msg, List<ReportPoint> out, String customerId,
-                                 IngesterContext ctx) {
-    ReportPoint histogram = FORMAT.drive(msg, defaultHostNameSupplier, customerId, null, ctx);
+  public void decode(String msg, List<ReportHistogram> out, String customerId,
+                     @Nullable IngesterContext ctx) {
+    ReportHistogram histogram = FORMAT.drive(msg, defaultHostNameSupplier, customerId, null, ctx);
     if (histogram != null) {
-      Histogram value = (Histogram) histogram.getValue();
+      Histogram value = histogram.getValue();
       if (ctx != null) {
         if (value.getCounts().size() > ctx.getHistogramCentroidsLimit()) {
           throw new TooManyCentroidException();
@@ -72,16 +67,16 @@ public class HistogramDecoder implements Decoder<String> {
       // adjust timestamp according to histogram bin first
       long duration = value.getDuration();
       histogram.setTimestamp((histogram.getTimestamp() / duration) * duration);
-      out.add(ReportPoint.newBuilder(histogram).build());
+      out.add(ReportHistogram.newBuilder(histogram).build());
     }
   }
 
   @Override
-  public void decodeReportPoints(String msg, List<ReportPoint> out) {
+  public void decode(String msg, List<ReportHistogram> out) {
     throw new UnsupportedOperationException("Customer ID extraction is not supported");
   }
 
-  private static void setBinType(ReportPoint target, String binType) {
+  private static void setBinType(ReportHistogram target, String binType) {
     int durationMillis;
     switch (binType) {
       case "!M":

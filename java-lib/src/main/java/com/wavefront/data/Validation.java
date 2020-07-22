@@ -20,6 +20,8 @@ import javax.annotation.Nullable;
 
 import wavefront.report.Annotation;
 import wavefront.report.Histogram;
+import wavefront.report.ReportHistogram;
+import wavefront.report.ReportMetric;
 import wavefront.report.ReportPoint;
 import wavefront.report.Span;
 
@@ -68,8 +70,8 @@ public class Validation {
   }
 
   @VisibleForTesting
-  static boolean annotationKeysAreValid(ReportPoint point) {
-    for (String key : point.getAnnotations().keySet()) {
+  static boolean annotationKeysAreValid(Map<String, String> annotations) {
+    for (String key : annotations.keySet()) {
       if (!charactersAreValid(key)) {
         return false;
       }
@@ -77,6 +79,17 @@ public class Validation {
     return true;
   }
 
+  @VisibleForTesting
+  static boolean annotationKeysAreValid(List<Annotation> annotations) {
+    for (Annotation annotation : annotations) {
+      if (!charactersAreValid(annotation.getKey())) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  @Deprecated
   public static void validatePoint(ReportPoint point, @Nullable ValidationConfiguration config) {
     if (config == null) {
       return;
@@ -167,6 +180,150 @@ public class Validation {
     } else if ((metric.charAt(0) == 0x2206 || metric.charAt(0) == 0x0394) &&
         ((Number) value).doubleValue() <= 0) {
           throw new DeltaCounterValueException("WF-404: Delta metrics cannot be non-positive");
+    }
+  }
+
+  public static void validateMetric(ReportMetric point, @Nullable ValidationConfiguration config) {
+    if (config == null) {
+      return;
+    }
+    final String host = point.getHost();
+    final String metric = point.getMetric();
+
+    if (StringUtils.isBlank(host)) {
+      ERROR_COUNTERS.get("sourceMissing").inc();
+      throw new DataValidationException("WF-406: Source/host name is required");
+    }
+    if (host.length() > config.getHostLengthLimit()) {
+      ERROR_COUNTERS.get("sourceTooLong").inc();
+      throw new DataValidationException("WF-407: Source/host name is too long (" + host.length() +
+          " characters, max: " + config.getHostLengthLimit() + "): " + host);
+    }
+    if (metric.length() > config.getMetricLengthLimit()) {
+      ERROR_COUNTERS.get("metricNameTooLong").inc();
+      throw new DataValidationException("WF-408: Metric name is too long (" + metric.length() +
+          " characters, max: " + config.getMetricLengthLimit() + "): " + metric);
+    }
+    if (!charactersAreValid(metric)) {
+      ERROR_COUNTERS.get("badchars").inc();
+      throw new DataValidationException("WF-400: Point metric has illegal character(s): " +
+          metric);
+    }
+    final List<Annotation> annotations = point.getAnnotations();
+    if (annotations != null) {
+      if (annotations.size() > config.getAnnotationsCountLimit()) {
+        ERROR_COUNTERS.get("tooManyPointTags").inc();
+        throw new DataValidationException("WF-410: Too many point tags (" + annotations.size() +
+            ", max " + config.getAnnotationsCountLimit() + "): ");
+      }
+      for (Annotation tag : annotations) {
+        final String tagK = tag.getKey();
+        final String tagV = tag.getValue();
+        // Each tag of the form "k=v" must be < 256
+        if (tagK.length() + tagV.length() >= 255) {
+          ERROR_COUNTERS.get("pointTagTooLong").inc();
+          throw new DataValidationException("WF-411: Point tag (key+value) too long (" +
+              (tagK.length() + tagV.length() + 1) + " characters, max: 255): " + tagK + "=" + tagV);
+        }
+        if (tagK.length() > config.getAnnotationsKeyLengthLimit()) {
+          ERROR_COUNTERS.get("pointTagKeyTooLong").inc();
+          throw new DataValidationException("WF-412: Point tag key is too long (" + tagK.length() +
+              " characters, max: " + config.getAnnotationsKeyLengthLimit() + "): " + tagK);
+        }
+        if (!charactersAreValid(tagK)) {
+          ERROR_COUNTERS.get("badchars").inc();
+          throw new DataValidationException("WF-401: Point tag key has illegal character(s): " +
+              tagK);
+        }
+        if (StringUtils.isBlank(tagV)) {
+          ERROR_COUNTERS.get("pointTagValueEmpty").inc();
+          throw new EmptyTagValueException("WF-414: Point tag value for " + tagK +
+              " is empty or missing");
+        }
+        if (tagV.length() > config.getAnnotationsValueLengthLimit()) {
+          ERROR_COUNTERS.get("pointTagValueTooLong").inc();
+          throw new DataValidationException("WF-413: Point tag value is too long (" +
+              tagV.length() + " characters, max: " + config.getAnnotationsValueLengthLimit() +
+              "): " + tagV);
+        }
+      }
+    }
+    if ((metric.charAt(0) == 0x2206 || metric.charAt(0) == 0x0394) && point.getValue() <= 0) {
+      throw new DeltaCounterValueException("WF-404: Delta metrics cannot be non-positive");
+    }
+  }
+
+  public static void validateHistogram(ReportHistogram histogram,
+                                       @Nullable ValidationConfiguration config) {
+    if (config == null) {
+      return;
+    }
+    final String host = histogram.getHost();
+    final String metric = histogram.getMetric();
+
+    if (StringUtils.isBlank(host)) {
+      ERROR_COUNTERS.get("sourceMissing").inc();
+      throw new DataValidationException("WF-406: Source/host name is required");
+    }
+    if (host.length() > config.getHostLengthLimit()) {
+      ERROR_COUNTERS.get("sourceTooLong").inc();
+      throw new DataValidationException("WF-407: Source/host name is too long (" + host.length() +
+          " characters, max: " + config.getHostLengthLimit() + "): " + host);
+    }
+    if (metric.length() > config.getHistogramLengthLimit()) {
+      ERROR_COUNTERS.get("histogramNameTooLong").inc();
+      throw new DataValidationException("WF-409: Histogram name is too long (" +
+          metric.length() + " characters, max: " + config.getHistogramLengthLimit() + "): " +
+          metric);
+    }
+    if (!charactersAreValid(metric)) {
+      ERROR_COUNTERS.get("badchars").inc();
+      throw new DataValidationException("WF-400: Point metric has illegal character(s): " +
+          metric);
+    }
+    final List<Annotation> annotations = histogram.getAnnotations();
+    if (annotations != null) {
+      if (annotations.size() > config.getAnnotationsCountLimit()) {
+        ERROR_COUNTERS.get("tooManyPointTags").inc();
+        throw new DataValidationException("WF-410: Too many point tags (" + annotations.size() +
+            ", max " + config.getAnnotationsCountLimit() + "): ");
+      }
+      for (Annotation tag : annotations) {
+        final String tagK = tag.getKey();
+        final String tagV = tag.getValue();
+        // Each tag of the form "k=v" must be < 256
+        if (tagK.length() + tagV.length() >= 255) {
+          ERROR_COUNTERS.get("pointTagTooLong").inc();
+          throw new DataValidationException("WF-411: Point tag (key+value) too long (" +
+              (tagK.length() + tagV.length() + 1) + " characters, max: 255): " + tagK + "=" + tagV);
+        }
+        if (tagK.length() > config.getAnnotationsKeyLengthLimit()) {
+          ERROR_COUNTERS.get("pointTagKeyTooLong").inc();
+          throw new DataValidationException("WF-412: Point tag key is too long (" + tagK.length() +
+              " characters, max: " + config.getAnnotationsKeyLengthLimit() + "): " + tagK);
+        }
+        if (!charactersAreValid(tagK)) {
+          ERROR_COUNTERS.get("badchars").inc();
+          throw new DataValidationException("WF-401: Point tag key has illegal character(s): " +
+              tagK);
+        }
+        if (StringUtils.isBlank(tagV)) {
+          ERROR_COUNTERS.get("pointTagValueEmpty").inc();
+          throw new EmptyTagValueException("WF-414: Point tag value for " + tagK +
+              " is empty or missing");
+        }
+        if (tagV.length() > config.getAnnotationsValueLengthLimit()) {
+          ERROR_COUNTERS.get("pointTagValueTooLong").inc();
+          throw new DataValidationException("WF-413: Point tag value is too long (" +
+              tagV.length() + " characters, max: " + config.getAnnotationsValueLengthLimit() +
+              "): " + tagV);
+        }
+      }
+    }
+    Histogram value = histogram.getValue();
+    if (value.getCounts().size() == 0 || value.getBins().size() == 0 ||
+        value.getCounts().stream().allMatch(i -> i == 0)) {
+      throw new EmptyHistogramException("WF-405: Empty histogram");
     }
   }
 
@@ -264,7 +421,7 @@ public class Validation {
     }
 
     if (point.getAnnotations() != null) {
-      if (!annotationKeysAreValid(point)) {
+      if (!annotationKeysAreValid(point.getAnnotations())) {
         throw new DataValidationException("WF-401 " + source +
             ": Point annotation key has illegal character");
       }
