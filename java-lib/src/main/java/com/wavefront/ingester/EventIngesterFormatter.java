@@ -41,12 +41,8 @@ public class EventIngesterFormatter extends AbstractIngesterFormatter<ReportEven
     event.setHosts(new ArrayList<>());
     event.setAnnotations(new HashMap<>());
 
-    try {
-      for (FormatterElement<ReportEvent> element : elements) {
-        element.consume(parser, event);
-      }
-    } catch (Exception ex) {
-      throw new RuntimeException("Could not parse: " + input, ex);
+    for (FormatterElement<ReportEvent> element : elements) {
+      element.consume(parser, event);
     }
 
     Iterator<Map.Entry<String, List<String>>> iter = event.getDimensions().entrySet().iterator();

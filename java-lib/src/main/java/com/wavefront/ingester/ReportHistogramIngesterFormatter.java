@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import com.wavefront.common.Clock;
+import com.wavefront.data.ParseException;
 
 import wavefront.report.ReportHistogram;
 
@@ -42,17 +43,11 @@ public class ReportHistogramIngesterFormatter extends AbstractIngesterFormatter<
     histogram.setTimestamp(Clock.now());
     final StringParser parser = new StringParser(input);
 
-    try {
-      for (FormatterElement<ReportHistogram> element : elements) {
-        element.consume(parser, histogram);
-      }
-    } catch (TooManyCentroidException ex) {
-      throw new TooManyCentroidException("Could not parse: " + input, ex);
-    } catch (Exception ex) {
-      throw new RuntimeException("Could not parse: " + input, ex);
+    for (FormatterElement<ReportHistogram> element : elements) {
+      element.consume(parser, histogram);
     }
     if (parser.hasNext()) {
-      throw new RuntimeException("Unexpected extra input: " + parser.next());
+      throw new ParseException("Unexpected extra input: " + parser.next());
     }
 
     String host = AbstractIngesterFormatter.getHost(histogram.getAnnotations(), customSourceTags);

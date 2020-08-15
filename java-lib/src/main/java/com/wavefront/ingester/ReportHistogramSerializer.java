@@ -6,6 +6,7 @@ import java.util.function.Function;
 import org.apache.commons.lang.time.DateUtils;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.wavefront.data.DataValidationException;
 
 import wavefront.report.Histogram;
 import wavefront.report.ReportHistogram;
@@ -69,7 +70,7 @@ public class ReportHistogramSerializer implements Function<ReportHistogram, Stri
         sb.append("!D ");
         break;
       default:
-        throw new RuntimeException("Unexpected histogram duration " + h.getDuration());
+        throw new DataValidationException("Unexpected histogram duration " + h.getDuration());
     }
     // Timestamp
     sb.append(point.getTimestamp() / 1000).append(' ');

@@ -5,8 +5,7 @@ import com.google.common.base.Preconditions;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
-
-import wavefront.report.ReportMetric;
+import wavefront.report.ReportPoint;
 
 /**
  * OpenTSDB decoder that takes in a point of the type:
@@ -15,18 +14,19 @@ import wavefront.report.ReportMetric;
  *
  * @author Clement Pang (clement@wavefront.com).
  */
-public class OpenTSDBDecoder implements ReportableEntityDecoder<String, ReportMetric> {
+@Deprecated
+public class OpenTSDBDecoder implements Decoder<String> {
 
-  private static final AbstractIngesterFormatter<ReportMetric> FORMAT =
-      ReportMetricIngesterFormatter.newBuilder().
+  private static final AbstractIngesterFormatter<ReportPoint> FORMAT =
+      ReportPointIngesterFormatter.newBuilder().
           caseInsensitiveLiterals(ImmutableList.of("put")).
-          text(ReportMetric::setMetric).
-          timestamp(ReportMetric::setTimestamp).
-          value(ReportMetric::setValue).
-          annotationList(ReportMetric::setAnnotations).
+          text(ReportPoint::setMetric).
+          timestamp(ReportPoint::setTimestamp).
+          value(ReportPoint::setValue).
+          annotationMap(ReportPoint::setAnnotations).
           build();
   private final String hostName;
-  private final List<String> customSourceTags;
+  private List<String> customSourceTags;
 
   public OpenTSDBDecoder(List<String> customSourceTags) {
     this("unknown", customSourceTags);
@@ -40,10 +40,23 @@ public class OpenTSDBDecoder implements ReportableEntityDecoder<String, ReportMe
   }
 
   @Override
-  public void decode(String msg, List<ReportMetric> out, String customerId, IngesterContext ctx) {
-    ReportMetric point = FORMAT.drive(msg, () -> hostName, customerId, customSourceTags, ctx);
+  public void decodeReportPoints(String msg, List<ReportPoint> out, String customerId) {
+    ReportPoint point = FORMAT.drive(msg, () -> hostName, customerId, customSourceTags, null);
     if (out != null) {
       out.add(point);
     }
+  }
+
+  @Override
+  public void decodeReportPoints(String msg, List<ReportPoint> out, String customerId, IngesterContext ingesterContext) {
+    ReportPoint point = FORMAT.drive(msg, () -> hostName, customerId, customSourceTags, ingesterContext);
+    if (out != null) {
+      out.add(point);
+    }
+  }
+
+  @Override
+  public void decodeReportPoints(String msg, List<ReportPoint> out) {
+    decodeReportPoints(msg, out, "dummy");
   }
 }

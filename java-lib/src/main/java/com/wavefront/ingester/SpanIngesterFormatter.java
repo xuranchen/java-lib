@@ -8,6 +8,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
 
+import com.wavefront.data.ParseException;
+
 /**
  * Builder for Span formatter.
  *
@@ -37,15 +39,11 @@ public class SpanIngesterFormatter extends AbstractIngesterFormatter<Span> {
     Span span = new Span();
     span.setCustomer(customerId);
     StringParser parser = new StringParser(input);
-    try {
-      for (FormatterElement<Span> element : elements) {
-        element.consume(parser, span);
-      }
-    } catch (Exception ex) {
-      throw new RuntimeException("Could not parse: " + input, ex);
+    for (FormatterElement<Span> element : elements) {
+      element.consume(parser, span);
     }
     if (parser.hasNext()) {
-      throw new RuntimeException("Unexpected extra input: " + parser.next());
+      throw new ParseException("Unexpected extra input: " + parser.next());
     }
     List<Annotation> annotations = span.getAnnotations();
     if (annotations != null) {
@@ -81,13 +79,13 @@ public class SpanIngesterFormatter extends AbstractIngesterFormatter<Span> {
       span.setSource(defaultHostNameSupplier.get());
     }
     if (span.getSource() == null) {
-      throw new RuntimeException("source can't be null: " + input);
+      throw new IllegalArgumentException("source can't be null: " + input);
     }
     if (span.getSpanId() == null) {
-      throw new RuntimeException("spanId can't be null: " + input);
+      throw new IllegalArgumentException("spanId can't be null: " + input);
     }
     if (span.getTraceId() == null) {
-      throw new RuntimeException("traceId can't be null: " + input);
+      throw new IllegalArgumentException("traceId can't be null: " + input);
     }
     return span;
   }

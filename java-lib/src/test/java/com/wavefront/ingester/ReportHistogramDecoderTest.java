@@ -1,6 +1,7 @@
 package com.wavefront.ingester;
 
 import com.wavefront.common.Clock;
+import com.wavefront.data.TooManyCentroidException;
 
 import org.apache.commons.lang.time.DateUtils;
 import org.junit.Test;

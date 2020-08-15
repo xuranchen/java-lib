@@ -8,6 +8,8 @@ import com.google.common.collect.ImmutableList;
 import com.tdunning.math.stats.AVLTreeDigest;
 import com.tdunning.math.stats.Centroid;
 import com.tdunning.math.stats.TDigest;
+import com.wavefront.data.ParseException;
+import com.wavefront.data.TooManyCentroidException;
 
 import org.apache.commons.lang.time.DateUtils;
 import wavefront.report.Histogram;
@@ -57,7 +59,8 @@ public class ReportHistogramDecoder implements ReportableEntityDecoder<String, R
       Histogram value = histogram.getValue();
       if (ctx != null) {
         if (value.getCounts().size() > ctx.getHistogramCentroidsLimit()) {
-          throw new TooManyCentroidException();
+          throw new TooManyCentroidException("Too many centroids (max: " +
+              ctx.getHistogramCentroidsLimit() + ")");
         }
         if (ctx.isOptimizeHistograms()) {
           optimizeForStorage(value.getBins(), value.getCounts(), value.getCounts().size(),
@@ -89,7 +92,7 @@ public class ReportHistogramDecoder implements ReportableEntityDecoder<String, R
         durationMillis = (int) DateUtils.MILLIS_PER_DAY;
         break;
       default:
-        throw new RuntimeException("Unknown BinType " + binType);
+        throw new ParseException("Unknown BinType " + binType);
     }
     Histogram histogram = new Histogram();
     histogram.setDuration(durationMillis);

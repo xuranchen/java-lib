@@ -30,12 +30,8 @@ public class ReportSourceTagIngesterFormatter extends AbstractIngesterFormatter<
                                @Nullable IngesterContext ingesterContext) {
     ReportSourceTag sourceTag = new ReportSourceTag();
     StringParser parser = new StringParser(input);
-    try {
-      for (FormatterElement<ReportSourceTag> element : elements) {
-        element.consume(parser, sourceTag);
-      }
-    } catch (Exception ex) {
-      throw new RuntimeException("Could not parse: " + input, ex);
+    for (FormatterElement<ReportSourceTag> element : elements) {
+      element.consume(parser, sourceTag);
     }
 
     if (sourceTag.getAnnotations() == null || sourceTag.getAnnotations().isEmpty()) {

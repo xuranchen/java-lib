@@ -17,13 +17,13 @@ import static org.junit.Assert.fail;
  *
  * @author Clement Pang (clement@wavefront.com).
  */
-public class OpenTSDBDecoderTest {
+public class OpenTSDBMetricDecoderTest {
 
   @Test
   public void testDoubleFormat() throws Exception {
     List<String> customSourceTags = new ArrayList<String>();
     customSourceTags.add("fqdn");
-    OpenTSDBDecoder decoder = new OpenTSDBDecoder("localhost", customSourceTags);
+    OpenTSDBMetricDecoder decoder = new OpenTSDBMetricDecoder("localhost", customSourceTags);
     List<ReportMetric> out = new ArrayList<>();
     decoder.decode("put tsdb.vehicle.charge.battery_level 12345.678 93.123e3 host=vehicle_2554", out);
     ReportMetric point = out.get(0);
@@ -98,7 +98,7 @@ public class OpenTSDBDecoderTest {
   public void testOpenTSDBCharacters() {
     List<String> customSourceTags = new ArrayList<>();
     customSourceTags.add("fqdn");
-    OpenTSDBDecoder decoder = new OpenTSDBDecoder("localhost", customSourceTags);
+    OpenTSDBMetricDecoder decoder = new OpenTSDBMetricDecoder("localhost", customSourceTags);
     List<ReportMetric> out = new ArrayList<>();
     decoder.decode("put tsdb.vehicle.charge.battery_level 12345.678 93.123e3 host=/vehicle_2554-test/GOOD some_tag=/vehicle_2554-test/BAD", out);
     ReportMetric point = out.get(0);

@@ -2,6 +2,7 @@ package com.wavefront.ingester;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.wavefront.data.ParseException;
 
 import org.apache.avro.specific.SpecificRecordBase;
 import wavefront.report.Annotation;
@@ -173,7 +174,7 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     @Override
     public void consume(StringParser parser, T target) {
       String text = parser.next();
-      if (!isAllowedLiteral(text)) throw new RuntimeException("'" + text +
+      if (!isAllowedLiteral(text)) throw new ParseException("'" + text +
           "' is not allowed here!");
       if (textConsumer != null) textConsumer.accept(target, text);
     }
@@ -199,11 +200,11 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     public void consume(StringParser parser, T target) {
       String token = parser.next();
       if (token == null)
-        throw new RuntimeException("Value is missing");
+        throw new ParseException("Value is missing");
       try {
         valueConsumer.accept(target, Double.parseDouble(token));
       } catch (NumberFormatException nef) {
-        throw new RuntimeException("Invalid value: " + token);
+        throw new ParseException("Invalid value: " + token);
       }
     }
   }
@@ -222,7 +223,7 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
         bins.add(parse(parser.next(), "centroid value", false).doubleValue());
       }
 
-      if (counts.size() == 0) throw new RuntimeException("Empty histogram (no centroids)");
+      if (counts.size() == 0) throw new ParseException("Empty histogram (no centroids)");
 
       Histogram histogram = (Histogram) target.get("value");
       histogram.setCounts(counts);
@@ -231,12 +232,12 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
 
     private static Number parse(@Nullable String toParse, String name, boolean asInteger) {
       if (toParse == null) {
-        throw new RuntimeException("Unexpected end of line, expected: " + name);
+        throw new ParseException("Unexpected end of line, expected: " + name);
       }
       try {
         return asInteger ? Integer.parseInt(toParse) : Double.parseDouble(toParse);
       } catch (NumberFormatException nef) {
-        throw new RuntimeException("Expected: " + name + ", got: " + toParse);
+        throw new ParseException("Expected: " + name + ", got: " + toParse);
       }
     }
   }
@@ -381,7 +382,7 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
       if (optional) {
         return null;
       } else {
-        throw new RuntimeException("Expected timestamp, found " +
+        throw new ParseException("Expected timestamp, found " +
             (peek == null ? "end of line" : peek));
       }
     }
@@ -407,7 +408,7 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
         return timestampLong / 1000000;
       }
     } catch (NumberFormatException nfe) {
-      throw new RuntimeException("Invalid timestamp value: " + peek);
+      throw new ParseException("Invalid timestamp value: " + peek);
     }
   }
 
@@ -416,15 +417,15 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     String annotationKey = parser.next();
     String op = parser.next();
     if (op == null) {
-      throw new RuntimeException("Tag keys and values must be separated by '=', " +
+      throw new ParseException("Tag keys and values must be separated by '=', " +
           "nothing found after '" + annotationKey + "'");
     }
     if (!op.equals("=")) {
-      throw new RuntimeException("Tag keys and values must be separated by '=', found " + op);
+      throw new ParseException("Tag keys and values must be separated by '=', found " + op);
     }
     String annotationValue = parser.next();
     if (annotationValue == null) {
-      throw new RuntimeException("Value missing for " + annotationKey);
+      throw new ParseException("Value missing for " + annotationKey);
     }
     kvConsumer.accept(annotationKey, annotationValue);
   }

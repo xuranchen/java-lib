@@ -1,6 +1,7 @@
 package com.wavefront.ingester;
 
 import com.wavefront.common.Clock;
+import com.wavefront.data.ParseException;
 
 import wavefront.report.ReportMetric;
 
@@ -42,15 +43,11 @@ public class ReportMetricIngesterFormatter extends AbstractIngesterFormatter<Rep
     point.setTimestamp(Clock.now());
     final StringParser parser = new StringParser(input);
 
-    try {
-      for (FormatterElement<ReportMetric> element : elements) {
-        element.consume(parser, point);
-      }
-    } catch (Exception ex) {
-      throw new RuntimeException("Could not parse: " + input, ex);
+    for (FormatterElement<ReportMetric> element : elements) {
+      element.consume(parser, point);
     }
     if (parser.hasNext()) {
-      throw new RuntimeException("Unexpected extra input: " + parser.next());
+      throw new ParseException("Unexpected extra input: " + parser.next());
     }
 
     String host = AbstractIngesterFormatter.getHost(point.getAnnotations(), customSourceTags);

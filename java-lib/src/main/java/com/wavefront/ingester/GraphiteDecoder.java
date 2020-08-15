@@ -3,6 +3,7 @@ package com.wavefront.ingester;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
+import com.wavefront.data.ParseException;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -61,7 +62,7 @@ public class GraphiteDecoder implements Decoder<String> {
         String metricName = rp.getMetric();
         List<String> metricParts = Lists.newArrayList(Splitter.on(".").split(metricName));
         if (metricParts.size() <= 1) {
-          throw new RuntimeException("Metric name does not contain a customer id: " + metricName);
+          throw new ParseException("Metric name does not contain a customer id: " + metricName);
         }
         String customerId = metricParts.get(0);
         if (CUSTOMERID.matcher(customerId).matches()) {

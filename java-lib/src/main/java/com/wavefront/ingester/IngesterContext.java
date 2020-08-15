@@ -1,5 +1,7 @@
 package com.wavefront.ingester;
 
+import com.wavefront.data.TooManyCentroidException;
+
 public class IngesterContext {
   /**
    * Compress histogram limit when the count of centroid is larger then this ratio * accuracy.

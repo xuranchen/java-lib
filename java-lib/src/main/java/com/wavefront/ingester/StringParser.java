@@ -1,6 +1,7 @@
 package com.wavefront.ingester;
 
 import com.google.common.base.Preconditions;
+import com.wavefront.data.ParseException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -85,7 +86,7 @@ public class StringParser {
 
   private String parseAsQuoted(char quoteChar) {
     int index = input.indexOf(quoteChar, currentIndex);
-    if (index == -1) throw new RuntimeException("Unmatched quote character: (" + quoteChar + ")");
+    if (index == -1) throw new ParseException("Unmatched quote character: (" + quoteChar + ")");
     int startIndex = currentIndex;
     currentIndex = index + 1;
     if (input.charAt(index - 1) != '\\') {
@@ -100,7 +101,7 @@ public class StringParser {
       index = input.indexOf(quoteChar, currentIndex);
       startIndex = currentIndex;
       currentIndex = index + 1;
-      if (index == -1) throw new RuntimeException("Unmatched quote character: (" + quoteChar + ")");
+      if (index == -1) throw new ParseException("Unmatched quote character: (" + quoteChar + ")");
       escapedQuote = input.charAt(index - 1) == '\\';
     }
     return unquoted.append(input, startIndex, index).toString();

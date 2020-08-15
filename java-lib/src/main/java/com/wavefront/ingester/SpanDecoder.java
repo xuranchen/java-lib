@@ -66,7 +66,7 @@ public class SpanDecoder implements ReportableEntityDecoder<String, Span> {
         span.setDuration(duration * 1000);
       }
     } else {
-      throw new RuntimeException("Both timestamp and duration expected");
+      throw new IllegalArgumentException("Both timestamp and duration expected");
     }
   }
 }
