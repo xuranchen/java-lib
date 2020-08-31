@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang.StringUtils;
 
 import com.google.common.collect.ImmutableList;
-import com.wavefront.common.PatternMatch;
+import com.wavefront.common.PatternMatchPredicate;
 
 import wavefront.report.Annotation;
 import wavefront.report.ReportHistogram;
@@ -115,7 +115,7 @@ public class MultiStringComparisonExpression implements PredicateEvalExpression 
       case "contains":
         return new MultiStringComparisonExpression(scope, argument, matchOp, String::contains);
       case "matches":
-        Predicate<String> match = PatternMatch.buildPredicate(argument.getString(null), false);
+        Predicate<String> match = PatternMatchPredicate.buildPredicate(argument.getString(null), false);
         return new MultiStringComparisonExpression(scope, argument, matchOp,
             (s1, s2) -> match.test(s1));
       case "regexMatch":
@@ -134,7 +134,7 @@ public class MultiStringComparisonExpression implements PredicateEvalExpression 
         return new MultiStringComparisonExpression(scope, argument, matchOp,
             StringUtils::containsIgnoreCase);
       case "matchesIgnoreCase":
-        Predicate<String> matchCI = PatternMatch.buildPredicate(argument.getString(null), true);
+        Predicate<String> matchCI = PatternMatchPredicate.buildPredicate(argument.getString(null), true);
         return new MultiStringComparisonExpression(scope, argument, matchOp,
             (s1, s2) -> matchCI.test(s1));
       case "regexMatchIgnoreCase":

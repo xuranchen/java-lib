@@ -20,7 +20,7 @@ import dk.brics.automaton.RunAutomaton;
  *
  * @author Clement Pang (clement@wavefront.com).
  */
-public class PatternMatch implements Predicate<String> {
+public class PatternMatchPredicate implements Predicate<String> {
 
   private static final Counter patternsCompiled = Metrics.newCounter(new TaggedMetricName("sldb",
       "patterns.compiled"));
@@ -43,7 +43,7 @@ public class PatternMatch implements Predicate<String> {
   private final RunAutomaton pattern;
   private final boolean caseInsensitive;
 
-  private PatternMatch(String pattern, boolean caseInsensitive) {
+  private PatternMatchPredicate(String pattern, boolean caseInsensitive) {
     this.pattern = automatons.get(caseInsensitive ? pattern.toLowerCase() : pattern);
     this.caseInsensitive = caseInsensitive;
   }
@@ -58,7 +58,7 @@ public class PatternMatch implements Predicate<String> {
     for (int i = 1; i < chars.length - 1; i++) {
       if (chars[i] == '*') {
         // need automaton
-        return new PatternMatch(pattern, caseInsensitive);
+        return new PatternMatchPredicate(pattern, caseInsensitive);
       }
     }
     if (startsWithWildcard && pattern.length() == 1) return s -> true;

@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.wavefront.common.PatternMatch;
+import com.wavefront.common.PatternMatchPredicate;
 
 import static com.wavefront.predicates.PredicateEvalExpression.asDouble;
 
@@ -47,7 +47,7 @@ public class StringComparisonExpression implements PredicateEvalExpression {
       case "contains":
         return new StringComparisonExpression(left, right, String::contains);
       case "matches":
-        Predicate<String> patternMatch = PatternMatch.buildPredicate(right.getString(null), false);
+        Predicate<String> patternMatch = PatternMatchPredicate.buildPredicate(right.getString(null), false);
         return entity -> asDouble(patternMatch.test(left.getString(entity)));
       case "regexMatch":
         return new StringComparisonExpression(left, right, new CachingRegexMatcher());
@@ -60,7 +60,7 @@ public class StringComparisonExpression implements PredicateEvalExpression {
       case "containsIgnoreCase":
         return new StringComparisonExpression(left, right, StringUtils::containsIgnoreCase);
       case "matchesIgnoreCase":
-        Predicate<String> patternMatchCI = PatternMatch.buildPredicate(right.getString(null), true);
+        Predicate<String> patternMatchCI = PatternMatchPredicate.buildPredicate(right.getString(null), true);
         return entity -> asDouble(patternMatchCI.test(left.getString(entity)));
       case "regexMatchIgnoreCase":
         return new StringComparisonExpression(left, right,

@@ -5,7 +5,6 @@ import java.util.function.Predicate;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.wavefront.common.PatternMatch;
 
 import dk.brics.automaton.Automaton;
 import dk.brics.automaton.RunAutomaton;
@@ -16,7 +15,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Created by clement on 2/24/17.
  */
-public class PatternMatchTest {
+public class PatternMatchPredicateTest {
 
   @Test
   public void testAutomaton() {
@@ -42,19 +41,19 @@ public class PatternMatchTest {
 
   @Test
   public void testPatternMatch() {
-    RunAutomaton test = PatternMatch.makeAutomaton("test");
+    RunAutomaton test = PatternMatchPredicate.makeAutomaton("test");
     assertTrue(test.run("test"));
     assertFalse(test.run("tes"));
-    test = PatternMatch.makeAutomaton("");
+    test = PatternMatchPredicate.makeAutomaton("");
     assertTrue(test.run(""));
-    test = PatternMatch.makeAutomaton("hello*world*hello*world");
+    test = PatternMatchPredicate.makeAutomaton("hello*world*hello*world");
     assertTrue(test.run("helloworldhelloworld"));
     assertTrue(test.run("helloworworldldhelloworld"));
     assertFalse(test.run("helloworld"));
     assertFalse(test.run("helloworldhelloworl"));
     assertFalse(test.run("2helloworldhelloworld"));
     assertFalse(test.run("helloworldhelloworld2"));
-    test = PatternMatch.makeAutomaton("*auth*prod*");
+    test = PatternMatchPredicate.makeAutomaton("*auth*prod*");
     assertTrue(test.run("authaskdfkkl.auth.2490349prod.prod"));
     assertTrue(test.run("authprod"));
     assertTrue(test.run("auth.2490349prod"));
@@ -63,21 +62,21 @@ public class PatternMatchTest {
 
   @Test
   public void testPredicate() {
-    Predicate<String> test = PatternMatch.buildPredicate("test", false);
+    Predicate<String> test = PatternMatchPredicate.buildPredicate("test", false);
     assertTrue(test.test("test"));
     assertFalse(test.test("Test"));
     assertFalse(test.test("tesT"));
     assertFalse(test.test("atest"));
     assertFalse(test.test("testa"));
 
-    test = PatternMatch.buildPredicate("test", true);
+    test = PatternMatchPredicate.buildPredicate("test", true);
     assertTrue(test.test("test"));
     assertTrue(test.test("Test"));
     assertTrue(test.test("tesT"));
     assertFalse(test.test("atest"));
     assertFalse(test.test("testa"));
 
-    test = PatternMatch.buildPredicate("*test", false);
+    test = PatternMatchPredicate.buildPredicate("*test", false);
     assertTrue(test.test("test"));
     assertFalse(test.test("Test"));
     assertFalse(test.test("tesT"));
@@ -87,7 +86,7 @@ public class PatternMatchTest {
     assertTrue(test.test("Atest"));
     assertFalse(test.test("testa"));
 
-    test = PatternMatch.buildPredicate("*test", true);
+    test = PatternMatchPredicate.buildPredicate("*test", true);
     assertTrue(test.test("test"));
     assertTrue(test.test("Test"));
     assertTrue(test.test("tesT"));
@@ -96,7 +95,7 @@ public class PatternMatchTest {
     assertTrue(test.test("Atest"));
     assertFalse(test.test("testa"));
 
-    test = PatternMatch.buildPredicate("test*", false);
+    test = PatternMatchPredicate.buildPredicate("test*", false);
     assertTrue(test.test("test"));
     assertFalse(test.test("Test"));
     assertFalse(test.test("tesT"));
@@ -104,7 +103,7 @@ public class PatternMatchTest {
     assertFalse(test.test("aTest"));
     assertTrue(test.test("testa"));
 
-    test = PatternMatch.buildPredicate("test*", true);
+    test = PatternMatchPredicate.buildPredicate("test*", true);
     assertTrue(test.test("test"));
     assertTrue(test.test("Test"));
     assertTrue(test.test("tesT"));
@@ -113,7 +112,7 @@ public class PatternMatchTest {
     assertTrue(test.test("tesTa"));
     assertTrue(test.test("testA"));
 
-    test = PatternMatch.buildPredicate("*test*", false);
+    test = PatternMatchPredicate.buildPredicate("*test*", false);
     assertTrue(test.test("test"));
     assertFalse(test.test("Test"));
     assertFalse(test.test("tesT"));
@@ -121,7 +120,7 @@ public class PatternMatchTest {
     assertFalse(test.test("aTest"));
     assertTrue(test.test("testa"));
 
-    test = PatternMatch.buildPredicate("*test*", true);
+    test = PatternMatchPredicate.buildPredicate("*test*", true);
     assertTrue(test.test("test"));
     assertTrue(test.test("Test"));
     assertTrue(test.test("tesT"));
@@ -130,14 +129,14 @@ public class PatternMatchTest {
     assertTrue(test.test("tesTa"));
     assertTrue(test.test("testA"));
 
-    test = PatternMatch.buildPredicate("hello*world*hello*world", false);
+    test = PatternMatchPredicate.buildPredicate("hello*world*hello*world", false);
     assertTrue(test.test("helloworldhelloworld"));
     assertTrue(test.test("helloworworldldhelloworld"));
     assertFalse(test.test("helloworld"));
     assertFalse(test.test("helloworldhelloworl"));
     assertFalse(test.test("2helloworldhelloworld"));
     assertFalse(test.test("helloworldhelloworld2"));
-    test = PatternMatch.buildPredicate("*auth*prod*", false);
+    test = PatternMatchPredicate.buildPredicate("*auth*prod*", false);
     assertTrue(test.test("authaskdfkkl.auth.2490349prod.prod"));
     assertTrue(test.test("authprod"));
     assertTrue(test.test("auth.2490349prod"));
