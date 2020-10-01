@@ -76,8 +76,16 @@ public class ValidationTest {
     input = "∆delta.metric8";
     Assert.assertTrue(Validation.charactersAreValid(input));
 
+    // second character can be ~ if first character is ∆ (\u2206)
+    input = "∆~delta.metric8";
+    Assert.assertTrue(Validation.charactersAreValid(input));
+
     // first character can be Δ (\u0394)
     input = "Δdelta.metric9";
+    Assert.assertTrue(Validation.charactersAreValid(input));
+
+    // second character can be ~ if first character is Δ (\u0394)
+    input = "Δ~delta.metric9";
     Assert.assertTrue(Validation.charactersAreValid(input));
 
     // non-first character cannot be ~
