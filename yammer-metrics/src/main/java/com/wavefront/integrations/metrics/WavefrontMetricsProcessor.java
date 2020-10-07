@@ -227,8 +227,9 @@ abstract class WavefrontMetricsProcessor implements MetricProcessor<Void> {
 
   @Override
   public void processGauge(MetricName name, Gauge<?> gauge, Void context) throws Exception {
-    if (gauge.value() != null) {
-      writeMetric(name, null, Double.valueOf(gauge.value().toString()));
+    Object value = gauge.value();
+    if (value != null) {
+      writeMetric(name, null, Double.parseDouble(value.toString()));
     }
   }
 }
