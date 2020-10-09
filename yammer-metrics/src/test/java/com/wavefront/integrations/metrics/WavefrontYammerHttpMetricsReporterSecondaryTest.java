@@ -357,6 +357,12 @@ public class WavefrontYammerHttpMetricsReporterSecondaryTest {
     assertThat(inputMetrics, contains(equalTo("\"mygauge\" 13.0 1485224035 source=\"test2\"")));
   }
 
+  @Test(timeout = 5000)
+  public void testNullGaugeDoesNotThrow() throws Exception {
+    WavefrontMetricsProcessor processor = new HttpMetricsProcessor.Builder().build();
+    processor.processGauge(new MetricName("test", "gauge", "null gauge"), null, null);
+  }
+
   @Test(timeout = 2000)
   public void testTimerWithClear() throws Exception {
     innerSetUp(false, null, false, true /* clear */);
