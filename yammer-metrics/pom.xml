@@ -24,6 +24,7 @@
         <dependency>
             <groupId>com.wavefront</groupId>
             <artifactId>java-lib</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
