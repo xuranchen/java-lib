@@ -25,6 +25,11 @@ public abstract class Constants {
   public static final String PUSH_FORMAT_HISTOGRAM = "histogram";
 
   /**
+   * Wavefront log format
+   */
+  public static final String PUSH_FORMAT_LOG = "log";
+
+  /**
    * Line-delimited format for source tag commands
    */
   public static final String PUSH_FORMAT_SOURCETAGS = "sourceTag";
