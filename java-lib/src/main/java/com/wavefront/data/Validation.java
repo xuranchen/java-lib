@@ -1,6 +1,7 @@
 package com.wavefront.data;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.RateLimiter;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -12,8 +13,10 @@ import com.yammer.metrics.core.MetricName;
 
 import org.apache.commons.lang.StringUtils;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
@@ -24,6 +27,8 @@ import wavefront.report.ReportHistogram;
 import wavefront.report.ReportMetric;
 import wavefront.report.ReportPoint;
 import wavefront.report.Span;
+import wavefront.report.SpanLog;
+import wavefront.report.SpanLogs;
 
 import static com.wavefront.data.Validation.Level.NO_VALIDATION;
 
@@ -330,7 +335,23 @@ public class Validation {
     }
   }
 
-  public static void validateSpan(Span span, @Nullable ValidationConfiguration config) {
+  /**
+   * Validate Span with provided validation configuration.
+   * @param span tracing span
+   * @param config validation configuration
+   */
+  public static void validateSpan(Span span, @Nullable ValidationConfiguration config){
+    validateSpan(span, config, null);
+  }
+
+  /**
+   * Validate Span with provided validation configuration.
+   * @param span tracing span
+   * @param config validation configuration
+   * @param spanLogsReporter reporter sending SpanLogs to Wavefront
+   */
+  public static void validateSpan(Span span, @Nullable ValidationConfiguration config,
+                                  @Nullable Consumer<SpanLogs> spanLogsReporter) {
     if (config == null) {
       return;
     }
@@ -362,6 +383,7 @@ public class Validation {
         throw new DataValidationException("WF-430: Span has too many annotations (" +
             annotations.size() + ", max " + config.getSpanAnnotationsCountLimit() + ")");
       }
+      Map<String, String> annotationsWithOversizedValue = spanLogsReporter == null ? null : new HashMap<>();
       for (Annotation annotation : annotations) {
         final String tagK = annotation.getKey();
         final String tagV = annotation.getValue();
@@ -390,8 +412,30 @@ public class Validation {
           }
           // trim the tag value to the allowed limit
           annotation.setValue(tagV.substring(0, config.getSpanAnnotationsValueLengthLimit()));
+          if (annotationsWithOversizedValue != null) {
+            annotationsWithOversizedValue.put(tagK, tagV);
+          }
           ERROR_COUNTERS.get("spanAnnotationValueTruncated").inc();
         }
+      }
+      // put annotations with oversized values into spanLogs and send them to Wavefront
+      if (annotationsWithOversizedValue != null && !annotationsWithOversizedValue.isEmpty()) {
+        if (!annotations.stream().filter(x -> x.getKey().equals("_spanLogs")).
+                peek(x -> x.setValue(Boolean.toString(true))).findAny().isPresent()) {
+          span.getAnnotations().add(new Annotation("_spanLogs", Boolean.toString(true)));
+        }
+        SpanLog spanLog = SpanLog.newBuilder().
+                setTimestamp(-1).
+                setFields(annotationsWithOversizedValue).
+                build();
+        SpanLogs spanLogs = SpanLogs.newBuilder().
+                setCustomer(span.getCustomer()).
+                setTraceId(span.getTraceId()).
+                setSpanId(span.getSpanId()).
+                setSpanSecondaryId(AnnotationUtils.getValue(annotations, "_spanSecondaryId")).
+                setLogs(ImmutableList.of(spanLog)).
+                build();
+        spanLogsReporter.accept(spanLogs);
       }
     }
   }

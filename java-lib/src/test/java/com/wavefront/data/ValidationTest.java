@@ -14,13 +14,16 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import wavefront.report.Annotation;
 import wavefront.report.ReportHistogram;
 import wavefront.report.ReportMetric;
 import wavefront.report.Span;
+import wavefront.report.SpanLogs;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -44,8 +47,8 @@ public class ValidationTest {
         setAnnotationsKeyLengthLimit(5).
         setAnnotationsValueLengthLimit(10).
         setSpanAnnotationsCountLimit(3).
-        setSpanAnnotationsKeyLengthLimit(6).
-        setSpanAnnotationsValueLengthLimit(15);
+        setSpanAnnotationsKeyLengthLimit(16).
+        setSpanAnnotationsValueLengthLimit(36);
   }
 
   @Test
@@ -428,7 +431,7 @@ public class ValidationTest {
     span.getAnnotations().add(new Annotation("k23456", "v1"));
     Validation.validateSpan(span, config);
     span = getValidSpan();
-    span.getAnnotations().add(new Annotation("k234567", "v1"));
+    span.getAnnotations().add(new Annotation("k2345678901234567", "v1"));
     try {
       Validation.validateSpan(span, config);
       fail();
@@ -437,15 +440,35 @@ public class ValidationTest {
     }
 
     // accept long span annotation value
+    List<SpanLogs> spanLogsToReport = new ArrayList<>();
+    Consumer<SpanLogs> spanLogsConsumer = spanLogsToReport::add;
     span = getValidSpan();
     span.getAnnotations().add(new Annotation("k", "v23456789012345"));
-    Validation.validateSpan(span, config);
+    Validation.validateSpan(span, config, spanLogsConsumer);
     assertEquals("v23456789012345", span.getAnnotations().get(1).getValue());
+    assertEquals(0, spanLogsToReport.size());
+
     span = getValidSpan();
-    span.getAnnotations().add(new Annotation("k", "v234567890123456"));
-    Validation.validateSpan(span, config);
+    span.getAnnotations().add(new Annotation("k", "v123456789012345678901234567890123456"));
+    span.getAnnotations().add(new Annotation("_spanSecondaryId", "713d14bd-e7c8-415a-b633-4042ba8a11fd"));
+    Validation.validateSpan(span, config, spanLogsConsumer);
     System.currentTimeMillis();
-    assertEquals("v23456789012345", span.getAnnotations().get(1).getValue());
+    assertEquals("v12345678901234567890123456789012345", span.getAnnotations().get(1).getValue());
+    assertEquals("dummy", spanLogsToReport.get(0).getCustomer());
+    assertEquals("d5355bf7-fc8d-48d1-b761-75b170f396e0", spanLogsToReport.get(0).getTraceId());
+    assertEquals("4217104a-690d-4927-baff-d9aa779414c2", spanLogsToReport.get(0).getSpanId());
+    assertEquals("713d14bd-e7c8-415a-b633-4042ba8a11fd", spanLogsToReport.get(0).getSpanSecondaryId());
+    assertNull(spanLogsToReport.get(0).getSpan());
+    assertEquals("v123456789012345678901234567890123456",
+            spanLogsToReport.get(0).getLogs().get(0).getFields().get("k"));
+    assertEquals(-1, spanLogsToReport.get(0).getLogs().get(0).getTimestamp());
+    assertEquals(AnnotationUtils.getValue(span.getAnnotations(), "_spanLogs"), Boolean.toString(true));
+
+    span = getValidSpan();
+    span.getAnnotations().add(new Annotation("k", "v123456789012345678901234567890123456"));
+    span.getAnnotations().add(new Annotation("_spanLogs", Boolean.toString(false)));
+    Validation.validateSpan(span, config, spanLogsConsumer);
+    assertEquals(AnnotationUtils.getValue(span.getAnnotations(), "_spanLogs"), Boolean.toString(true));
   }
 
   @Test
