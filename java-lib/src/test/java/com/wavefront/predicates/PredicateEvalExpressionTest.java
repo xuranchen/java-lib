@@ -65,7 +65,10 @@ public class PredicateEvalExpressionTest {
       setAnnotations(ImmutableList.of(
           new Annotation("foo", "bar1-baz"),
           new Annotation("foo", "bar2-baz"),
-          new Annotation("boo", "baz"))).
+          new Annotation("boo", "baz"),
+          new Annotation("span.kind", "error"),
+          new Annotation("http.status_code", "404"),
+          new Annotation("application", "beachshirts"))).
       setStartMillis(1532012145123L).
       setDuration(1111).
       build();
@@ -418,6 +421,11 @@ public class PredicateEvalExpressionTest {
     parseAndAssertEq(1, "{{foo}} any equalsIgnoreCase 'bar2-BAZ'", span);
     parseAndAssertEq(1, "{{sourceName}} all startsWith 'span'", span);
     parseAndAssertEq(1, "{{spanName}} all startsWith 'test'", span);
+    parseAndAssertEq(1, "{{http.status_code}} in ('400', \"404\")", span);
+    parseAndAssertEq(0, "{{span.kind}}='warning'", span);
+    parseAndAssertEq(1, "{{application}} = \"beachshirts\" and {{spanName}} startsWith \"test\" " +
+        "and {{sourceName}} contains \"span\" and {{http.status_code}} in (\"400\", \"404\")",
+        span);
   }
 
   @Test(expected = IllegalArgumentException.class)

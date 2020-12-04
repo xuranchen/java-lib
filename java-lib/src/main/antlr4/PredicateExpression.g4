@@ -184,7 +184,15 @@ string
   ;
 
 placeholder
-  : '{{' (Letters | Identifier) '}}'
+  : '{{' tagk '}}'
+  ;
+
+tagk
+  : Quoted
+  | Letters
+  | Literal
+  | Identifier
+  | Number
   ;
 
 stringComparisonOp

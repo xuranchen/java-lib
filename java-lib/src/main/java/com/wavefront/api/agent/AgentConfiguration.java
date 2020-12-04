@@ -27,6 +27,7 @@ public class AgentConfiguration {
   private boolean collectorSetsRetryBackoff = false;
   private Double retryBackoffBaseSeconds;
   private boolean collectorSetsRateLimit = false;
+  private List<SpanSamplingPolicy> activeSpanSamplingPolicies;
 
   /**
    * When set, enforces a per proxy rate limit for points.
@@ -386,6 +387,16 @@ public class AgentConfiguration {
 
   public void setDropSpansDelayedMinutes(int dropSpansDelayedMinutes) {
     this.dropSpansDelayedMinutes = dropSpansDelayedMinutes;
+  }
+
+  @Nullable
+  public List<SpanSamplingPolicy> getActiveSpanSamplingPolicies() {
+    return activeSpanSamplingPolicies;
+  }
+
+  public void setActiveSpanSamplingPolicies(
+      @Nullable List<SpanSamplingPolicy> activeSpanSamplingPolicies) {
+    this.activeSpanSamplingPolicies = activeSpanSamplingPolicies;
   }
 
   @Override

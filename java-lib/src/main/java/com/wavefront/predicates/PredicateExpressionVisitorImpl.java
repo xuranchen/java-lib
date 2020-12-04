@@ -18,7 +18,6 @@ import wavefront.report.ReportMetric;
 import wavefront.report.ReportPoint;
 import wavefront.report.Span;
 
-import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.wavefront.predicates.PredicateEvalExpression.asDouble;
 import static com.wavefront.predicates.PredicateEvalExpression.isTrue;
 import static com.wavefront.ingester.AbstractIngesterFormatter.unquote;
@@ -56,8 +55,7 @@ public class PredicateExpressionVisitorImpl extends PredicateExpressionBaseVisit
       PredicateEvalExpression expression = eval(ctx.evalExpression(0));
       return (PredicateEvalExpression) entity -> ~ (long) expression.getValue(entity);
     } else if (ctx.multiModifier != null) {
-      String scope = firstNonNull(ctx.placeholder().Letters(),
-          ctx.placeholder().Identifier()).getText();
+      String scope = unquote(ctx.placeholder().tagk().getText());
       StringExpression argument = stringExpression(ctx.stringExpression(0));
       String op = ctx.stringComparisonOp().getText();
       return MultiStringComparisonExpression.of(scope, argument,
