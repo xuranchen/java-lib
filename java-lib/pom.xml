@@ -7,7 +7,7 @@
   <parent>
     <groupId>com.wavefront</groupId>
     <artifactId>javalib</artifactId>
-    <version>2020-12.1</version>
+    <version>2020-12.2-SNAPSHOT</version>
   </parent>
 
   <name>Wavefront Shared Java Library</name>
