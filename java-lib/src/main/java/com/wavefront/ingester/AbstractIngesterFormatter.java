@@ -7,6 +7,7 @@ import com.wavefront.data.ParseException;
 import org.apache.avro.specific.SpecificRecordBase;
 import wavefront.report.Annotation;
 import wavefront.report.Histogram;
+import wavefront.report.ReportEvent;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -114,6 +115,13 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     public IngesterFormatBuilder<T> annotationMap(BiConsumer<T, Map<String, String>> mapConsumer,
                                                   int limit) {
       elements.add(new StringMap<>(mapConsumer, null, limit, null));
+      return this;
+    }
+
+    public IngesterFormatBuilder<T> annotationText(Function<T, List<Annotation>> listProvider,
+                                                   BiConsumer<T, List<Annotation>> listConsumer,
+                                                   String annotationKey) {
+      elements.add(new AnnotationText<>(listConsumer, listProvider, annotationKey));
       return this;
     }
 
@@ -372,6 +380,35 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
         parseKeyValuePair(parser, (k, v) -> annotationList.add(new Annotation(k, v)));
         i++;
       }
+      annotationListConsumer.accept(target, annotationList);
+    }
+  }
+
+  public static class AnnotationText<T extends SpecificRecordBase> implements FormatterElement<T> {
+    private final BiConsumer<T, List<Annotation>> annotationListConsumer;
+    private final Function<T, List<Annotation>> annotationListProvider;
+    private final String annotationKey;
+
+    AnnotationText(BiConsumer<T, List<Annotation>> annotationListConsumer,
+                   @Nullable Function<T, List<Annotation>> annotationListProvider,
+                   String annotationKey) {
+      this.annotationListConsumer = annotationListConsumer;
+      this.annotationListProvider = annotationListProvider;
+      this.annotationKey = annotationKey;
+    }
+
+    @Override
+    public void consume(StringParser parser, T target) {
+      List<Annotation> annotations = null;
+      if (annotationListProvider != null) {
+        annotations = annotationListProvider.apply(target);
+      }
+      if (annotations == null) {
+        annotations = new ArrayList<>();
+      }
+      List<Annotation> annotationList = annotations;
+      String text = parser.next();
+      annotationList.add(new Annotation(annotationKey, text));
       annotationListConsumer.accept(target, annotationList);
     }
   }

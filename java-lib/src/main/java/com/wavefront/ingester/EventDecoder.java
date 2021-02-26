@@ -21,8 +21,8 @@ public class EventDecoder implements ReportableEntityDecoder<String, ReportEvent
           caseSensitiveLiterals(ImmutableList.of(EVENT_LITERAL)).
           timestamp(ReportEvent::setStartTime).
           optionalTimestamp(ReportEvent::setEndTime).
-          text(ReportEvent::setName).
-          annotationMultimap(ReportEvent::setDimensions).
+          annotationText(ReportEvent::getAnnotations, ReportEvent::setAnnotations, "eventName").
+          annotationList(ReportEvent::getAnnotations, ReportEvent::setAnnotations).
           build();
 
   @Override
