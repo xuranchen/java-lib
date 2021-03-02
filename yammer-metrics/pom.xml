@@ -3,7 +3,7 @@
     <parent>
         <artifactId>javalib</artifactId>
         <groupId>com.wavefront</groupId>
-        <version>2020-12.2-SNAPSHOT</version>
+        <version>2021-03.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
