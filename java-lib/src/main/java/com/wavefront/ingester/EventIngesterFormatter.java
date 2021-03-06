@@ -41,6 +41,7 @@ public class EventIngesterFormatter extends AbstractIngesterFormatter<ReportEven
     StringParser parser = new StringParser(input);
     event.setHosts(new ArrayList<>());
     event.setAnnotations(new ArrayList<>());
+    event.setCustomer(customerId);
 
     for (FormatterElement<ReportEvent> element : elements) {
       element.consume(parser, event);

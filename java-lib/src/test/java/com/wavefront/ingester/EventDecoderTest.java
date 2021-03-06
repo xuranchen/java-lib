@@ -64,7 +64,6 @@ public class EventDecoderTest {
     assertEquals("Really long description with a line break here: \n end of description", out.get(0).getDetails());
     assertArrayEquals(new String[] {"app1", "app2", "app3", "app4"}, out.get(0).getHosts().toArray());
     assertEquals(6, out.get(0).getAnnotations().size());
-    // TODO: shall we put description into detail?
   }
 
   @Test

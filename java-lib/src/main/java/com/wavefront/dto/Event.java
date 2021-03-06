@@ -31,6 +31,8 @@ public class Event implements Serializable {
   @JsonProperty
   private Long endTime;
   @JsonProperty
+  private String customer;
+  @JsonProperty
   private List<String> hosts;
   @JsonProperty
   private List<Annotation> annotations;
@@ -47,6 +49,7 @@ public class Event implements Serializable {
     this.startTime = event.getStartTime();
     this.endTime = event.getEndTime();
     this.annotations = event.getAnnotations();
+    this.customer = event.getCustomer();
     this.hosts = new ArrayList<>(event.getHosts());
     this.details = event.getDetails();
   }
@@ -72,6 +75,9 @@ public class Event implements Serializable {
   }
 
   @JsonProperty
+  public String getCustomer() { return customer; }
+
+  @JsonProperty
   public List<String> getHosts() {
     return hosts;
   }
@@ -89,6 +95,7 @@ public class Event implements Serializable {
     result = result * 31 + (int) (startTime ^ (startTime >>> 32));
     result = result * 31 + (endTime == null ? 0 : (int) (endTime ^ (endTime >>> 32)));
     result = result * 31 + annotations.hashCode();
+    result = result * 31 + customer.hashCode();
     result = result * 31 + hosts.hashCode();
     result = result * 31 + (details == null ? 0 : details.hashCode());
     return result;
@@ -104,6 +111,7 @@ public class Event implements Serializable {
     if (startTime != other.startTime) return false;
     if (!Objects.equals(endTime, other.endTime)) return false;
     if (!annotations.equals(other.annotations)) return false;
+    if (!customer.equals(other.customer)) return false;
     if (!hosts.equals(other.hosts)) return false;
     if (!details.equals(other.details)) return false;
     return true;
@@ -120,6 +128,8 @@ public class Event implements Serializable {
     appendQuoted(sb, this.getGroup());
     sb.append(' ');
     appendQuoted(sb, this.getEventId());
+    sb.append(' ');
+    appendQuoted(sb, this.getCustomer());
     appendTags(sb, "host", this.getHosts());
     if (this.getAnnotations() != null) {
       appendAnnotations(sb, this.getAnnotations());
