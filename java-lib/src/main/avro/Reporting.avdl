@@ -104,8 +104,8 @@ protocol Reporting {
   record ReportEvent {
     string group;
     string eventId;
-    long startTime;
-    long endTime;
+    long startMillis;
+    long endMillis;
     string customer = "unknown";
     array<string> hosts = [];
     union {null, string} details = null;

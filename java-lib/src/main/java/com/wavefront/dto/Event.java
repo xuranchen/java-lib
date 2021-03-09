@@ -27,9 +27,9 @@ public class Event implements Serializable {
   @JsonProperty
   private String eventId;
   @JsonProperty
-  private long startTime;
+  private long startMillis;
   @JsonProperty
-  private Long endTime;
+  private Long endMillis;
   @JsonProperty
   private String customer;
   @JsonProperty
@@ -46,8 +46,8 @@ public class Event implements Serializable {
   public Event(ReportEvent event) {
     this.group = event.getGroup();
     this.eventId = event.getEventId();
-    this.startTime = event.getStartTime();
-    this.endTime = event.getEndTime();
+    this.startMillis = event.getStartMillis();
+    this.endMillis = event.getEndMillis();
     this.annotations = event.getAnnotations();
     this.customer = event.getCustomer();
     this.hosts = new ArrayList<>(event.getHosts());
@@ -60,13 +60,13 @@ public class Event implements Serializable {
 
   public String getEventId() { return eventId; }
 
-  public long getStartTime() {
-    return startTime;
+  public long getStartMillis() {
+    return startMillis;
   }
 
   @JsonProperty
-  public Long getEndTime() {
-    return endTime;
+  public Long getEndMillis() {
+    return endMillis;
   }
 
   @JsonProperty
@@ -92,8 +92,8 @@ public class Event implements Serializable {
     int result = 1;
     result = result * 31 + (group == null ? 0 : group.hashCode());
     result = result * 31 + (eventId == null ? 0 : eventId.hashCode());
-    result = result * 31 + (int) (startTime ^ (startTime >>> 32));
-    result = result * 31 + (endTime == null ? 0 : (int) (endTime ^ (endTime >>> 32)));
+    result = result * 31 + (int) (startMillis ^ (startMillis >>> 32));
+    result = result * 31 + (endMillis == null ? 0 : (int) (endMillis ^ (endMillis >>> 32)));
     result = result * 31 + annotations.hashCode();
     result = result * 31 + customer.hashCode();
     result = result * 31 + hosts.hashCode();
@@ -108,8 +108,8 @@ public class Event implements Serializable {
     Event other = (Event) obj;
     if (!Objects.equals(group, other.group)) return false;
     if (!Objects.equals(eventId, other.eventId)) return false;
-    if (startTime != other.startTime) return false;
-    if (!Objects.equals(endTime, other.endTime)) return false;
+    if (startMillis != other.startMillis) return false;
+    if (!Objects.equals(endMillis, other.endMillis)) return false;
     if (!annotations.equals(other.annotations)) return false;
     if (!customer.equals(other.customer)) return false;
     if (!hosts.equals(other.hosts)) return false;
@@ -120,9 +120,9 @@ public class Event implements Serializable {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder(AbstractIngesterFormatter.EVENT_LITERAL).append(' ');
-    sb.append(this.getStartTime()).append(' ');
-    if (this.getEndTime() != null) {
-      sb.append(this.getEndTime());
+    sb.append(this.getStartMillis()).append(' ');
+    if (this.getEndMillis() != null) {
+      sb.append(this.getEndMillis());
     }
     sb.append(' ');
     appendQuoted(sb, this.getGroup());

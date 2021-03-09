@@ -57,8 +57,8 @@ public class EventDecoderTest {
         "tag=eventtag2 host=app4 somerandomannotation=value", out);
     assertEquals(1, out.size());
     assertNotNull(out.get(0).getEventId());
-    assertEquals(startTs, out.get(0).getStartTime());
-    assertEquals(endTs, out.get(0).getEndTime());
+    assertEquals(startTs, out.get(0).getStartMillis());
+    assertEquals(endTs, out.get(0).getEndMillis());
     assertEquals("deployment-event", out.get(0).getGroup());
     assertEquals(4, out.get(0).getHosts().size());
     assertEquals("Really long description with a line break here: \n end of description", out.get(0).getDetails());
@@ -76,8 +76,8 @@ public class EventDecoderTest {
     assertEquals(1, out.size());
     assertEquals("dff7e9d7-b208-4f08-a2f4-0380119fac88", out.get(0).getEventId());
     assertEquals("testGroup", out.get(0).getGroup());
-    assertEquals(startTs, out.get(0).getStartTime());
-    assertEquals(endTs, out.get(0).getEndTime());
+    assertEquals(startTs, out.get(0).getStartMillis());
+    assertEquals(endTs, out.get(0).getEndMillis());
     assertEquals(4, out.get(0).getHosts().size());
     assertArrayEquals(new String[] {"app1", "app2", "app3", "app4"}, out.get(0).getHosts().toArray());
     assertEquals("Really long description with a line break here: \n end of description", out.get(0).getDetails());
@@ -92,8 +92,8 @@ public class EventDecoderTest {
         "description=\"Really long description with a line break here: \n end of description\" " +
         "\"tag\"=\"eventtag2\" host=\"app4\" \"somerandomannotation\"=value", out);
     assertEquals(1, out.size());
-    assertEquals(startTs, out.get(0).getStartTime());
-    assertEquals(endTs, out.get(0).getEndTime());
+    assertEquals(startTs, out.get(0).getStartMillis());
+    assertEquals(endTs, out.get(0).getEndMillis());
     assertEquals(4, out.get(0).getHosts().size());
     assertEquals("Really long description with a line break here: \n end of description",
         out.get(0).getDetails());
@@ -109,8 +109,8 @@ public class EventDecoderTest {
         "description=\"Really long description with a line break here: \n end of description\" " +
         "tag=eventtag2 host=app4 somerandomannotation=value", out);
     assertEquals(1, out.size());
-    assertEquals(startTs, out.get(0).getStartTime());
-    assertEquals(startTs + 1, out.get(0).getEndTime());
+    assertEquals(startTs, out.get(0).getStartMillis());
+    assertEquals(startTs + 1, out.get(0).getEndMillis());
     assertEquals(4, out.get(0).getHosts().size());
     assertEquals("Really long description with a line break here: \n end of description",
         out.get(0).getDetails());
@@ -123,8 +123,8 @@ public class EventDecoderTest {
     List<ReportEvent> out = new ArrayList<>();
     decoder.decode("@Event 1569423200123 1569423260123 \"Event name for testing\"", out);
     assertEquals(1, out.size());
-    assertEquals(startTs, out.get(0).getStartTime());
-    assertEquals(endTs, out.get(0).getEndTime());
+    assertEquals(startTs, out.get(0).getStartMillis());
+    assertEquals(endTs, out.get(0).getEndMillis());
     assertEquals(0, out.get(0).getHosts().size());
     assertEquals(1, out.get(0).getAnnotations().size());
   }
@@ -134,8 +134,8 @@ public class EventDecoderTest {
     List<ReportEvent> out = new ArrayList<>();
     decoder.decode("@Event 1569423200123 1569423260123 Event_name_for_testing", out);
     assertEquals(1, out.size());
-    assertEquals(startTs, out.get(0).getStartTime());
-    assertEquals(endTs, out.get(0).getEndTime());
+    assertEquals(startTs, out.get(0).getStartMillis());
+    assertEquals(endTs, out.get(0).getEndMillis());
     assertEquals(0, out.get(0).getHosts().size());
     assertEquals(1, out.get(0).getAnnotations().size());
   }
@@ -145,8 +145,8 @@ public class EventDecoderTest {
     List<ReportEvent> out = new ArrayList<>();
     decoder.decode("@Event 1569423200123 \"Event name for testing\"", out);
     assertEquals(1, out.size());
-    assertEquals(startTs, out.get(0).getStartTime());
-    assertEquals(startTs + 1, out.get(0).getEndTime());
+    assertEquals(startTs, out.get(0).getStartMillis());
+    assertEquals(startTs + 1, out.get(0).getEndMillis());
     assertEquals(0, out.get(0).getHosts().size());
     assertEquals(1, out.get(0).getAnnotations().size());
   }

@@ -89,8 +89,8 @@ public class EventIngesterFormatter extends AbstractIngesterFormatter<ReportEven
       event.getAnnotations().add(new Annotation("description", defaultDetails));
     }
     // if no end time specified, we assume it's an instant event
-    if (event.getEndTime() == 0 || event.getEndTime() <= event.getStartTime()) {
-      event.setEndTime(event.getStartTime() + 1);
+    if (event.getEndMillis() == 0 || event.getEndMillis() <= event.getStartMillis()) {
+      event.setEndMillis(event.getStartMillis() + 1);
     }
     if (event.getHosts() == null && defaultHostNameSupplier != null) {
       event.setHosts(ImmutableList.of(defaultHostNameSupplier.get()));

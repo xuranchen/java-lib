@@ -19,8 +19,8 @@ public class EventDecoder implements ReportableEntityDecoder<String, ReportEvent
   private static final AbstractIngesterFormatter<ReportEvent> FORMAT =
       EventIngesterFormatter.newBuilder().
           caseSensitiveLiterals(ImmutableList.of(EVENT_LITERAL)).
-          timestamp(ReportEvent::setStartTime).
-          optionalTimestamp(ReportEvent::setEndTime).
+          timestamp(ReportEvent::setStartMillis).
+          optionalTimestamp(ReportEvent::setEndMillis).
           annotationText(ReportEvent::getAnnotations, ReportEvent::setAnnotations, "eventName").
           annotationList(ReportEvent::getAnnotations, ReportEvent::setAnnotations).
           build();
