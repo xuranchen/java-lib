@@ -1,6 +1,6 @@
 open_source_licenses.txt
 
-Wavefront by VMware 2021-03.1 GA
+Wavefront by VMware 2021-03.2 GA
 
 ======================================================================
 
@@ -3010,4 +3010,4 @@ Source Files is valid for three years from the date you acquired or last used th
 Software product. Alternatively, the Source Files may accompany the
 VMware service.
 
-[WAVEFRONTHQJAVA2021031GANT110520]
+[WAVEFRONTHQJAVA2021032GANT110520]
