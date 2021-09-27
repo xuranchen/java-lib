@@ -10,7 +10,7 @@ Wavefront shared Java library
 ```
 $ git clone https://github.com/wavefronthq/java-lib
 $ cd java-lib
-$ mvn clean install -DskipTests
+$ mvn clean install
 ```
 
 ## Contributing
