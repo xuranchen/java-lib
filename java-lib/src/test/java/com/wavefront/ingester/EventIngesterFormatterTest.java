@@ -65,4 +65,38 @@ public class EventIngesterFormatterTest {
 
         assertEquals(expected, actual.getAnnotations());
     }
+
+    @Test
+    public void setsEventDetailsFromAnnotation() {
+        String input = "@Event 1569423200123 1569423260123 eventName " +
+                "details=\"expected details\"";
+
+        ReportEvent actual = subject.drive(input, defaultHostNameSupplier, customerId, null, null);
+
+        assertEquals("expected details", actual.getDetails());
+    }
+
+    @Test
+    public void setsDetailsFromDescription() {
+        String input = "@Event 1569423200123 1569423260123 eventName " +
+                "description=\"expected details\"";
+
+        ReportEvent actual = subject.drive(input, defaultHostNameSupplier, customerId, null, null);
+
+        assertEquals("expected details", actual.getDetails());
+    }
+
+    @Test
+    public void detailsAndDescriptionArePreserved() {
+        String input = "@Event 1569423200123 1569423260123 eventName " +
+                "details=\"expected details\" description=expectedDescription";
+
+        ReportEvent actual = subject.drive(input, defaultHostNameSupplier, customerId, null, null);
+
+        ImmutableList<Annotation> expected = ImmutableList.of(
+                new Annotation("eventName", "eventName"),
+                new Annotation("description", "expectedDescription"));
+        assertEquals(expected, actual.getAnnotations());
+        assertEquals("expected details", actual.getDetails());
+    }
 }
