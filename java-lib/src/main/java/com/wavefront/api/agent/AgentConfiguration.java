@@ -62,6 +62,8 @@ public class AgentConfiguration {
   private boolean shutOffAgents = false;
   private boolean showTrialExpired = false;
 
+  private boolean truncateQueue = false;
+
   /**
    * A custom message to display before shutting down the proxy
    */
@@ -422,5 +424,16 @@ public class AgentConfiguration {
     result = 31 * result + (defaultPublicKey != null ? defaultPublicKey.hashCode() : 0);
     result = 31 * result + (allowAnyHostKeys ? 1 : 0);
     return result;
+  }
+
+  /**
+   * If the value is true, then the metrics queue will be truncated
+   */
+  public boolean isTruncateQueue() {
+    return truncateQueue;
+  }
+
+  public void setTruncateQueue(boolean truncateQueue) {
+    this.truncateQueue = truncateQueue;
   }
 }
