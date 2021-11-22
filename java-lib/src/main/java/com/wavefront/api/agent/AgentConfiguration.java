@@ -62,6 +62,9 @@ public class AgentConfiguration {
   private boolean shutOffAgents = false;
   private boolean showTrialExpired = false;
 
+  /**
+  * If the value is true the metrics queue will be truncated
+  */
   private boolean truncateQueue = false;
 
   /**
@@ -426,9 +429,6 @@ public class AgentConfiguration {
     return result;
   }
 
-  /**
-   * If the value is true, then the metrics queue will be truncated
-   */
   public boolean isTruncateQueue() {
     return truncateQueue;
   }
