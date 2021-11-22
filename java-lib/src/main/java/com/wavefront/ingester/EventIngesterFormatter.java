@@ -1,14 +1,13 @@
 package com.wavefront.ingester;
 
-import com.google.common.collect.ImmutableList;
-import wavefront.report.Annotation;
 import wavefront.report.ReportEvent;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
 import java.util.function.Supplier;
 
 /**
@@ -40,69 +39,39 @@ public class EventIngesterFormatter extends AbstractIngesterFormatter<ReportEven
     final ReportEvent event = new ReportEvent();
     StringParser parser = new StringParser(input);
     event.setHosts(new ArrayList<>());
-    event.setAnnotations(new ArrayList<>());
-    event.setCustomer(customerId);
+    event.setAnnotations(new HashMap<>());
 
     for (FormatterElement<ReportEvent> element : elements) {
       element.consume(parser, event);
     }
 
-    List<Annotation> annotations = event.getAnnotations();
-    String defaultGroup = "Default";
-    String defaultDetails = null;
-    if (annotations != null) {
-      Iterator<Annotation> iterator = annotations.iterator();
-      while(iterator.hasNext()) {
-        final Annotation annotation = iterator.next();
-        switch (annotation.getKey()) {
-          case "eventId":
-            event.setEventId(annotation.getValue());
-            iterator.remove();
-            break;
-          case "host":
-            event.getHosts().add(annotation.getValue());
-            iterator.remove();
-            break;
-          case "group":
-            event.setGroup(annotation.getValue());
-            iterator.remove();
-            break;
-          case "details":
-            event.setDetails(annotation.getValue());
-            iterator.remove();
-            break;
-          case "description":
-            defaultDetails = annotation.getValue();
-            iterator.remove();
-            break;
-          case "type":
-            defaultGroup = annotation.getValue();
-            break;
-        }
+    Iterator<Map.Entry<String, List<String>>> iter = event.getDimensions().entrySet().iterator();
+    while (iter.hasNext()) {
+      final Map.Entry<String, List<String>> entry = iter.next();
+      switch (entry.getKey()) {
+        case "host":
+          event.setHosts(entry.getValue());
+          iter.remove();
+          break;
+        case "tag":
+        case "eventTag":
+          event.setTags(entry.getValue());
+          iter.remove();
+          break;
+        default:
+          // single-value dimensions should be moved to annotations
+          if (entry.getValue().size() == 1) {
+            event.getAnnotations().put(entry.getKey(), entry.getValue().get(0));
+            iter.remove();
+          }
       }
     }
-    if (event.getDetails() == null) {
-      // if details field does not exit, use description from the old format
-      event.setDetails(defaultDetails);
-    } else if (defaultDetails != null){
-      // add description back to annotation if details already exist
-      event.getAnnotations().add(new Annotation("description", defaultDetails));
+    if (event.getDimensions().isEmpty()) {
+      event.setDimensions(null);
     }
     // if no end time specified, we assume it's an instant event
-    if (event.getEndMillis() == 0 || event.getEndMillis() <= event.getStartMillis()) {
-      event.setEndMillis(event.getStartMillis() + 1);
-    }
-    if (event.getHosts() == null && defaultHostNameSupplier != null) {
-      event.setHosts(ImmutableList.of(defaultHostNameSupplier.get()));
-    }
-    if (event.getHosts() == null) {
-      throw new IllegalArgumentException("hosts can't be null: " + input);
-    }
-    if (event.getGroup() == null) {
-      event.setGroup(defaultGroup);
-    }
-    if (event.getEventId() == null) {
-      event.setEventId(UUID.randomUUID().toString());
+    if (event.getEndTime() == 0 || event.getEndTime() <= event.getStartTime()) {
+      event.setEndTime(event.getStartTime() + 1);
     }
     return event;
   }

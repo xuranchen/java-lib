@@ -72,11 +72,10 @@ public class PredicateEvalExpressionTest {
       setStartMillis(1532012145123L).
       setDuration(1111).
       build();
-  private final ReportEvent event = ReportEvent.newBuilder().setGroup("test").
-      setStartMillis(System.currentTimeMillis()).
-      setEndMillis(System.currentTimeMillis() + 1).
-      setEventId("0ab72a9c-d4e3-4ae7-b9b6-7a37216c0b47").
-      setAnnotations(ImmutableList.of(new Annotation("tagk1", "tagv1"))).
+  private final ReportEvent event = ReportEvent.newBuilder().setName("test").
+      setStartTime(System.currentTimeMillis()).
+      setEndTime(System.currentTimeMillis() + 1).
+      setAnnotations(ImmutableMap.of()).
       build();
 
   @Test
