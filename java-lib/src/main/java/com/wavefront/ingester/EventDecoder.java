@@ -19,15 +19,15 @@ public class EventDecoder implements ReportableEntityDecoder<String, ReportEvent
   private static final AbstractIngesterFormatter<ReportEvent> FORMAT =
       EventIngesterFormatter.newBuilder().
           caseSensitiveLiterals(ImmutableList.of(EVENT_LITERAL)).
-          timestamp(ReportEvent::setStartTime).
-          optionalTimestamp(ReportEvent::setEndTime).
-          text(ReportEvent::setName).
-          annotationMultimap(ReportEvent::setDimensions).
+          timestamp(ReportEvent::setStartMillis).
+          optionalTimestamp(ReportEvent::setEndMillis).
+          annotationText(ReportEvent::getAnnotations, ReportEvent::setAnnotations, "eventName").
+          annotationList(ReportEvent::getAnnotations, ReportEvent::setAnnotations).
           build();
 
   @Override
   public void decode(String msg, List<ReportEvent> out, String customerId, IngesterContext ctx) {
-    ReportEvent event = FORMAT.drive(msg, null, "default", null, ctx);
+    ReportEvent event = FORMAT.drive(msg, null, customerId, null, ctx);
     if (out != null) {
       out.add(event);
     }

@@ -102,13 +102,14 @@ protocol Reporting {
   }
 
   record ReportEvent {
-    string name;
-    long startTime;
-    long endTime;
-    map<string> annotations;
+    string group;
+    string eventId;
+    long startMillis;
+    long endMillis;
+    string customer = "unknown";
     array<string> hosts = [];
-    union {null, array<string>} tags = null;
-    union {null, map<array<string>>} dimensions = null;
+    union {null, string} details = null;
+    array<Annotation> annotations = [];  // include verbose event name
   }
 
   record ReportMetric {
