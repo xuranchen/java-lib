@@ -1,6 +1,6 @@
 open_source_licenses.txt
 
-Wavefront by VMware 2020-11.1 GA
+Wavefront by VMware 2021-12.1 GA
 
 ======================================================================
 
