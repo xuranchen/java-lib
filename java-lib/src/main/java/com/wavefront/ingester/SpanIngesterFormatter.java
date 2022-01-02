@@ -35,6 +35,8 @@ public class SpanIngesterFormatter extends AbstractIngesterFormatter<Span> {
   @Override
   public Span drive(String input, @Nullable Supplier<String> defaultHostNameSupplier,
                     String customerId, @Nullable List<String> customSourceTags,
+                    @Nullable List<String> customLogTimestampTags,
+                    @Nullable List<String> customLogMessageTags,
                     @Nullable IngesterContext ingesterContext) {
     Span span = new Span();
     span.setCustomer(customerId);

@@ -49,6 +49,7 @@ public class ValidationTest {
         setSpanAnnotationsCountLimit(3).
         setSpanAnnotationsKeyLengthLimit(16).
         setSpanAnnotationsValueLengthLimit(36);
+        // TODO(amitw) write tests for log config
   }
 
   @Test

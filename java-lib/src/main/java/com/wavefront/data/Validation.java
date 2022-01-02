@@ -21,14 +21,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
 
-import wavefront.report.Annotation;
-import wavefront.report.Histogram;
-import wavefront.report.ReportHistogram;
-import wavefront.report.ReportMetric;
-import wavefront.report.ReportPoint;
-import wavefront.report.Span;
-import wavefront.report.SpanLog;
-import wavefront.report.SpanLogs;
+import wavefront.report.*;
 
 import static com.wavefront.data.Validation.Level.NO_VALIDATION;
 
@@ -47,9 +40,11 @@ public class Validation {
 
   private final static LoadingCache<String, Counter> ERROR_COUNTERS = Caffeine.newBuilder().
       build(x -> Metrics.newCounter(new MetricName("point", "", x)));
+  private final static LoadingCache<String, Counter> LOG_ERROR_COUNTERS = Caffeine.newBuilder().
+          build(x -> Metrics.newCounter(new MetricName("log", "", x)));
   @SuppressWarnings("UnstableApiUsage")
   private static final RateLimiter blockedLoggingRateLimiter = RateLimiter.create(1);
-  private static final Logger log = Logger.getLogger(Validation.class.getCanonicalName());
+  private static final Logger logger = Logger.getLogger(Validation.class.getCanonicalName());
 
   public static boolean charactersAreValid(String input) {
     // Legal characters are 44-57 (,-./ and numbers), 65-90 (upper), 97-122 (lower), 95 (_)
@@ -406,7 +401,7 @@ public class Validation {
         if (tagV.length() > config.getSpanAnnotationsValueLengthLimit()) {
           //noinspection UnstableApiUsage
           if (blockedLoggingRateLimiter.tryAcquire()) {
-            log.warning("WF-433: Span annotation value for " + tagK + " is too long (" +
+            logger.warning("WF-433: Span annotation value for " + tagK + " is too long (" +
                 tagV.length() + " characters, max: " + config.getSpanAnnotationsValueLengthLimit() +
                 "), value will be truncated: " + tagV);
           }
@@ -436,6 +431,72 @@ public class Validation {
                 setLogs(ImmutableList.of(spanLog)).
                 build();
         spanLogsReporter.accept(spanLogs);
+      }
+    }
+  }
+
+  /**
+   * Validate Log with provided validation configuration.
+   *
+   * @param log    log line
+   * @param config validation configuration
+   */
+  public static void validateLog(ReportLog log, @Nullable ValidationConfiguration config) {
+    if (config == null) {
+      return;
+    }
+    final String source = log.getHost();
+    final String message = log.getMessage();
+
+
+    if (StringUtils.isBlank(source)) {
+      LOG_ERROR_COUNTERS.get("logSourceMissing").inc();
+      throw new DataValidationException("WF-450: Log source/host name is required");
+    }
+    if (source.length() > config.getHostLengthLimit()) {
+      LOG_ERROR_COUNTERS.get("logSourceTooLong").inc();
+      throw new DataValidationException("WF-451: Log source/host name is too long (" +
+              source.length() + " characters, max: " + config.getHostLengthLimit() + "): " + source);
+    }
+    if (message.length() > config.getLogLengthLimit()) {
+      LOG_ERROR_COUNTERS.get("logMessageTooLong").inc();
+      throw new DataValidationException("WF-452: log message is too long (" + message.length() +
+              " characters, max: " + config.getLogLengthLimit() + "): " + message);
+    }
+
+    final List<Annotation> annotations = log.getAnnotations();
+    if (annotations != null) {
+      if (annotations.size() > config.getLogAnnotationsCountLimit()) {
+        LOG_ERROR_COUNTERS.get("tooManyLogTags").inc();
+        throw new DataValidationException("WF-453: Too many log tags (" + annotations.size() +
+                ", max " + config.getLogAnnotationsCountLimit() + "): ");
+      }
+
+      for (Annotation tag : annotations) {
+        final String tagK = tag.getKey();
+        final String tagV = tag.getValue();
+        if (tagK.length() > config.getLogAnnotationsKeyLengthLimit()) {
+          LOG_ERROR_COUNTERS.get("logAnnotationKeyTooLong").inc();
+          throw new DataValidationException("WF-454: Log tag key is too long (" +
+                  tagK.length() + " characters, max: " + config.getLogAnnotationsValueLengthLimit() +
+                  "): " + tagK);
+        }
+        if (!charactersAreValid(tagK)) {
+          LOG_ERROR_COUNTERS.get("logAnnotationKeyBadChars").inc();
+          throw new DataValidationException("WF-455: Log tag key has illegal character(s): " + tagK);
+        }
+        if (StringUtils.isBlank(tagV)) {
+          LOG_ERROR_COUNTERS.get("logAnnotationValueEmpty").inc();
+          throw new EmptyTagValueException("WF-456: log tag value for " + tagK +
+                  " is empty or missing ");
+        }
+
+        if (tagV.length() > config.getLogAnnotationsValueLengthLimit()) {
+          LOG_ERROR_COUNTERS.get("logAnnotationValueTooLong").inc();
+          throw new DataValidationException("WF-457: Log tag value is too long (" +
+                  tagV.length() + " characters, max: " + config.getLogAnnotationsValueLengthLimit() +
+                  "): " + tagV);
+        }
       }
     }
   }

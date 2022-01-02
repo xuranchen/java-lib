@@ -59,6 +59,11 @@ public class AgentConfiguration {
    */
   private Double eventsRateLimit;
 
+  /**
+   * When set, enforces a per proxy rate limit for logs.
+   */
+  private Long logsRateLimit;
+
   private boolean shutOffAgents = false;
   private boolean showTrialExpired = false;
 
@@ -86,6 +91,21 @@ public class AgentConfiguration {
    * If the value is true, then span logs are disabled
    */
   private boolean spanLogsDisabled = false;
+
+  /**
+   * If the value is true, then logs feature is disabled
+   */
+  private boolean logsDisabled = false;
+
+  /**
+   * This is the endpoint to use to talk to the log server
+   */
+  private String logServerEndpointUrl;
+
+  /**
+   * This is the token to use to talk to the log server
+   */
+  private String logServerToken;
 
   /**
    * Server-side configuration for various limits to be enforced at the proxy.
@@ -121,6 +141,12 @@ public class AgentConfiguration {
    * Global rate limit for new events (collectorEPS)
    */
   private Double globalEventRateLimit;
+
+  /**
+   * Global logs logs/s limit (collectorLogsPPS)
+   * TODO(amitw): Chat with Bohyun and see if we want to rate limit by bytes / s or logs per sec
+   */
+  private Long globalLogsRateLimit;
 
   /**
    * Controls the number of centroids in a histogram.
@@ -226,6 +252,15 @@ public class AgentConfiguration {
     this.eventsRateLimit = eventsRateLimit;
   }
 
+  @Nullable
+  public Long getLogsRateLimit() {
+    return logsRateLimit;
+  }
+
+  public void setLogsRateLimit(@Nullable Long logsRateLimit) {
+    this.logsRateLimit = logsRateLimit;
+  }
+
   public void setCollectorSetsPointsPerBatch(boolean collectorSetsPointsPerBatch) {
     this.collectorSetsPointsPerBatch = collectorSetsPointsPerBatch;
   }
@@ -287,6 +322,26 @@ public class AgentConfiguration {
     this.spanLogsDisabled = spanLogsDisabled;
   }
 
+  public boolean getLogsDisabled() {
+    return logsDisabled;
+  }
+
+  public void setLogsDisabled(boolean logsDisabled) {
+    this.logsDisabled = logsDisabled;
+  }
+
+  public String getLogServerEndpointUrl() {
+    return logServerEndpointUrl;
+  }
+
+  public void setLogServerEndpointUrl(String logServerEndpointUrl) { this.logServerEndpointUrl = logServerEndpointUrl; }
+
+  public String getLogServerToken() {
+    return logServerToken;
+  }
+
+  public void setLogServerToken(String logServerToken) { this.logServerToken = logServerToken; }
+
   public ValidationConfiguration getValidationConfiguration() {
     return this.validationConfiguration;
   }
@@ -347,6 +402,15 @@ public class AgentConfiguration {
 
   public void setGlobalEventRateLimit(@Nullable Double globalEventRateLimit) {
     this.globalEventRateLimit = globalEventRateLimit;
+  }
+
+  @Nullable
+  public Long getGlobalLogsRateLimit() {
+    return globalLogsRateLimit;
+  }
+
+  public void setGlobalLogsRateLimit(@Nullable Long globalLogsRateLimit) {
+    this.globalLogsRateLimit = globalLogsRateLimit;
   }
 
   @Nullable

@@ -27,6 +27,8 @@ public class ReportSourceTagIngesterFormatter extends AbstractIngesterFormatter<
   @Override
   public ReportSourceTag drive(String input, @Nullable Supplier<String> defaultHostNameSupplier,
                                String customerId, @Nullable List<String> customerSourceTags,
+                               @Nullable List<String> customLogTimestampTags,
+                               @Nullable List<String> customLogMessageTags,
                                @Nullable IngesterContext ingesterContext) {
     ReportSourceTag sourceTag = new ReportSourceTag();
     StringParser parser = new StringParser(input);
