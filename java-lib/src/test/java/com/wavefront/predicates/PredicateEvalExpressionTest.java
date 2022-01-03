@@ -34,6 +34,7 @@ public class PredicateEvalExpressionTest {
       setHost("testHost").
       setAnnotations(ImmutableMap.of("tagk1", "tagv1", "tagk2", "tagv2",
           "env", "prod", "dc", "us-west-2")).
+          setStartTimestamp(12345L).
       build();
   private final ReportMetric metric = ReportMetric.newBuilder().
       setCustomer("test").

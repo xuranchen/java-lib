@@ -41,6 +41,7 @@ public class ReportPointSerializerTest {
         .setHost("TestSource")
         .setTimestamp(1469751813000L)
         .setAnnotations(ImmutableMap.of("keyA", "valueA", "keyB", "valueB"))
+            .setStartTimestamp(0L)
         .build();
   }
 
@@ -49,20 +50,20 @@ public class ReportPointSerializerTest {
     // Common case.
     Assert.assertEquals("\"some metric\" 10 1469751813 source=\"host\" \"foo\"=\"bar\" \"boo\"=\"baz\"",
         serializer.apply(new ReportPoint("some metric",1469751813000L, 10L, "host", "table",
-            ImmutableMap.of("foo", "bar", "boo", "baz"))));
+            ImmutableMap.of("foo", "bar", "boo", "baz"), 12345L)));
     Assert.assertEquals("\"some metric\" 10 1469751813 source=\"host\"",
         serializer.apply(new ReportPoint("some metric",1469751813000L, 10L, "host", "table",
-            ImmutableMap.of())));
+            ImmutableMap.of(), 12345L)));
 
     // Quote in metric name
     Assert.assertEquals("\"some\\\"metric\" 10 1469751813 source=\"host\"",
         serializer.apply(new ReportPoint("some\"metric", 1469751813000L, 10L, "host", "table",
-            new HashMap<String, String>()))
+            new HashMap<String, String>(), 12345L))
     );
     // Quote in tags
     Assert.assertEquals("\"some metric\" 10 1469751813 source=\"host\" \"foo\\\"\"=\"\\\"bar\" \"bo\\\"o\"=\"baz\"",
         serializer.apply(new ReportPoint("some metric", 1469751813000L, 10L, "host", "table",
-            ImmutableMap.of("foo\"", "\"bar", "bo\"o", "baz")))
+            ImmutableMap.of("foo\"", "\"bar", "bo\"o", "baz"), 12345L))
     );
   }
 
@@ -115,7 +116,7 @@ public class ReportPointSerializerTest {
 
   @Test(expected = RuntimeException.class)
   public void testHistogramReportPointToString_BadValue() {
-    ReportPoint p = new ReportPoint("m", 1469751813L, new ArrayUtils(), "h", "c", ImmutableMap.of());
+    ReportPoint p = new ReportPoint("m", 1469751813L, new ArrayUtils(), "h", "c", ImmutableMap.of(), 12345L);
 
     serializer.apply(p);
   }
