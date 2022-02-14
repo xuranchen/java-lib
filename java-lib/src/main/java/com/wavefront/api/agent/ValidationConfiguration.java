@@ -30,6 +30,11 @@ public class ValidationConfiguration {
   private int spanLengthLimit = 128;
 
   /**
+   * Maximum allowed log message length. Default: 20_000 characters (roughly 100 lines).
+   */
+  private int logLengthLimit = 20_000;
+
+  /**
    * Maximum allowed host/source name length. Default: 1023 characters (historic limit).
    */
   private int hostLengthLimit = 1023;
@@ -68,6 +73,21 @@ public class ValidationConfiguration {
    */
   private int spanAnnotationsValueLengthLimit = 128;
 
+  /**
+   * Maximum allowed length for log annotation keys. Default: 128 characters.
+   */
+  private int logAnnotationsKeyLengthLimit = 128;
+
+  /**
+   * Maximum allowed length for log annotation values. Default: 128 characters.
+   */
+  private int logAnnotationsValueLengthLimit = 128;
+
+  /**
+   * Maximum allowed number of log tags per log line. Default: 100
+   */
+  private int logAnnotationsCountLimit = 100;
+
   public int getMetricLengthLimit() {
     return metricLengthLimit;
   }
@@ -82,6 +102,10 @@ public class ValidationConfiguration {
 
   public int getHostLengthLimit() {
     return hostLengthLimit;
+  }
+
+  public int getLogLengthLimit() {
+    return logLengthLimit;
   }
 
   public int getAnnotationsCountLimit() {
@@ -106,6 +130,16 @@ public class ValidationConfiguration {
 
   public int getSpanAnnotationsValueLengthLimit() {
     return spanAnnotationsValueLengthLimit;
+  }
+
+  public int getLogAnnotationsKeyLengthLimit() { return logAnnotationsKeyLengthLimit; }
+
+  public int getLogAnnotationsValueLengthLimit() {
+    return logAnnotationsValueLengthLimit;
+  }
+
+  public int getLogAnnotationsCountLimit() {
+    return logAnnotationsCountLimit;
   }
 
   public ValidationConfiguration setMetricLengthLimit(int value) {
@@ -158,11 +192,32 @@ public class ValidationConfiguration {
     return this;
   }
 
+  public ValidationConfiguration setLogLengthLimit(int value) {
+    this.logLengthLimit = value;
+    return this;
+  }
+
+  public ValidationConfiguration setLogAnnotationsKeyLengthLimit(int value) {
+    this.logAnnotationsKeyLengthLimit = value;
+    return this;
+  }
+
+  public ValidationConfiguration setLogAnnotationsValueLengthLimit(int value) {
+    this.logAnnotationsValueLengthLimit = value;
+    return this;
+  }
+
+  public ValidationConfiguration setLogAnnotationsCountLimit(int value) {
+    this.logAnnotationsCountLimit = value;
+    return this;
+  }
+
   public void updateFrom(@Nullable ValidationConfiguration other) {
     if (other == null) return;
     this.metricLengthLimit = other.getMetricLengthLimit();
     this.histogramLengthLimit = other.getHistogramLengthLimit();
     this.spanLengthLimit = other.getSpanLengthLimit();
+    this.logLengthLimit = other.getLogLengthLimit();
     this.hostLengthLimit = other.getHostLengthLimit();
     this.annotationsCountLimit = other.getAnnotationsCountLimit();
     this.annotationsKeyLengthLimit = other.getAnnotationsKeyLengthLimit();
@@ -170,5 +225,8 @@ public class ValidationConfiguration {
     this.spanAnnotationsCountLimit = other.getSpanAnnotationsCountLimit();
     this.spanAnnotationsKeyLengthLimit = other.getSpanAnnotationsKeyLengthLimit();
     this.spanAnnotationsValueLengthLimit = other.getSpanAnnotationsValueLengthLimit();
+    this.logAnnotationsKeyLengthLimit = other.getLogAnnotationsKeyLengthLimit();
+    this.logAnnotationsValueLengthLimit = other.getLogAnnotationsValueLengthLimit();
+    this.logAnnotationsCountLimit = other.getLogAnnotationsCountLimit();
   }
 }

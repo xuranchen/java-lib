@@ -39,6 +39,8 @@ public class ReportPointIngesterFormatter extends AbstractIngesterFormatter<Repo
   @Override
   public ReportPoint drive(String input, Supplier<String> defaultHostNameSupplier,
                            String customerId, @Nullable List<String> customSourceTags,
+                           @Nullable List<String> customLogTimestampTags,
+                           @Nullable List<String> customLogMessageTags,
                            @Nullable IngesterContext ingesterContext) {
     ReportPoint point = new ReportPoint();
     point.setTable(customerId);

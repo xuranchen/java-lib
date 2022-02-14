@@ -12,7 +12,8 @@ public enum ReportableEntityType {
   SOURCE_TAG("sourceTags", "tags/s"),
   TRACE("spans", "sps"),
   TRACE_SPAN_LOGS("spanLogs", "logs/s"),
-  EVENT("events", "eps");
+  EVENT("events", "eps"),
+  LOGS("logs", "logs/s");
 
   private final String name;
   private final String rateUnit;

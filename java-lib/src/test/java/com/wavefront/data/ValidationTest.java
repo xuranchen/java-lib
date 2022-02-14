@@ -21,11 +21,13 @@ import wavefront.report.ReportHistogram;
 import wavefront.report.ReportMetric;
 import wavefront.report.Span;
 import wavefront.report.SpanLogs;
+import wavefront.report.ReportLog;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assert.assertThrows;
 
 /**
  * @author vasily@wavefront.com
@@ -48,7 +50,11 @@ public class ValidationTest {
         setAnnotationsValueLengthLimit(10).
         setSpanAnnotationsCountLimit(3).
         setSpanAnnotationsKeyLengthLimit(16).
-        setSpanAnnotationsValueLengthLimit(36);
+        setSpanAnnotationsValueLengthLimit(36).
+        setLogLengthLimit(100).
+        setLogAnnotationsKeyLengthLimit(10).
+        setLogAnnotationsValueLengthLimit(10).
+        setLogAnnotationsCountLimit(10);
   }
 
   @Test
@@ -472,6 +478,104 @@ public class ValidationTest {
   }
 
   @Test
+  public void testValidLog() {
+    Validation.validateLog(getValidLog(), config);
+  }
+
+  @Test
+  public void testInvalidLog() {
+    // Test Null Source
+    ReportLog nullHostLog = getValidLog();
+    nullHostLog.setHost("");
+    Exception e = assertThrows(DataValidationException.class, () -> Validation.validateLog(nullHostLog, config));
+    assertEquals(Validation.LOG_SOURCE_REQUIRED_ERROR, e.getMessage());
+
+    // Test Host Too Long
+    ReportLog hostTooLongLog = getValidLog();
+    StringBuilder hostTooLong = new StringBuilder();
+    for (int i = 0; i < config.getHostLengthLimit() + 1; i++) {
+      hostTooLong.append("a");
+    }
+    hostTooLongLog.setHost(String.valueOf(hostTooLong));
+    e = assertThrows(DataValidationException.class, () -> Validation.validateLog(hostTooLongLog, config));
+    String errorMsg = String.format(Validation.LOG_SOURCE_TOO_LONG_ERROR, (config.getHostLengthLimit() + 1)
+            , config.getHostLengthLimit(), hostTooLong);
+    assertEquals(errorMsg, e.getMessage());
+
+    // Test Log Message Too Long
+    ReportLog messageTooLongLog = getValidLog();
+    StringBuilder stringTooLong = new StringBuilder();
+    for (int i = 0; i < config.getLogLengthLimit() + 1; i++) {
+      stringTooLong.append("a");
+    }
+    messageTooLongLog.setMessage(String.valueOf(stringTooLong));
+    e = assertThrows(DataValidationException.class, () -> Validation.validateLog(messageTooLongLog, config));
+    errorMsg = String.format(Validation.LOG_MESSAGE_TOO_LONG_ERROR, config.getLogLengthLimit() + 1
+            , config.getLogLengthLimit(), messageTooLongLog.getMessage());
+    assertEquals(errorMsg, e.getMessage());
+
+    // Test Too Many Annotations
+    ReportLog tooManyAnnotationsLog = getValidLog();
+    List<Annotation> annotationList = new ArrayList<>();
+    for (int i = 0; i < config.getLogAnnotationsCountLimit() + 1; i++) {
+      annotationList.add(new Annotation());
+    }
+    tooManyAnnotationsLog.setAnnotations(annotationList);
+    e = assertThrows(DataValidationException.class, () -> Validation.validateLog(tooManyAnnotationsLog, config));
+    errorMsg = String.format(Validation.LOG_TOO_MANY_ANNOTATIONS_ERROR, (config.getLogAnnotationsCountLimit() + 1)
+            , config.getLogAnnotationsCountLimit());
+    assertEquals(errorMsg, e.getMessage());
+
+    // Test annotation Tag Key Too long
+    ReportLog annotationKeyTooLongLog = getValidLog();
+    annotationList = new ArrayList<>();
+    stringTooLong = new StringBuilder();
+    for (int i = 0; i < config.getLogAnnotationsKeyLengthLimit() + 1; i++) {
+      stringTooLong.append("a");
+    }
+    annotationList.add(new Annotation(String.valueOf(stringTooLong), "mValue"));
+    annotationKeyTooLongLog.setAnnotations(annotationList);
+    e = assertThrows(DataValidationException.class, () -> Validation.validateLog(annotationKeyTooLongLog, config));
+    errorMsg = String.format(Validation.LOG_TAG_KEY_TOO_LONG_ERROR, (config.getLogAnnotationsKeyLengthLimit() + 1)
+            , config.getLogAnnotationsValueLengthLimit(), stringTooLong);
+    assertEquals(errorMsg, e.getMessage());
+
+    // Test invalid characters in Annotation Key
+    ReportLog invalidAnnotationKeyLog = getValidLog();
+    annotationList = new ArrayList<>();
+    String invalidKey = "!@#$%^^&*(";
+    annotationList.add(new Annotation(invalidKey, "mValue"));
+    invalidAnnotationKeyLog.setAnnotations(annotationList);
+    e = assertThrows(DataValidationException.class, () -> Validation.validateLog(invalidAnnotationKeyLog, config));
+    errorMsg = String.format(Validation.LOG_TAG_KEY_ILLEGAL_CHAR_ERROR, invalidKey);
+    assertEquals(errorMsg, e.getMessage());
+
+    // Test blank Annotation value
+    ReportLog blankAnnotationValueLog = getValidLog();
+    annotationList = new ArrayList<>();
+    annotationList.add(new Annotation("mKey", ""));
+    blankAnnotationValueLog.setAnnotations(annotationList);
+    e = assertThrows(EmptyTagValueException.class, () -> Validation.validateLog(blankAnnotationValueLog, config));
+    errorMsg = String.format(Validation.LOG_ANNOTATION_NO_VALUE_ERROR, "mKey");
+    assertEquals(errorMsg, e.getMessage());
+
+    // Test annotation value Too long
+    ReportLog annotationValueTooLongLog = getValidLog();
+    annotationList = new ArrayList<>();
+    stringTooLong = new StringBuilder();
+    for (int i = 0; i < config.getLogAnnotationsValueLengthLimit() + 1; i++) {
+      stringTooLong.append("a");
+    }
+    annotationList.add(new Annotation("mKey", String.valueOf(stringTooLong)));
+    annotationValueTooLongLog.setAnnotations(annotationList);
+    e = assertThrows(DataValidationException.class, () -> Validation.validateLog(annotationValueTooLongLog, config));
+    errorMsg = String.format(Validation.LOG_ANNOTATION_VALUE_TOO_LONG_ERROR,
+            (config.getLogAnnotationsValueLengthLimit() + 1), config.getLogAnnotationsValueLengthLimit(), stringTooLong);
+    assertEquals(errorMsg, e.getMessage());
+
+  }
+
+  @Test
   public void testValidHistogram() {
     ReportHistogramDecoder decoder = new ReportHistogramDecoder();
     List<ReportHistogram> out = new ArrayList<>();
@@ -510,5 +614,25 @@ public class ValidationTest {
             "traceId=d5355bf7-fc8d-48d1-b761-75b170f396e0 tagkey=tagvalue1 1532012145123456 1532012146234567 ",
         spanOut);
     return spanOut.get(0);
+  }
+
+  private ReportLog getValidLog() {
+    ReportLog log = new ReportLog();
+
+    long timeStamp = System.currentTimeMillis();
+    log.setTimestamp(timeStamp);
+
+    String validSource = "myHost";
+    log.setHost(validSource);
+
+    String message = "oh no an error";
+    log.setMessage(message);
+
+    Annotation annotation = new Annotation("mKey", "mValue");
+    List<Annotation> annotationList = new ArrayList<>();
+    annotationList.add(annotation);
+    log.setAnnotations(annotationList);
+
+    return log;
   }
 }

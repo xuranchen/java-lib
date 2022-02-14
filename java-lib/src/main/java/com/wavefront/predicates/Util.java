@@ -8,11 +8,7 @@ import java.util.regex.Pattern;
 import com.mdimension.jchronic.Chronic;
 import com.mdimension.jchronic.Options;
 
-import wavefront.report.Annotation;
-import wavefront.report.ReportHistogram;
-import wavefront.report.ReportMetric;
-import wavefront.report.ReportPoint;
-import wavefront.report.Span;
+import wavefront.report.*;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.wavefront.ingester.AbstractIngesterFormatter.unquote;
@@ -193,6 +189,45 @@ public abstract class Util {
               substitution = span.getAnnotations().stream().
                   filter(a -> a.getKey().equals(placeholders.group(1))).
                   map(Annotation::getValue).findFirst().orElse(null);
+          }
+          placeholders.appendReplacement(result, firstNonNull(substitution, ""));
+        }
+      }
+      placeholders.appendTail(result);
+      return result.toString();
+    }
+    return input;
+  }
+
+  /**
+   * Substitute {{...}} placeholders with corresponding components of the log
+   * {{message}} {{sourceName}} are replaced with the message and source respectively
+   * {{anyTagK}} is replaced with the value of the anyTagK point tag
+   *
+   * @param input        input string with {{...}} placeholders
+   * @param reportLog ReportLog object to extract components from
+   * @return string with substituted placeholders
+   */
+  public static String expandPlaceholders(String input, ReportLog reportLog) {
+    if (reportLog != null && input.contains("{{")) {
+      StringBuffer result = new StringBuffer();
+      Matcher placeholders = PLACEHOLDERS.matcher(input);
+      while (placeholders.find()) {
+        if (placeholders.group(1).isEmpty()) {
+          placeholders.appendReplacement(result, placeholders.group(0));
+        } else {
+          String substitution;
+          switch (placeholders.group(1)) {
+            case "message":
+              substitution = reportLog.getMessage();
+              break;
+            case "sourceName":
+              substitution = reportLog.getHost();
+              break;
+            default:
+              substitution = reportLog.getAnnotations().stream().
+                      filter(a -> a.getKey().equals(placeholders.group(1))).
+                      map(Annotation::getValue).findFirst().orElse(null);
           }
           placeholders.appendReplacement(result, firstNonNull(substitution, ""));
         }

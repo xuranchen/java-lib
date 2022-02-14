@@ -36,7 +36,7 @@ public class ReportPointDecoder implements ReportableEntityDecoder<String, Repor
   @Override
   public void decode(String msg, List<ReportPoint> out, String customerId,
                      IngesterContext ctx) {
-    ReportPoint point = FORMAT.drive(msg, hostNameSupplier, customerId, customSourceTags,
+    ReportPoint point = FORMAT.drive(msg, hostNameSupplier, customerId, customSourceTags, null, null,
         ctx);
     if (out != null) {
       out.add(point);

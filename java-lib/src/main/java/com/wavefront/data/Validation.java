@@ -29,6 +29,7 @@ import wavefront.report.ReportPoint;
 import wavefront.report.Span;
 import wavefront.report.SpanLog;
 import wavefront.report.SpanLogs;
+import wavefront.report.ReportLog;
 
 import static com.wavefront.data.Validation.Level.NO_VALIDATION;
 
@@ -45,11 +46,22 @@ public class Validation {
     NUMERIC_ONLY
   }
 
+  static final String LOG_SOURCE_REQUIRED_ERROR = "WF-450: Log source/host name is required";
+  static final String LOG_SOURCE_TOO_LONG_ERROR = "WF-451: Log source/host name is too long (%s characters, max: %s): %s";
+  static final String LOG_MESSAGE_TOO_LONG_ERROR = "WF-452: log message is too long (%s characters, max: %s): %s";
+  static final String LOG_TOO_MANY_ANNOTATIONS_ERROR = "WF-453: Too many log tags (%s, max %s)";
+  static final String LOG_TAG_KEY_TOO_LONG_ERROR = "WF-454: Log tag key is too long (%s characters, max: %s): %s";
+  static final String LOG_TAG_KEY_ILLEGAL_CHAR_ERROR = "WF-455: Log tag key has illegal character(s): %s";
+  static final String LOG_ANNOTATION_NO_VALUE_ERROR = "WF-456: log tag value for %s is empty or missing";
+  static final String LOG_ANNOTATION_VALUE_TOO_LONG_ERROR = "WF-457: Log tag value is too long (%s characters, max: %s): %s";
+
   private final static LoadingCache<String, Counter> ERROR_COUNTERS = Caffeine.newBuilder().
       build(x -> Metrics.newCounter(new MetricName("point", "", x)));
+  private final static LoadingCache<String, Counter> LOG_ERROR_COUNTERS = Caffeine.newBuilder().
+          build(x -> Metrics.newCounter(new MetricName("log", "", x)));
   @SuppressWarnings("UnstableApiUsage")
   private static final RateLimiter blockedLoggingRateLimiter = RateLimiter.create(1);
-  private static final Logger log = Logger.getLogger(Validation.class.getCanonicalName());
+  private static final Logger logger = Logger.getLogger(Validation.class.getCanonicalName());
 
   public static boolean charactersAreValid(String input) {
     // Legal characters are 44-57 (,-./ and numbers), 65-90 (upper), 97-122 (lower), 95 (_)
@@ -406,7 +418,7 @@ public class Validation {
         if (tagV.length() > config.getSpanAnnotationsValueLengthLimit()) {
           //noinspection UnstableApiUsage
           if (blockedLoggingRateLimiter.tryAcquire()) {
-            log.warning("WF-433: Span annotation value for " + tagK + " is too long (" +
+            logger.warning("WF-433: Span annotation value for " + tagK + " is too long (" +
                 tagV.length() + " characters, max: " + config.getSpanAnnotationsValueLengthLimit() +
                 "), value will be truncated: " + tagV);
           }
@@ -436,6 +448,69 @@ public class Validation {
                 setLogs(ImmutableList.of(spanLog)).
                 build();
         spanLogsReporter.accept(spanLogs);
+      }
+    }
+  }
+
+  /**
+   * Validate Log with provided validation configuration.
+   *
+   * @param log    log line
+   * @param config validation configuration
+   */
+  public static void validateLog(ReportLog log, @Nullable ValidationConfiguration config) {
+    if (config == null) {
+      return;
+    }
+    final String source = log.getHost();
+    final String message = log.getMessage();
+
+
+    if (StringUtils.isBlank(source)) {
+      LOG_ERROR_COUNTERS.get("logSourceMissing").inc();
+      throw new DataValidationException(Validation.LOG_SOURCE_REQUIRED_ERROR);
+    }
+    if (source.length() > config.getHostLengthLimit()) {
+      LOG_ERROR_COUNTERS.get("logSourceTooLong").inc();
+      throw new DataValidationException(String.format(LOG_SOURCE_TOO_LONG_ERROR, source.length(),
+              config.getHostLengthLimit(), source));
+    }
+    if (message.length() > config.getLogLengthLimit()) {
+      LOG_ERROR_COUNTERS.get("logMessageTooLong").inc();
+      throw new DataValidationException(String.format(Validation.LOG_MESSAGE_TOO_LONG_ERROR, message.length(),
+              config.getLogLengthLimit(), message));
+    }
+
+    final List<Annotation> annotations = log.getAnnotations();
+    if (annotations != null) {
+      if (annotations.size() > config.getLogAnnotationsCountLimit()) {
+        LOG_ERROR_COUNTERS.get("tooManyLogTags").inc();
+        throw new DataValidationException(String.format(Validation.LOG_TOO_MANY_ANNOTATIONS_ERROR, annotations.size(),
+                config.getLogAnnotationsCountLimit()));
+      }
+
+      for (Annotation tag : annotations) {
+        final String tagK = tag.getKey();
+        final String tagV = tag.getValue();
+        if (tagK.length() > config.getLogAnnotationsKeyLengthLimit()) {
+          LOG_ERROR_COUNTERS.get("logAnnotationKeyTooLong").inc();
+          throw new DataValidationException(String.format(Validation.LOG_TAG_KEY_TOO_LONG_ERROR, tagK.length(),
+                  config.getLogAnnotationsKeyLengthLimit(), tagK));
+        }
+        if (!charactersAreValid(tagK)) {
+          LOG_ERROR_COUNTERS.get("logAnnotationKeyBadChars").inc();
+          throw new DataValidationException(String.format(Validation.LOG_TAG_KEY_ILLEGAL_CHAR_ERROR, tagK));
+        }
+        if (StringUtils.isBlank(tagV)) {
+          LOG_ERROR_COUNTERS.get("logAnnotationValueEmpty").inc();
+          throw new EmptyTagValueException(String.format(Validation.LOG_ANNOTATION_NO_VALUE_ERROR, tagK));
+        }
+
+        if (tagV.length() > config.getLogAnnotationsValueLengthLimit()) {
+          LOG_ERROR_COUNTERS.get("logAnnotationValueTooLong").inc();
+          throw new DataValidationException(String.format(Validation.LOG_ANNOTATION_VALUE_TOO_LONG_ERROR, tagV.length(),
+                  config.getLogAnnotationsValueLengthLimit(), tagV));
+        }
       }
     }
   }

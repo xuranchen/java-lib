@@ -59,7 +59,7 @@ public class HistogramDecoder implements Decoder<String> {
   @Override
   public void decodeReportPoints(String msg, List<ReportPoint> out, String customerId,
                                  IngesterContext ctx) {
-    ReportPoint histogram = FORMAT.drive(msg, defaultHostNameSupplier, customerId, null, ctx);
+    ReportPoint histogram = FORMAT.drive(msg, defaultHostNameSupplier, customerId, null, null, null, ctx);
     if (histogram != null) {
       Histogram value = (Histogram) histogram.getValue();
       if (ctx != null) {

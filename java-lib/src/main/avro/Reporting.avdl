@@ -120,6 +120,13 @@ protocol Reporting {
     array<Annotation> annotations = [];
   }
 
+  record ReportLog {
+    long timestamp;
+    string message;
+    string host = "unknown";
+    array<Annotation> annotations = [];
+  }
+
   record ReportHistogram {
     string metric;
     long timestamp;

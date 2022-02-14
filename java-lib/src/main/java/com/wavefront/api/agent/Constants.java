@@ -30,6 +30,11 @@ public abstract class Constants {
   public static final String PUSH_FORMAT_LOG = "log";
 
   /**
+   * Json Array of logs
+   */
+  public static final String PUSH_FORMAT_LOGS_JSON_ARR = "logs_json_arr";
+
+  /**
    * Line-delimited format for source tag commands
    */
   public static final String PUSH_FORMAT_SOURCETAGS = "sourceTag";

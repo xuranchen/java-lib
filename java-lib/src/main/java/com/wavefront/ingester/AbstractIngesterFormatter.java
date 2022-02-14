@@ -2,6 +2,7 @@ package com.wavefront.ingester;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.wavefront.common.Clock;
 import com.wavefront.data.ParseException;
 
 import org.apache.avro.specific.SpecificRecordBase;
@@ -18,6 +19,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.Arrays;
 
 import static org.apache.commons.lang.StringUtils.containsAny;
 import static org.apache.commons.lang.StringUtils.replace;
@@ -37,6 +39,10 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
   private static final String ESCAPED_SINGLE_QUOTE_STR = "\\'";
   private static final String DOUBLE_QUOTE_STR = "\"";
   private static final String ESCAPED_DOUBLE_QUOTE_STR = "\\\"";
+
+  private static final List<String> DEFAULT_LOG_MESSAGE_KEYS = Arrays.asList("message", "text");
+  private static final List<String> DEFAULT_LOG_TIMESTAMP_KEYS = Arrays.asList("timestamp", "log_timestamp");
+
 
   protected final List<FormatterElement<T>> elements;
 
@@ -376,6 +382,28 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     }
   }
 
+  /**
+   * Infers timestamp resolution and normalizes it to milliseconds
+   * @param timestamp timestamp in seconds, milliseconds, microseconds or nanoseconds
+   * @return timestamp in milliseconds
+   */
+  public static long timestampInMilliseconds(Double timestamp) {
+    long timestampLong = timestamp.longValue();
+    if (timestampLong < 1_000_000_000_000L) {
+      // less than 13 digits: treat it as seconds
+      return (long)(1000 * timestamp);
+    } else if (timestampLong < 10_000_000_000_000L) {
+      // 13 digits: treat as milliseconds
+      return timestampLong;
+    } else if (timestampLong < 10_000_000_000_000_000L) {
+      // 16 digits: treat as microseconds
+      return timestampLong / 1000;
+    } else {
+      // 19 digits: treat as nanoseconds.
+      return timestampLong / 1000000;
+    }
+  }
+
   private static Long parseTimestamp(StringParser parser, boolean optional, boolean raw) {
     String peek = parser.peek();
     if (peek == null || !Character.isDigit(peek.charAt(0))) {
@@ -388,25 +416,12 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     }
     try {
       Double timestamp = Double.parseDouble(peek);
-      long timestampLong = timestamp.longValue();
       parser.next();
       if (raw) {
         // as-is
-        return timestampLong;
+        return timestamp.longValue();
       }
-      if (timestampLong < 1_000_000_000_000L) {
-        // less than 13 digits: treat it as seconds
-        return (long)(1000 * timestamp);
-      } else if (timestampLong < 10_000_000_000_000L) {
-        // 13 digits: treat as milliseconds
-        return timestampLong;
-      } else if (timestampLong < 10_000_000_000_000_000L) {
-        // 16 digits: treat as microseconds
-        return timestampLong / 1000;
-      } else {
-        // 19 digits: treat as nanoseconds.
-        return timestampLong / 1000000;
-      }
+      return timestampInMilliseconds(timestamp);
     } catch (NumberFormatException nfe) {
       throw new ParseException("Invalid timestamp value: " + peek);
     }
@@ -495,12 +510,94 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     return source;
   }
 
+  @Nullable
+  public static String getLogMessage(@Nullable List<Annotation> annotations,
+                                     @Nullable List<String> customLogMessageTags) {
+    String logMessage = null;
+    if (annotations != null) {
+      Iterator<Annotation> iter = annotations.iterator();
+      while (iter.hasNext()) {
+        Annotation annotation = iter.next();
+        for (String defaultLogMessageKey : DEFAULT_LOG_MESSAGE_KEYS) {
+          if (annotation.getKey().equals(defaultLogMessageKey)) {
+            iter.remove();
+            logMessage = annotation.getValue();
+            break;
+          }
+        }
+      }
+
+      if (logMessage == null && customLogMessageTags != null) {
+        // iterate over the set of custom message tags, breaking when one is found
+        for (String tag : customLogMessageTags) {
+          // nested loops are not pretty but we need to ensure the order of customLogMessageTags
+          for (Annotation annotation : annotations) {
+            if (annotation.getKey().equals(tag)) {
+              logMessage = annotation.getValue();
+              break;
+            }
+          }
+          if (logMessage != null) break;
+        }
+      }
+    }
+
+    return (logMessage == null)? "" : logMessage;
+  }
+
+  @Nullable
+  public static Long getLogTimestamp(@Nullable List<Annotation> annotations,
+                                       @Nullable List<String> customLogTimestampTags) {
+    String timestampStr = null;
+    if (annotations != null) {
+      Iterator<Annotation> iter = annotations.iterator();
+      while (iter.hasNext()) {
+        Annotation annotation = iter.next();
+        for (String defaultLogTimestampKey : DEFAULT_LOG_TIMESTAMP_KEYS) {
+          if (annotation.getKey().equals(defaultLogTimestampKey)) {
+            iter.remove();
+            timestampStr = annotation.getValue();
+            break;
+          }
+        }
+      }
+
+      if (timestampStr == null && customLogTimestampTags != null) {
+        // iterate over the set of custom timestamp tags, breaking when one is found
+        for (String tag : customLogTimestampTags) {
+          // nested loops are not pretty but we need to ensure the order of customLogTimestampTags
+          for (Annotation annotation : annotations) {
+            if (annotation.getKey().equals(tag)) {
+              timestampStr = annotation.getValue();
+              break;
+            }
+          }
+          if (timestampStr != null) break;
+        }
+      }
+    }
+    if (timestampStr == null) {
+      return Clock.now();
+    }
+
+    Long timestamp = null;
+    // We're only supporting timestamp in epoch format with various resolutions (seconds, milliseconds,
+    // microseconds or nanoseconds) as input.  We will normalize to millisecond resolution
+    try {
+      timestamp = timestampInMilliseconds(Double.parseDouble(timestampStr));
+    } catch (NumberFormatException ignore) {
+      timestamp = Clock.now();
+    }
+
+    return timestamp;
+  }
+
   public T drive(String input, @Nullable Supplier<String> defaultHostNameSupplier,
                  String customerId) {
-    return drive(input, defaultHostNameSupplier, customerId, null, null);
+    return drive(input, defaultHostNameSupplier, customerId, null, null, null, null);
   }
 
   public abstract T drive(String input, @Nullable Supplier<String> defaultHostNameSupplier,
-                          String customerId, @Nullable List<String> customSourceTags,
-                          @Nullable IngesterContext ingesterContext);
+                          String customerId, @Nullable List<String> customSourceTags, @Nullable List<String> customLogTimestampTags,
+                          @Nullable List<String> customLogMessageTags, @Nullable IngesterContext ingesterContext);
 }
