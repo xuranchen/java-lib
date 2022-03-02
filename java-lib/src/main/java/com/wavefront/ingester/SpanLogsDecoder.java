@@ -45,7 +45,8 @@ public class SpanLogsDecoder implements ReportableEntityDecoder<JsonNode, SpanLo
         setCustomer(customerId).
         setTraceId(msg.get("traceId") == null ? null : msg.get("traceId").textValue()).
         setSpanId(msg.get("spanId") == null ? null : msg.get("spanId").textValue()).
-        setSpanSecondaryId(msg.get("spanSecondaryId") == null ? null :
+        setSpanSecondaryId(msg.get("spanSecondaryId") == null ? (msg.get("_spanSecondaryId") == null ? null :
+            msg.get("_spanSecondaryId").textValue()) :
             msg.get("spanSecondaryId").textValue()).
         setLogs(StreamSupport.stream(iterable.spliterator(), false).
             map(x -> SpanLog.newBuilder().
