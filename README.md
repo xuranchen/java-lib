@@ -2,7 +2,7 @@
 Wavefront shared Java library
 
 ## Requirements
-  * Java >= 1.8
+  * Java >= 11
   * Maven
 
 ## To start developing
