@@ -531,9 +531,12 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
         // iterate over the set of custom message tags, breaking when one is found
         for (String tag : customLogMessageTags) {
           // nested loops are not pretty but we need to ensure the order of customLogMessageTags
-          for (Annotation annotation : annotations) {
+          iter = annotations.iterator();
+          while (iter.hasNext()) {
+            Annotation annotation = iter.next();
             if (annotation.getKey().equals(tag)) {
               logMessage = annotation.getValue();
+              iter.remove();
               break;
             }
           }
@@ -566,9 +569,12 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
         // iterate over the set of custom timestamp tags, breaking when one is found
         for (String tag : customLogTimestampTags) {
           // nested loops are not pretty but we need to ensure the order of customLogTimestampTags
-          for (Annotation annotation : annotations) {
+          iter = annotations.iterator();
+          while (iter.hasNext()) {
+            Annotation annotation = iter.next();
             if (annotation.getKey().equals(tag)) {
               timestampStr = annotation.getValue();
+              iter.remove();
               break;
             }
           }
