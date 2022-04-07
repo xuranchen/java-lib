@@ -54,6 +54,7 @@
     <!-- Testing library versions -->
     <junit.version>4.13.1</junit.version>
     <truth.version>0.29</truth.version>
+    <hamcrest.version>1.3</hamcrest.version>
 
     <!-- target java 8 compatibility -->
     <java.version>1.8</java.version>
@@ -184,6 +185,12 @@
         <groupId>com.google.truth</groupId>
         <artifactId>truth</artifactId>
         <version>${truth.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.hamcrest</groupId>
+        <artifactId>hamcrest-all</artifactId>
+        <version>${hamcrest.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>

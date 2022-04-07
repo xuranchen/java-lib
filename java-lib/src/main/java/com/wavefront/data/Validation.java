@@ -381,7 +381,7 @@ public class Validation {
     }
     if (spanName.length() > config.getSpanLengthLimit()) {
       ERROR_COUNTERS.get("spanNameTooLong").inc();
-      throw new DataValidationException("WF-428: Span name is too long (" + source.length() +
+      throw new DataValidationException("WF-428: Span name is too long (" + spanName.length() +
           " characters, max: " + config.getSpanLengthLimit() + "): " + spanName);
     }
     if (spanName.contains("*")) {

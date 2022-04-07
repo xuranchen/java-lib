@@ -4,8 +4,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 import com.wavefront.api.agent.ValidationConfiguration;
-import com.wavefront.ingester.ReportMetricDecoder;
 import com.wavefront.ingester.ReportHistogramDecoder;
+import com.wavefront.ingester.ReportMetricDecoder;
 import com.wavefront.ingester.SpanDecoder;
 
 import org.junit.Assert;
@@ -23,6 +23,8 @@ import wavefront.report.Span;
 import wavefront.report.SpanLogs;
 import wavefront.report.ReportLog;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -417,6 +419,7 @@ public class ValidationTest {
       fail();
     } catch (IllegalArgumentException iae) {
       assertTrue(iae.getMessage().contains("WF-428"));
+      assertThat(iae.getMessage(), containsString(span.getName().length() + " characters, max: 20"));
     }
 
     // span has too many annotations: WF-430
@@ -579,7 +582,7 @@ public class ValidationTest {
   public void testValidHistogram() {
     ReportHistogramDecoder decoder = new ReportHistogramDecoder();
     List<ReportHistogram> out = new ArrayList<>();
-    decoder.decode("!M 1533849540 #1 0.0 #2 1.0 #3 3.0 TestMetric source=Test key=value", out, 
+    decoder.decode("!M 1533849540 #1 0.0 #2 1.0 #3 3.0 TestMetric source=Test key=value", out,
         "dummy");
     Validation.validateHistogram(out.get(0), new ValidationConfiguration());
   }
