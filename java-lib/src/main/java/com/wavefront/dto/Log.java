@@ -27,7 +27,7 @@ import static com.wavefront.common.SerializerUtils.appendQuoted;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Log implements Serializable {
 
-    @JsonProperty("log_timestamp")
+    @JsonProperty("timestamp")
     private long timestamp;
 
     @JsonProperty("text")
@@ -97,7 +97,7 @@ public class Log implements Serializable {
             appendQuoted(sb, annotations.get(key));
             sb.append(", ");
         }
-        appendQuoted(sb, "log_timestamp");
+        appendQuoted(sb, "timestamp");
         sb.append(":");
         sb.append(timestamp);
         sb.append(", ");

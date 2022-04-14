@@ -17,7 +17,7 @@ public class LogTest {
 
         Log log1 = new Log(new ReportLog(1234567L, "oops", "myHost", new ArrayList<>()));
 
-        assertEquals("{\"log_timestamp\":1234567, \"text\":\"oops\", \"source\":\"myHost\"}", log1.toString());
+        assertEquals("{\"timestamp\":1234567, \"text\":\"oops\", \"source\":\"myHost\"}", log1.toString());
     }
 
     @Test
@@ -27,6 +27,6 @@ public class LogTest {
                 new Annotation("key1", "value1")
         )));
 
-        assertEquals("{\"key1\":\"value1\", \"log_timestamp\":1234567, \"text\":\"oops\", \"source\":\"myHost\"}", log1.toString());
+        assertEquals("{\"key1\":\"value1\", \"timestamp\":1234567, \"text\":\"oops\", \"source\":\"myHost\"}", log1.toString());
     }
 }
