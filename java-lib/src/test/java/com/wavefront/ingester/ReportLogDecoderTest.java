@@ -6,6 +6,7 @@ import org.junit.Test;
 import wavefront.report.ReportLog;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
@@ -95,14 +96,17 @@ public class ReportLogDecoderTest {
     // Tests custom formatting
     @Test
     public void testCustomMessage() {
-        ReportLogDecoder decoder = new ReportLogDecoder(defaultHostSupplier, Collections.singletonList("customHost"), Collections.singletonList("customTimestamp"), Collections.singletonList("customMessage"));
+        ReportLogDecoder decoder = new ReportLogDecoder(defaultHostSupplier, Collections.singletonList("customHost"),
+                Arrays.asList("customTimestamp", "customTimestamp2"), Arrays.asList("customMessage", "customMessage2"));
         List<ReportLog> out = new ArrayList<>();
 
         long curTime = Clock.now();
         String jsonStr = "{\n" +
                 "   \"customMessage\": \"a log message\",\n" +
+                "   \"customMessage2\": \"not the message\",\n" +
                 "   \"customHost\": \"my unit test\",\n" +
-                "   \"customTimestamp\": \"" + curTime + "\"\n" +
+                "   \"customTimestamp\": \"" + curTime + "\",\n" +
+                "   \"customTimestamp2\": \"" + 0 + "\"\n" +
                 "}";
         decoder.decode(jsonStr, out, "unitTestCustomer", null);
         assertEquals(out.size(), 1);
@@ -111,11 +115,11 @@ public class ReportLogDecoderTest {
         assertEquals(log.getHost(), "my unit test");
         assertEquals(log.getTimestamp(), curTime);
         assertEquals(log.getAnnotations().size(), 3);
-        assertEquals(log.getAnnotations().get(0).getKey(), "customMessage");
+        assertEquals(log.getAnnotations().get(0).getKey(), "customMessage2");
         assertEquals(log.getAnnotations().get(1).getKey(), "customHost");
-        assertEquals(log.getAnnotations().get(2).getKey(), "customTimestamp");
-        assertEquals(log.getAnnotations().get(0).getValue(), "a log message");
+        assertEquals(log.getAnnotations().get(2).getKey(), "customTimestamp2");
+        assertEquals(log.getAnnotations().get(0).getValue(), "not the message");
         assertEquals(log.getAnnotations().get(1).getValue(), "my unit test");
-        assertEquals(log.getAnnotations().get(2).getValue(), String.valueOf(curTime));
+        assertEquals(log.getAnnotations().get(2).getValue(), String.valueOf(0));
     }
 }
