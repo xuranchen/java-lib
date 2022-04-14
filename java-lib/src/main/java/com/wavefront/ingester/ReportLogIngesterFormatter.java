@@ -3,14 +3,11 @@ package com.wavefront.ingester;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wavefront.common.Clock;
 import wavefront.report.Annotation;
-import wavefront.report.ReportEvent;
 import wavefront.report.ReportLog;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -40,7 +37,7 @@ public class ReportLogIngesterFormatter extends AbstractIngesterFormatter<Report
     @Override
     public ReportLog drive(String logJson, @Nullable Supplier<String> defaultHostNameSupplier,
                            String customerId, @Nullable List<String> customSourceTags, @Nullable List<String> customLogTimestampTags,
-                           @Nullable List<String> customLogMessageTags, @Nullable IngesterContext ingesterContext) {
+                           @Nullable List<String> customLogMessageTags, List<String> customLogApplicationTags, List<String> customLogServiceTags, @Nullable IngesterContext ingesterContext) {
         final ReportLog log = new ReportLog();
         List<Annotation> annotations = new ArrayList<>();
 
@@ -65,6 +62,10 @@ public class ReportLogIngesterFormatter extends AbstractIngesterFormatter<Report
             log.setTimestamp(timestamp);
             String message = AbstractIngesterFormatter.getLogMessage(log.getAnnotations(), customLogMessageTags);
             log.setMessage(message);
+            String application = AbstractIngesterFormatter.getLogApplication(log.getAnnotations(), customLogApplicationTags);
+            log.setApplication(application);
+            String service = AbstractIngesterFormatter.getLogService(log.getAnnotations(), customLogServiceTags);
+            log.setService(service);
             return log;
         } catch (JsonProcessingException e) {
             e.printStackTrace();

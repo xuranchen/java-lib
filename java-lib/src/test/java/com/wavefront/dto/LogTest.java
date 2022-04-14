@@ -15,18 +15,18 @@ public class LogTest {
     @Test
     public void testToString_NoAnnotations() {
 
-        Log log1 = new Log(new ReportLog(1234567L, "oops", "myHost", new ArrayList<>()));
+        Log log1 = new Log(new ReportLog(1234567L, "oops", "myApp", "myService", "myHost", new ArrayList<>()));
 
-        assertEquals("{\"timestamp\":1234567, \"text\":\"oops\", \"source\":\"myHost\"}", log1.toString());
+        assertEquals("{\"timestamp\":1234567, \"text\":\"oops\", \"source\":\"myHost\", \"application\":\"myApp\", \"service\":\"myService\"}", log1.toString());
     }
 
     @Test
     public void testToString_WithAnnotations() {
 
-        Log log1 = new Log(new ReportLog(1234567L, "oops", "myHost", Collections.singletonList(
+        Log log1 = new Log(new ReportLog(1234567L, "oops", "myApp", "myService", "myHost", Collections.singletonList(
                 new Annotation("key1", "value1")
         )));
 
-        assertEquals("{\"key1\":\"value1\", \"timestamp\":1234567, \"text\":\"oops\", \"source\":\"myHost\"}", log1.toString());
+        assertEquals("{\"key1\":\"value1\", \"timestamp\":1234567, \"text\":\"oops\", \"source\":\"myHost\", \"application\":\"myApp\", \"service\":\"myService\"}", log1.toString());
     }
 }

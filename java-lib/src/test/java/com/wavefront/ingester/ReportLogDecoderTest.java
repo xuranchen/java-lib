@@ -22,7 +22,7 @@ public class ReportLogDecoderTest {
     @Test
     public void testEmptyMessage() {
         // uses default Host Supplier
-        ReportLogDecoder decoder = new ReportLogDecoder(defaultHostSupplier, null, null, null);
+        ReportLogDecoder decoder = new ReportLogDecoder(defaultHostSupplier, null, null, null, null, null);
         List<ReportLog> out = new ArrayList<>();
 
         decoder.decode("{}", out, "unitTestCustomer", null);
@@ -33,13 +33,15 @@ public class ReportLogDecoderTest {
         assertEquals(log.getAnnotations().size(), 0);
 
         // no Default Host Supplier
-        decoder = new ReportLogDecoder(null, null, null, null);
+        decoder = new ReportLogDecoder(null, null, null, null, null, null);
         out = new ArrayList<>();
 
         decoder.decode("{}", out, "unitTestCustomer", null);
         assertEquals(out.size(), 1);
         log = out.get(0);
         assertEquals(log.getMessage(), "");
+        assertEquals(log.getApplication(), "*");
+        assertEquals(log.getService(), "*");
         assertEquals(log.getHost(), "unknown");
         assertEquals(log.getAnnotations().size(), 0);
     }
@@ -48,7 +50,7 @@ public class ReportLogDecoderTest {
     @Test
     public void testInvalidMessage() {
         // The input message is not in JSON format
-        ReportLogDecoder decoder = new ReportLogDecoder(defaultHostSupplier, null, null, null);
+        ReportLogDecoder decoder = new ReportLogDecoder(defaultHostSupplier, null, null, null, null,null);
         List<ReportLog> out = new ArrayList<>();
 
         decoder.decode("", out, "unitTestCustomer", null);
@@ -57,7 +59,7 @@ public class ReportLogDecoderTest {
         assertNull(log);
 
         // The timestamp is not numerical
-        decoder = new ReportLogDecoder(defaultHostSupplier, null, null, null);
+        decoder = new ReportLogDecoder(defaultHostSupplier, null, null, null, null,null);
         out = new ArrayList<>();
 
         decoder.decode("{\"timestamp\": \"asdf\"}", out, "unitTestCustomer", null);
@@ -69,13 +71,15 @@ public class ReportLogDecoderTest {
     // Tests a basic message with no custom formatting
     @Test
     public void testBasicMessage() {
-        ReportLogDecoder decoder = new ReportLogDecoder(defaultHostSupplier, null, null, null);
+        ReportLogDecoder decoder = new ReportLogDecoder(defaultHostSupplier, null, null, null, null, null);
         List<ReportLog> out = new ArrayList<>();
 
         long curTime = Clock.now();
         String jsonStr = "{\n" +
                 "   \"message\": \"a log message\",\n" +
                 "   \"source\": \"my unit test\",\n" +
+                "   \"application\": \"my app\",\n" +
+                "   \"service\": \"my service\",\n" +
                 "   \"timestamp\": \"" + curTime + "\",\n" +
                 "   \"extraTag1\": \"extraValue1\",\n" +
                 "   \"extraTag2\": \"extraValue2\"\n" +
@@ -85,6 +89,8 @@ public class ReportLogDecoderTest {
         ReportLog log = out.get(0);
         assertEquals(log.getMessage(), "a log message");
         assertEquals(log.getHost(), "my unit test");
+        assertEquals(log.getApplication(), "my app");
+        assertEquals(log.getService(), "my service");
         assertEquals(log.getTimestamp(), curTime);
         assertEquals(log.getAnnotations().size(), 2);
         assertEquals(log.getAnnotations().get(0).getKey(), "extraTag1");
@@ -97,7 +103,8 @@ public class ReportLogDecoderTest {
     @Test
     public void testCustomMessage() {
         ReportLogDecoder decoder = new ReportLogDecoder(defaultHostSupplier, Collections.singletonList("customHost"),
-                Arrays.asList("customTimestamp", "customTimestamp2"), Arrays.asList("customMessage", "customMessage2"));
+                Arrays.asList("customTimestamp", "customTimestamp2"), Arrays.asList("customMessage", "customMessage2"),
+                Collections.singletonList("customApplication"), Collections.singletonList("customService"));
         List<ReportLog> out = new ArrayList<>();
 
         long curTime = Clock.now();
@@ -106,13 +113,17 @@ public class ReportLogDecoderTest {
                 "   \"customMessage2\": \"not the message\",\n" +
                 "   \"customHost\": \"my unit test\",\n" +
                 "   \"customTimestamp\": \"" + curTime + "\",\n" +
-                "   \"customTimestamp2\": \"" + 0 + "\"\n" +
+                "   \"customTimestamp2\": \"" + 0 + "\",\n" +
+                "   \"customApplication\": \"my app\",\n" +
+                "   \"customService\": \"my service\"\n" +
                 "}";
         decoder.decode(jsonStr, out, "unitTestCustomer", null);
         assertEquals(out.size(), 1);
         ReportLog log = out.get(0);
         assertEquals(log.getMessage(), "a log message");
         assertEquals(log.getHost(), "my unit test");
+        assertEquals(log.getApplication(), "my app");
+        assertEquals(log.getService(), "my service");
         assertEquals(log.getTimestamp(), curTime);
         assertEquals(log.getAnnotations().size(), 3);
         assertEquals(log.getAnnotations().get(0).getKey(), "customMessage2");

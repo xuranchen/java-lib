@@ -35,10 +35,10 @@ public class ReportHistogramIngesterFormatter extends AbstractIngesterFormatter<
 
   @Override
   public ReportHistogram drive(String input, Supplier<String> defaultHostNameSupplier,
-                           String customerId, @Nullable List<String> customSourceTags,
-                           @Nullable List<String> customLogTimestampTags,
-                           @Nullable List<String> customLogMessageTags,
-                           @Nullable IngesterContext ingesterContext) {
+                               String customerId, @Nullable List<String> customSourceTags,
+                               @Nullable List<String> customLogTimestampTags,
+                               @Nullable List<String> customLogMessageTags,
+                               List<String> customLogApplicationTags, List<String> customLogServiceTags, @Nullable IngesterContext ingesterContext) {
     ReportHistogram histogram = new ReportHistogram();
     histogram.setCustomer(customerId);
     // if the point has a timestamp, this would be overriden
