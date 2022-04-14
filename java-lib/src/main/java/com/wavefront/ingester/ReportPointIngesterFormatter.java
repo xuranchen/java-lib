@@ -41,7 +41,7 @@ public class ReportPointIngesterFormatter extends AbstractIngesterFormatter<Repo
                            String customerId, @Nullable List<String> customSourceTags,
                            @Nullable List<String> customLogTimestampTags,
                            @Nullable List<String> customLogMessageTags,
-                           @Nullable IngesterContext ingesterContext) {
+                           List<String> customLogApplicationTags, List<String> customLogServiceTags, @Nullable IngesterContext ingesterContext) {
     ReportPoint point = new ReportPoint();
     point.setTable(customerId);
     // if the point has a timestamp, this would be overriden

@@ -37,7 +37,7 @@ public class SpanIngesterFormatter extends AbstractIngesterFormatter<Span> {
                     String customerId, @Nullable List<String> customSourceTags,
                     @Nullable List<String> customLogTimestampTags,
                     @Nullable List<String> customLogMessageTags,
-                    @Nullable IngesterContext ingesterContext) {
+                    List<String> customLogApplicationTags, List<String> customLogServiceTags, @Nullable IngesterContext ingesterContext) {
     Span span = new Span();
     span.setCustomer(customerId);
     StringParser parser = new StringParser(input);

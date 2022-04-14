@@ -41,7 +41,7 @@ public class OpenTSDBDecoder implements Decoder<String> {
 
   @Override
   public void decodeReportPoints(String msg, List<ReportPoint> out, String customerId) {
-    ReportPoint point = FORMAT.drive(msg, () -> hostName, customerId, customSourceTags, null, null,null);
+    ReportPoint point = FORMAT.drive(msg, () -> hostName, customerId, customSourceTags, null, null, null, null, null);
     if (out != null) {
       out.add(point);
     }
@@ -49,7 +49,7 @@ public class OpenTSDBDecoder implements Decoder<String> {
 
   @Override
   public void decodeReportPoints(String msg, List<ReportPoint> out, String customerId, IngesterContext ingesterContext) {
-    ReportPoint point = FORMAT.drive(msg, () -> hostName, customerId, customSourceTags, null, null, ingesterContext);
+    ReportPoint point = FORMAT.drive(msg, () -> hostName, customerId, customSourceTags, null, null, null, null, ingesterContext);
     if (out != null) {
       out.add(point);
     }

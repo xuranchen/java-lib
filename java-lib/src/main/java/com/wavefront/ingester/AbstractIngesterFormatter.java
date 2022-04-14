@@ -10,16 +10,11 @@ import wavefront.report.Annotation;
 import wavefront.report.Histogram;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.Arrays;
 
 import static org.apache.commons.lang.StringUtils.containsAny;
 import static org.apache.commons.lang.StringUtils.replace;
@@ -42,6 +37,9 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
 
   private static final List<String> DEFAULT_LOG_MESSAGE_KEYS = Arrays.asList("message", "text");
   private static final List<String> DEFAULT_LOG_TIMESTAMP_KEYS = Arrays.asList("timestamp", "log_timestamp");
+  private static final List<String> DEFAULT_LOG_APPLICATION_KEYS = Collections.singletonList("application");
+  private static final List<String> DEFAULT_LOG_SERVICE_KEYS = Collections.singletonList("service");
+
 
 
   protected final List<FormatterElement<T>> elements;
@@ -598,12 +596,86 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     return timestamp;
   }
 
+  @Nullable
+  public static String getLogApplication(@Nullable List<Annotation> annotations,
+                                         @Nullable List<String> customLogApplicationTags) {
+    String applicationStr = null;
+    if (annotations != null) {
+      Iterator<Annotation> iter = annotations.iterator();
+      while (iter.hasNext()) {
+        Annotation annotation = iter.next();
+        for (String defaultLogApplicationKey : DEFAULT_LOG_APPLICATION_KEYS) {
+          if (annotation.getKey().equals(defaultLogApplicationKey)) {
+            iter.remove();
+            applicationStr = annotation.getValue();
+            break;
+          }
+        }
+      }
+
+      if (applicationStr == null && customLogApplicationTags != null) {
+        // iterate over the set of custom application tags, breaking when one is found
+        for (String tag : customLogApplicationTags) {
+          // nested loops are not pretty but we need to ensure the order of customLogMessageTags
+          iter = annotations.iterator();
+          while (iter.hasNext()) {
+            Annotation annotation = iter.next();
+            if (annotation.getKey().equals(tag)) {
+              applicationStr = annotation.getValue();
+              iter.remove();
+              break;
+            }
+          }
+          if (applicationStr != null) break;
+        }
+      }
+    }
+    return (applicationStr == null)? "*" : applicationStr;
+  }
+
+  @Nullable
+  public static String getLogService(@Nullable List<Annotation> annotations,
+                                         @Nullable List<String> customLogServiceTags) {
+    String serviceStr = null;
+    if (annotations != null) {
+      Iterator<Annotation> iter = annotations.iterator();
+      while (iter.hasNext()) {
+        Annotation annotation = iter.next();
+        for (String defaultLogServiceKey : DEFAULT_LOG_SERVICE_KEYS) {
+          if (annotation.getKey().equals(defaultLogServiceKey)) {
+            iter.remove();
+            serviceStr = annotation.getValue();
+            break;
+          }
+        }
+      }
+
+      if (serviceStr == null && customLogServiceTags != null) {
+        // iterate over the set of custom service tags, breaking when one is found
+        for (String tag : customLogServiceTags) {
+          // nested loops are not pretty but we need to ensure the order of customLogMessageTags
+          iter = annotations.iterator();
+          while (iter.hasNext()) {
+            Annotation annotation = iter.next();
+            if (annotation.getKey().equals(tag)) {
+              serviceStr = annotation.getValue();
+              iter.remove();
+              break;
+            }
+          }
+          if (serviceStr != null) break;
+        }
+      }
+    }
+    return (serviceStr == null)? "*" : serviceStr;
+  }
+
   public T drive(String input, @Nullable Supplier<String> defaultHostNameSupplier,
                  String customerId) {
-    return drive(input, defaultHostNameSupplier, customerId, null, null, null, null);
+    return drive(input, defaultHostNameSupplier, customerId, null, null, null, null, null, null);
   }
 
   public abstract T drive(String input, @Nullable Supplier<String> defaultHostNameSupplier,
                           String customerId, @Nullable List<String> customSourceTags, @Nullable List<String> customLogTimestampTags,
-                          @Nullable List<String> customLogMessageTags, @Nullable IngesterContext ingesterContext);
+                          @Nullable List<String> customLogMessageTags, List<String> customLogApplicationTags, List<String> customLogServiceTags, @Nullable IngesterContext ingesterContext);
 }
