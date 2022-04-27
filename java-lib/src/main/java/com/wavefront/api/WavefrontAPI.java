@@ -33,7 +33,6 @@ public interface WavefrontAPI {
    *
    * @param agentId       Agent id to poll for configuration.
    * @param hostname      Hostname of the agent.
-   * @param proxyname     Proxyname of the agent.
    * @param currentMillis Current millis on the agent (to adjust for timing).
    * @param token         Token to auto-register the agent.
    * @param version       Version of the agent.
@@ -44,7 +43,6 @@ public interface WavefrontAPI {
   @Produces(MediaType.APPLICATION_JSON)
   AgentConfiguration getConfig(@PathParam("agentId") UUID agentId,
                                @QueryParam("hostname") String hostname,
-                               @QueryParam("proxyname") String proxyname,
                                @QueryParam("currentMillis") final Long currentMillis,
                                @QueryParam("bytesLeftForBuffer") Long bytesLeftForbuffer,
                                @QueryParam("bytesPerMinuteForBuffer") Long bytesPerMinuteForBuffer,
@@ -58,7 +56,6 @@ public interface WavefrontAPI {
   @Produces(MediaType.APPLICATION_JSON)
   AgentConfiguration checkin(@PathParam("sshDaemonId") final UUID agentId,
                              @QueryParam("hostname") String hostname,
-                             @QueryParam("proxyname") String proxyname,
                              @QueryParam("token") String token,
                              @QueryParam("version") String version,
                              @QueryParam("currentMillis") final Long currentMillis,
