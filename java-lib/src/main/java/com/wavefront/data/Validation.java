@@ -89,6 +89,12 @@ public class Validation {
     return true;
   }
 
+  /**
+   * validates the input string to ensure any annotations are accepted by the backend storage
+   *
+   * @param input the input string to be validated
+   * @return true if input is valid, else false
+   */
   public static boolean logCharactersAreValid(String input) {
     // Legal characters are 45-46 (-.), 48-57 (numbers), 65-90 (upper), 97-122 (lower), 95 (_)
     int l = input.length();
