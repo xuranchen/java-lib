@@ -89,6 +89,22 @@ public class Validation {
     return true;
   }
 
+  public static boolean logCharactersAreValid(String input) {
+    // Legal characters are 45-46 (-.), 48-57 (numbers), 65-90 (upper), 97-122 (lower), 95 (_)
+    int l = input.length();
+    if (l == 0) {
+      return false;
+    }
+    for (int i = 0; i < l; i++) {
+      char cur = input.charAt(i);
+      if (!(45 <= cur && cur <= 46) && !(48 <= cur && cur <= 57) && !(65 <= cur && cur <= 90)
+              && !(97 <= cur && cur <= 122) && cur != 95) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   @VisibleForTesting
   static boolean annotationKeysAreValid(Map<String, String> annotations) {
     for (String key : annotations.keySet()) {
@@ -497,7 +513,7 @@ public class Validation {
           throw new DataValidationException(String.format(Validation.LOG_TAG_KEY_TOO_LONG_ERROR, tagK.length(),
                   config.getLogAnnotationsKeyLengthLimit(), tagK));
         }
-        if (!charactersAreValid(tagK)) {
+        if (!logCharactersAreValid(tagK)) {
           LOG_ERROR_COUNTERS.get("logAnnotationKeyBadChars").inc();
           throw new DataValidationException(String.format(Validation.LOG_TAG_KEY_ILLEGAL_CHAR_ERROR, tagK));
         }
