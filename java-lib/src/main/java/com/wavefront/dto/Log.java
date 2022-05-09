@@ -1,6 +1,7 @@
 package com.wavefront.dto;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -44,6 +45,9 @@ public class Log implements Serializable {
 
     private Map<String, String> annotations;
 
+    @JsonIgnore
+    private int dataSize;
+
     @SuppressWarnings("unused")
     private Log() { }
 
@@ -57,6 +61,7 @@ public class Log implements Serializable {
         for (Annotation tag : log.getAnnotations()) {
             annotations.put(tag.getKey(), tag.getValue());
         }
+        this.dataSize = this.toString().length();
     }
 
     public long getTimestamp() {
@@ -76,6 +81,10 @@ public class Log implements Serializable {
     }
 
     public String getSource() { return source; }
+
+    public int getDataSize() {
+        return dataSize;
+    }
 
     @JsonAnyGetter
     public Map<String, String> getAnnotations() {
