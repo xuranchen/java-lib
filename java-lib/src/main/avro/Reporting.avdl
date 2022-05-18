@@ -123,8 +123,8 @@ protocol Reporting {
   record ReportLog {
     long timestamp;
     string message;
-    string application = "*";
-    string service = "*";
+    string application = "none";
+    string service = "none";
     string host = "unknown";
     array<Annotation> annotations = [];
   }
