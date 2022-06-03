@@ -96,13 +96,10 @@ public class Validation {
    * @return true if input is valid, else false
    */
   public static boolean logCharactersAreValid(String input) {
-
-
-//    The name of the field. Field names should consist of alphanumeric or underscore characters only and not start
-//    with a digit. This is not currently strictly enforced, but other field names will not have first class support
-//    from all components and back compatibility is not guaranteed. Names with both leading and
-//    trailing underscores (e.g., _version_) are reserved.
-
+    //    The name of the field. Field names should consist of alphanumeric or underscore characters only and not start
+    //    with a digit. This is not currently strictly enforced, but other field names will not have first class support
+    //    from all components and back compatibility is not guaranteed. Names with both leading and
+    //    trailing underscores (e.g., _version_) are reserved.
     int l = input.length();
     if (l == 0) {
       return false;
