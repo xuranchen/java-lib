@@ -553,6 +553,26 @@ public class ValidationTest {
     errorMsg = String.format(Validation.LOG_TAG_KEY_ILLEGAL_CHAR_ERROR, invalidKey);
     assertEquals(errorMsg, e.getMessage());
 
+    // Test leading and trailing underscore
+    ReportLog leadingAndTrailingUnderScoreLog = getValidLog();
+    annotationList = new ArrayList<>();
+    invalidKey = "_asdf_";
+    annotationList.add(new Annotation(invalidKey, "mValue"));
+    leadingAndTrailingUnderScoreLog.setAnnotations(annotationList);
+    e = assertThrows(DataValidationException.class, () -> Validation.validateLog(leadingAndTrailingUnderScoreLog, config));
+    errorMsg = String.format(Validation.LOG_TAG_KEY_ILLEGAL_CHAR_ERROR, invalidKey);
+    assertEquals(errorMsg, e.getMessage());
+
+    // Test leading digit in Annotation Key
+    ReportLog leadingDigitAnnotationKeyLog = getValidLog();
+    annotationList = new ArrayList<>();
+    invalidKey = "1asdf";
+    annotationList.add(new Annotation(invalidKey, "mValue"));
+    leadingDigitAnnotationKeyLog.setAnnotations(annotationList);
+    e = assertThrows(DataValidationException.class, () -> Validation.validateLog(leadingDigitAnnotationKeyLog, config));
+    errorMsg = String.format(Validation.LOG_TAG_KEY_ILLEGAL_CHAR_ERROR, invalidKey);
+    assertEquals(errorMsg, e.getMessage());
+
     // Test blank Annotation value
     ReportLog blankAnnotationValueLog = getValidLog();
     annotationList = new ArrayList<>();
@@ -631,7 +651,7 @@ public class ValidationTest {
     String message = "oh no an error";
     log.setMessage(message);
 
-    Annotation annotation = new Annotation("mKey", "mValue");
+    Annotation annotation = new Annotation("m_Key", "mValue");
     List<Annotation> annotationList = new ArrayList<>();
     annotationList.add(annotation);
     log.setAnnotations(annotationList);
