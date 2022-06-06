@@ -1,6 +1,6 @@
 open_source_license.txt
 
-Wavefront by VMware 2022-06.1 GA
+Wavefront by VMware 2022-06.3 GA
 ======================================================================
 
 The following copyright statements and licenses apply to various open
@@ -7505,4 +7505,4 @@ Source Files is valid for three years from the date you acquired or last used th
 Software product. Alternatively, the Source Files may accompany the
 VMware service.
 
-[WAVEFRONTHQJAVA2022061GAAT060222]
+[WAVEFRONTHQJAVA2022063GAAT060622]
