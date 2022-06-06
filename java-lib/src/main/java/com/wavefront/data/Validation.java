@@ -96,15 +96,27 @@ public class Validation {
    * @return true if input is valid, else false
    */
   public static boolean logCharactersAreValid(String input) {
-    // Legal characters are 45-46 (-.), 48-57 (numbers), 65-90 (upper), 97-122 (lower), 95 (_)
+    //    The name of the field. Field names should consist of alphanumeric or underscore characters only and not start
+    //    with a digit. This is not currently strictly enforced, but other field names will not have first class support
+    //    from all components and back compatibility is not guaranteed. Names with both leading and
+    //    trailing underscores (e.g., _version_) are reserved.
     int l = input.length();
     if (l == 0) {
       return false;
     }
+    char start = input.charAt(0);
+    // input starts with a digit
+    if (48 <= start && start <= 57) {
+      return false;
+    }
+    // input starts with and ends with _
+    if (start == '_' || input.charAt(input.length() - 1) == '_') {
+      return false;
+    }
     for (int i = 0; i < l; i++) {
       char cur = input.charAt(i);
-      if (!(45 <= cur && cur <= 46) && !(48 <= cur && cur <= 57) && !(65 <= cur && cur <= 90)
-              && !(97 <= cur && cur <= 122) && cur != 95) {
+      if (!(48 <= cur && cur <= 57) && !(65 <= cur && cur <= 90)
+              && !(97 <= cur && cur <= 122) && cur != '_') {
         return false;
       }
     }
