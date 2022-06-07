@@ -3,12 +3,12 @@
     <parent>
         <artifactId>javalib</artifactId>
         <groupId>com.wavefront</groupId>
-        <version>2022-06.4</version>
+        <version>2022-06.5-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>yammer-metrics</artifactId>
-    <version>2022-06.4</version>
+    <version>2022-06.5-SNAPSHOT</version>
     <name>Wavefront Yammer Metrics</name>
     <dependencies>
         <dependency>
