@@ -13,7 +13,9 @@ public enum ExpectedAgentMetric {
   BUFFER_BYTES_LEFT(new MetricName("buffer", "", "bytes-left")),
   BUFFER_BYTES_PER_MINUTE(new MetricName("buffer", "", "fill-rate")),
   CURRENT_QUEUE_SIZE(new MetricName("buffer", "", "task-count")),
-  RDNS_CACHE_SIZE(new MetricName("listeners", "", "rdns-cache-size"));
+  RDNS_CACHE_SIZE(new MetricName("listeners", "", "rdns-cache-size")),
+  // Billing related
+  LOGS_DELIVERED(new MetricName("Proxy", "", "total-logs-delivered"));
 
   public MetricName metricName;
 

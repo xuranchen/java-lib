@@ -556,7 +556,7 @@ public class ValidationTest {
     // Test leading and trailing underscore
     ReportLog leadingAndTrailingUnderScoreLog = getValidLog();
     annotationList = new ArrayList<>();
-    invalidKey = "_asdf_";
+    invalidKey = "_asdf";
     annotationList.add(new Annotation(invalidKey, "mValue"));
     leadingAndTrailingUnderScoreLog.setAnnotations(annotationList);
     e = assertThrows(DataValidationException.class, () -> Validation.validateLog(leadingAndTrailingUnderScoreLog, config));
