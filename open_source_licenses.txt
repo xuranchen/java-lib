@@ -48,8 +48,8 @@ SECTION 1: Apache License, V2.0
    >>> org.apache.commons:commons-compress-1.19
    >>> com.google.errorprone:error_prone_annotations-2.3.4
    >>> org.apache.httpcomponents:httpcore-4.4.13
-   >>> com.fasterxml.jackson.core:jackson-core-2.11.0
-   >>> com.fasterxml.jackson.core:jackson-databind-2.11.0
+   >>> com.fasterxml.jackson.core:jackson-core-2.13.3
+   >>> com.fasterxml.jackson.core:jackson-databind-2.13.3
    >>> com.fasterxml.jackson.core:jackson-annotations-2.11.0
    >>> org.apache.avro:avro-1.9.2
    >>> org.apache.httpcomponents:httpclient-4.5.13
@@ -629,7 +629,7 @@ APPENDIX. Standard License Files
        <http://www.apache.org/>.
 
 
-   >>> com.fasterxml.jackson.core:jackson-core-2.11.0
+   >>> com.fasterxml.jackson.core:jackson-core-2.13.3
 
        # Jackson JSON processor
 
@@ -662,7 +662,7 @@ APPENDIX. Standard License Files
        http://www.apache.org/licenses/LICENSE-2.0
 
 
-   >>> com.fasterxml.jackson.core:jackson-databind-2.11.0
+   >>> com.fasterxml.jackson.core:jackson-databind-2.13.3
 
        # Jackson JSON processor
 
