@@ -670,6 +670,10 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     return (serviceStr == null)? "*" : serviceStr;
   }
 
+  public static List<String> getDefaultLogMessageKeys() {
+    return DEFAULT_LOG_MESSAGE_KEYS;
+  }
+
   public T drive(String input, @Nullable Supplier<String> defaultHostNameSupplier,
                  String customerId) {
     return drive(input, defaultHostNameSupplier, customerId, null, null, null, null, null, null);
