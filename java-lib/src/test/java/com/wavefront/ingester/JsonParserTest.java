@@ -15,9 +15,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 public class JsonParserTest {
-    String testStr = "{\"log\":\"2022-07-08 15:29:13,140 INFO  [AbstractReportableEntityHandler:printStats] [2878] Points received rate: 0 pps (1 min), 0 pps (5 min), 0 pps (current).\\n\",\"stream\":\"stdout\",\"docker\":{\"container_id\":\"446daf7372ddc630b1a339635c7a18e12199fcbb14af2ea6b52052edff8a9a29\"},\"kubernetes\":{\"container_name\":\"proxy\",\"namespace_name\":\"default\",\"pod_name\":\"hyperlogs-proxy-77476445fb-wnbwp\",\"container_image\":\"wavefronthq/proxy:11.2\",\"container_image_id\":\"docker-pullable://wavefronthq/proxy@sha256:2746f37e087efdd6a8ee32b485b7bd6db9731d03cb31fb9969554ed3fda98435\",\"pod_id\":\"8235fc39-0476-44ec-b8a9-1e9e780455a4\",\"host\":\"minikube\",\"labels\":{\"app\":\"hyperlogs-proxy\",\"pod-template-hash\":\"77476445fb\"}},\"service\":\"myApp\",\"application\":\"myService\",\"timestamp\":\"1657294153140\",\n" +
-            "  \"testArray\":[\"a\", \"b\", {\"c\":\"d\", \"e\":\"1\"}]\n" +
-            "}";
     private ObjectMapper objectMapper;
 
     @Before

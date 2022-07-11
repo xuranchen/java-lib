@@ -3,7 +3,6 @@ package com.wavefront.ingester;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.avro.data.Json;
 import wavefront.report.Annotation;
 import wavefront.report.ReportLog;
 
