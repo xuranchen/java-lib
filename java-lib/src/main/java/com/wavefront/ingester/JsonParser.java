@@ -36,9 +36,9 @@ public class JsonParser {
 
     private void flattenJsonInternal(String key, Object value, List<Annotation> annotations) {
         if (value == null) {
-            annotations.add(Annotation.newBuilder().setKey(key).setValue("null").build());
+            annotations.add(Annotation.newBuilder().setKey(labelReplace(key)).setValue("null").build());
         } else if (ignoreFlatten.contains(key) || value instanceof String) {
-            annotations.add(Annotation.newBuilder().setKey(key).setValue(value.toString()).build());
+            annotations.add(Annotation.newBuilder().setKey(labelReplace(key)).setValue(value.toString()).build());
         } else if (value instanceof Map<?, ?>) {
             for (Map.Entry<?, ?> tagKV : ((Map<?, ?>)value).entrySet()) {
                 flattenJsonInternal(concatonate(key, tagKV.getKey().toString()), tagKV.getValue(), annotations);
@@ -48,11 +48,15 @@ public class JsonParser {
                 flattenJsonInternal(concatonate(key, String.valueOf(i)), ((List<?>) value).get(i), annotations);
             }
         } else {
-            annotations.add(Annotation.newBuilder().setKey(key).setValue(value.toString()).build());
+            annotations.add(Annotation.newBuilder().setKey(labelReplace(key)).setValue(value.toString()).build());
         }
     }
 
     private String concatonate(String s1, String s2) {
         return s1 + UNDERSCORE + s2;
+    }
+    private String labelReplace(String label) {
+        String intermediate = label.replace('-', '_');
+        return intermediate.replace('.', '_');
     }
 }

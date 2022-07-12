@@ -107,4 +107,24 @@ public class JsonParserTest {
             fail("error parsing json input");
         }
     }
+
+    @Test
+    public void testFlattenJson_replace() {
+        String testStr =
+                "{" +
+                        "\"a.a\":\"b\"," +
+                        "\"c-c\":\"d\"" +
+                        "}";
+        try {
+            Map<String, Object> tagMap = objectMapper.readValue(testStr, new TypeReference<Map<String,Object>>(){});
+            JsonParser jsonParser = new JsonParser(tagMap, AbstractIngesterFormatter.getDefaultLogMessageKeys());
+            List<Annotation> annotations = new ArrayList<>();
+            jsonParser.flattenJson(annotations);
+            assertEquals(annotations.size(), 2);
+            assertEquals(annotations.get(0), Annotation.newBuilder().setKey("a_a").setValue("b").build());
+            assertEquals(annotations.get(1), Annotation.newBuilder().setKey("c_c").setValue("d").build());
+        } catch (JsonProcessingException e) {
+            fail("error parsing json input");
+        }
+    }
 }
