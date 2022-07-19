@@ -110,7 +110,7 @@ public class Validation {
       return false;
     }
     // input starts with and ends with _
-    if (start == '_' || input.charAt(input.length() - 1) == '_') {
+    if (start == '_' && input.charAt(input.length() - 1) == '_') {
       return false;
     }
     for (int i = 0; i < l; i++) {
