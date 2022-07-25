@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Ingestion formatter for logs.
@@ -43,11 +45,10 @@ public class ReportLogIngesterFormatter extends AbstractIngesterFormatter<Report
 
         try {
             Map<String, Object> tagMap = new ObjectMapper().readValue(logJson, new TypeReference<Map<String,Object>>(){});
-            for (Map.Entry<String, Object> tagKV : tagMap.entrySet()) {
-                String tagK = tagKV.getKey();
-                String tagV = (tagKV.getValue() == null)? "null" : tagKV.getValue().toString();
-                annotations.add(Annotation.newBuilder().setKey(tagK).setValue(tagV).build());
-            }
+            List<String> logMessageTags = customLogMessageTags == null ? AbstractIngesterFormatter.getDefaultLogMessageKeys() :
+                    Stream.concat(AbstractIngesterFormatter.getDefaultLogMessageKeys().stream(), customLogMessageTags.stream()).collect(Collectors.toList());
+            JsonParser parser = new JsonParser(tagMap, logMessageTags);
+            parser.flattenJson(annotations);
             log.setAnnotations(annotations);
             String host = AbstractIngesterFormatter.getHost(log.getAnnotations(), customSourceTags);
             if (host == null) {

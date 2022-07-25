@@ -630,7 +630,7 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
         }
       }
     }
-    return (applicationStr == null)? "*" : applicationStr;
+    return (applicationStr == null)? "none" : applicationStr;
   }
 
   @Nullable
@@ -667,7 +667,11 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
         }
       }
     }
-    return (serviceStr == null)? "*" : serviceStr;
+    return (serviceStr == null)? "none" : serviceStr;
+  }
+
+  public static List<String> getDefaultLogMessageKeys() {
+    return DEFAULT_LOG_MESSAGE_KEYS;
   }
 
   public T drive(String input, @Nullable Supplier<String> defaultHostNameSupplier,
