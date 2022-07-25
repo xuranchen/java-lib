@@ -40,8 +40,8 @@ public class ReportLogDecoderTest {
         assertEquals(out.size(), 1);
         log = out.get(0);
         assertEquals(log.getMessage(), "");
-        assertEquals(log.getApplication(), "*");
-        assertEquals(log.getService(), "*");
+        assertEquals(log.getApplication(), "none");
+        assertEquals(log.getService(), "none");
         assertEquals(log.getHost(), "unknown");
         assertEquals(log.getAnnotations().size(), 0);
     }
