@@ -54,7 +54,7 @@ public class ReportHistogramDecoder implements ReportableEntityDecoder<String, R
   @Override
   public void decode(String msg, List<ReportHistogram> out, String customerId,
                      @Nullable IngesterContext ctx) {
-    ReportHistogram histogram = FORMAT.drive(msg, defaultHostNameSupplier, customerId, null,null, null, null, null, ctx);
+    ReportHistogram histogram = FORMAT.drive(msg, defaultHostNameSupplier, customerId, null,null, null, null, null, null, null, ctx);
     if (histogram != null) {
       Histogram value = histogram.getValue();
       if (ctx != null) {

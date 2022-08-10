@@ -41,7 +41,7 @@ public class OpenTSDBMetricDecoder implements ReportableEntityDecoder<String, Re
 
   @Override
   public void decode(String msg, List<ReportMetric> out, String customerId, IngesterContext ctx) {
-    ReportMetric point = FORMAT.drive(msg, () -> hostName, customerId, customSourceTags, null, null, null, null, ctx);
+    ReportMetric point = FORMAT.drive(msg, () -> hostName, customerId, customSourceTags, null, null, null, null,null, null, ctx);
     if (out != null) {
       out.add(point);
     }

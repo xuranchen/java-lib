@@ -27,7 +27,7 @@ public class WFTopDecoder implements Decoder<String> {
 
   @Override
   public void decodeReportPoints(String msg, List<ReportPoint> out, String customerId) {
-    ReportPoint point = FORMAT.drive(msg, hostNameSupplier, customerId, Collections.emptyList(), null, null, null, null, null);
+    ReportPoint point = FORMAT.drive(msg, hostNameSupplier, customerId, Collections.emptyList(), null, null, null, null, null, null, null);
     if (out != null) {
       out.add(point);
     }
@@ -35,7 +35,7 @@ public class WFTopDecoder implements Decoder<String> {
 
   @Override
   public void decodeReportPoints(String msg, List<ReportPoint> out, String customerId, IngesterContext ingesterContext) {
-    ReportPoint point = FORMAT.drive(msg, hostNameSupplier, customerId, Collections.emptyList(), null, null, null, null, ingesterContext);
+    ReportPoint point = FORMAT.drive(msg, hostNameSupplier, customerId, Collections.emptyList(), null, null, null, null, null, null, ingesterContext);
     if (out != null) {
       out.add(point);
     }

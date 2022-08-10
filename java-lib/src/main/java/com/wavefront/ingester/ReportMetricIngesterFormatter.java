@@ -37,7 +37,8 @@ public class ReportMetricIngesterFormatter extends AbstractIngesterFormatter<Rep
   public ReportMetric drive(String input, Supplier<String> defaultHostNameSupplier,
                             String customerId, @Nullable List<String> customSourceTags,
                             @Nullable List<String> customLogTimestampTags, @Nullable List<String> customLogMessageTags,
-                            List<String> customLogApplicationTags, List<String> customLogServiceTags, @Nullable IngesterContext ingesterContext) {
+                            List<String> customLogApplicationTags, List<String> customLogServiceTags,
+                            @Nullable List<String> customLogLevelTags, @Nullable List<String> customLogExceptionTags, @Nullable IngesterContext ingesterContext) {
     ReportMetric point = new ReportMetric();
     point.setCustomer(customerId);
     // if the point has a timestamp, this would be overriden

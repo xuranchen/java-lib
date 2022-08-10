@@ -43,6 +43,12 @@ public class Log implements Serializable {
     @JsonProperty("service")
     private String service;
 
+    @JsonProperty("log_level")
+    private String level;
+
+    @JsonProperty("error_name")
+    private String exception;
+
     private Map<String, String> annotations;
 
     @JsonIgnore
@@ -57,6 +63,8 @@ public class Log implements Serializable {
         this.source = log.getHost();
         this.application = log.getApplication();
         this.service = log.getService();
+        this.level = log.getLevel();
+        this.exception = log.getException();
         this.annotations = new HashMap<>();
         for (Annotation tag : log.getAnnotations()) {
             annotations.put(tag.getKey(), tag.getValue());
@@ -86,6 +94,14 @@ public class Log implements Serializable {
         return dataSize;
     }
 
+    public String getLevel() {
+        return level;
+    }
+
+    public String getException() {
+        return exception;
+    }
+
     @JsonAnyGetter
     public Map<String, String> getAnnotations() {
         return annotations;
@@ -99,6 +115,8 @@ public class Log implements Serializable {
         result = result * 31 + (source == null ? 0 : source.hashCode());
         result = result * 31 + (application == null ? 0 : application.hashCode());
         result = result * 31 + (service == null ? 0 : service.hashCode());
+        result = result * 31 + (level == null ? 0 : level.hashCode());
+        result = result * 31 + (exception == null ? 0 : exception.hashCode());
         result = result * 31 + annotations.hashCode();
         return result;
     }
@@ -113,6 +131,8 @@ public class Log implements Serializable {
         if (!Objects.equals(application, other.application)) return false;
         if (!Objects.equals(service, other.service)) return false;
         if (!Objects.equals(source, other.source)) return false;
+        if (!Objects.equals(level, other.level)) return false;
+        if (!Objects.equals(exception, other.exception)) return false;
         if (!annotations.equals(other.annotations)) return false;
         return true;
     }
@@ -145,6 +165,14 @@ public class Log implements Serializable {
         appendQuoted(sb, "service");
         sb.append(":");
         appendQuoted(sb, service);
+        sb.append(", ");
+        appendQuoted(sb, "log_level");
+        sb.append(":");
+        appendQuoted(sb, level);
+        sb.append(", ");
+        appendQuoted(sb, "error_name");
+        sb.append(":");
+        appendQuoted(sb, exception);
         sb.append("}");
         return sb.toString();
     }

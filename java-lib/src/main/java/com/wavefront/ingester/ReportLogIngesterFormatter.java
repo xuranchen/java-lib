@@ -39,7 +39,8 @@ public class ReportLogIngesterFormatter extends AbstractIngesterFormatter<Report
     @Override
     public ReportLog drive(String logJson, @Nullable Supplier<String> defaultHostNameSupplier,
                            String customerId, @Nullable List<String> customSourceTags, @Nullable List<String> customLogTimestampTags,
-                           @Nullable List<String> customLogMessageTags, List<String> customLogApplicationTags, List<String> customLogServiceTags, @Nullable IngesterContext ingesterContext) {
+                           @Nullable List<String> customLogMessageTags, List<String> customLogApplicationTags, List<String> customLogServiceTags,
+                           @Nullable List<String> customLogLevelTags,@Nullable List<String> customLogExceptionTags, @Nullable IngesterContext ingesterContext) {
         final ReportLog log = new ReportLog();
         List<Annotation> annotations = new ArrayList<>();
 
@@ -67,6 +68,10 @@ public class ReportLogIngesterFormatter extends AbstractIngesterFormatter<Report
             log.setApplication(application);
             String service = AbstractIngesterFormatter.getLogService(log.getAnnotations(), customLogServiceTags);
             log.setService(service);
+            String level = AbstractIngesterFormatter.getLogLevel(log.getAnnotations(), customLogLevelTags);
+            log.setLevel(level);
+            String exception = AbstractIngesterFormatter.getLogException(log.getAnnotations(), customLogExceptionTags);
+            log.setException(exception);
             return log;
         } catch (JsonProcessingException e) {
             e.printStackTrace();

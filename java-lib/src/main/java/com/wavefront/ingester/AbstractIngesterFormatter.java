@@ -39,6 +39,8 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
   private static final List<String> DEFAULT_LOG_TIMESTAMP_KEYS = Arrays.asList("timestamp", "log_timestamp");
   private static final List<String> DEFAULT_LOG_APPLICATION_KEYS = Collections.singletonList("application");
   private static final List<String> DEFAULT_LOG_SERVICE_KEYS = Collections.singletonList("service");
+  private static final List<String> DEFAULT_LOG_EXCEPTION_KEYS = Arrays.asList("exception", "error_name");
+  private static final List<String> DEFAULT_LOG_LEVEL_KEYS = Arrays.asList("level", "log_level");
 
 
 
@@ -674,12 +676,88 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
     return DEFAULT_LOG_MESSAGE_KEYS;
   }
 
+  @Nullable
+  public static String getLogLevel(@Nullable List<Annotation> annotations,
+                                     @Nullable List<String> customLogLevelTags) {
+    String logLvlStr = null;
+    if (annotations != null) {
+      Iterator<Annotation> iter = annotations.iterator();
+      while (iter.hasNext()) {
+        Annotation annotation = iter.next();
+        for (String defaultLogLevelKey : DEFAULT_LOG_LEVEL_KEYS) {
+          if (annotation.getKey().equals(defaultLogLevelKey)) {
+            iter.remove();
+            logLvlStr = annotation.getValue();
+            break;
+          }
+        }
+      }
+
+      if (logLvlStr == null && customLogLevelTags != null) {
+        // iterate over the set of custom level tags, breaking when one is found
+        for (String tag : customLogLevelTags) {
+          // nested loops are not pretty but we need to ensure the order of customLogMessageTags
+          iter = annotations.iterator();
+          while (iter.hasNext()) {
+            Annotation annotation = iter.next();
+            if (annotation.getKey().equals(tag)) {
+              logLvlStr = annotation.getValue();
+              iter.remove();
+              break;
+            }
+          }
+          if (logLvlStr != null) break;
+        }
+      }
+    }
+    return logLvlStr;
+  }
+
+  @Nullable
+  public static String getLogException(@Nullable List<Annotation> annotations,
+                                       @Nullable List<String> customLogExceptionTags) {
+    String exceptionStr = null;
+    if (annotations != null) {
+      Iterator<Annotation> iter = annotations.iterator();
+      while (iter.hasNext()) {
+        Annotation annotation = iter.next();
+        for (String defaultLogExceptionKey : DEFAULT_LOG_EXCEPTION_KEYS) {
+          if (annotation.getKey().equals(defaultLogExceptionKey)) {
+            iter.remove();
+            exceptionStr = annotation.getValue();
+            break;
+          }
+        }
+      }
+
+      if (exceptionStr == null && customLogExceptionTags != null) {
+        // iterate over the set of custom exception tags, breaking when one is found
+        for (String tag : customLogExceptionTags) {
+          // nested loops are not pretty but we need to ensure the order of customLogMessageTags
+          iter = annotations.iterator();
+          while (iter.hasNext()) {
+            Annotation annotation = iter.next();
+            if (annotation.getKey().equals(tag)) {
+              exceptionStr = annotation.getValue();
+              iter.remove();
+              break;
+            }
+          }
+          if (exceptionStr != null) break;
+        }
+      }
+    }
+    return exceptionStr;
+  }
+
   public T drive(String input, @Nullable Supplier<String> defaultHostNameSupplier,
                  String customerId) {
-    return drive(input, defaultHostNameSupplier, customerId, null, null, null, null, null, null);
+    return drive(input, defaultHostNameSupplier, customerId, null, null, null, null, null, null, null, null);
   }
 
   public abstract T drive(String input, @Nullable Supplier<String> defaultHostNameSupplier,
                           String customerId, @Nullable List<String> customSourceTags, @Nullable List<String> customLogTimestampTags,
-                          @Nullable List<String> customLogMessageTags, List<String> customLogApplicationTags, List<String> customLogServiceTags, @Nullable IngesterContext ingesterContext);
+                          @Nullable List<String> customLogMessageTags, List<String> customLogApplicationTags, List<String> customLogServiceTags,
+                          @Nullable List<String> customLogLevelTags, @Nullable List<String> customExceptionTags,@Nullable IngesterContext ingesterContext);
+
 }

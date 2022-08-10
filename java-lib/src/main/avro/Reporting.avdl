@@ -126,6 +126,8 @@ protocol Reporting {
     string application = "none";
     string service = "none";
     string host = "unknown";
+    string level = "unknown";
+    string exception = "unknown";
     array<Annotation> annotations = [];
   }
 

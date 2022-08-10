@@ -27,7 +27,7 @@ public class SpyApiMetricDecoder implements ReportableEntityDecoder<String, Repo
   @Override
   public void decode(String msg, List<ReportMetric> out, String customerId, IngesterContext ctx) {
     ReportMetric point = FORMAT.drive(msg, hostNameSupplier, customerId, Collections.emptyList(),null, null,
-            null, null, ctx);
+            null, null, null, null,  ctx);
     if (out != null) {
       out.add(point);
     }

@@ -29,7 +29,8 @@ public class ReportSourceTagIngesterFormatter extends AbstractIngesterFormatter<
                                String customerId, @Nullable List<String> customerSourceTags,
                                @Nullable List<String> customLogTimestampTags,
                                @Nullable List<String> customLogMessageTags,
-                               List<String> customLogApplicationTags, List<String> customLogServiceTags, @Nullable IngesterContext ingesterContext) {
+                               List<String> customLogApplicationTags, List<String> customLogServiceTags,
+                               @Nullable List<String> customLogLevelTags, @Nullable List<String> customLogExceptionTags, @Nullable IngesterContext ingesterContext) {
     ReportSourceTag sourceTag = new ReportSourceTag();
     StringParser parser = new StringParser(input);
     for (FormatterElement<ReportSourceTag> element : elements) {

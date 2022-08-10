@@ -37,7 +37,8 @@ public class EventIngesterFormatter extends AbstractIngesterFormatter<ReportEven
                            String customerId, @Nullable List<String> customSourceTags,
                            @Nullable List<String> customLogTimestampTags,
                            @Nullable List<String> customLogMessageTags,
-                           List<String> customLogApplicationTags, List<String> customLogServiceTags, @Nullable IngesterContext ingesterContext) {
+                           List<String> customLogApplicationTags, List<String> customLogServiceTags,
+                           @Nullable List<String> customLogLevelTags,@Nullable List<String> customLogExceptionTags, @Nullable IngesterContext ingesterContext) {
     final ReportEvent event = new ReportEvent();
     StringParser parser = new StringParser(input);
     event.setHosts(new ArrayList<>());

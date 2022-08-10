@@ -18,6 +18,8 @@ public class ReportLogDecoder implements ReportableEntityDecoder<String, ReportL
     private List<String> customLogMessageTags;
     private List<String> customApplicationTags;
     private List<String> customServiceTags;
+    private List<String> customLevelTags;
+    private List<String> customExceptionTags;
 
 
     public ReportLogDecoder(@Nullable Supplier<String> hostNameSupplier,
@@ -31,10 +33,25 @@ public class ReportLogDecoder implements ReportableEntityDecoder<String, ReportL
         this.customServiceTags = customServiceTags;
     }
 
+    public ReportLogDecoder(@Nullable Supplier<String> hostNameSupplier,
+                            List<String> customSourceTags, List<String> customLogTimestampTags, List<String> customLogMessageTags,
+                            List<String> customApplicationTags, List<String> customServiceTags,
+                            List<String> customLevelTags, List<String> customExceptionTags) {
+        this.hostNameSupplier = hostNameSupplier;
+        this.customSourceTags = customSourceTags;
+        this.customLogTimestampTags = customLogTimestampTags;
+        this.customLogMessageTags = customLogMessageTags;
+        this.customApplicationTags = customApplicationTags;
+        this.customServiceTags = customServiceTags;
+        this.customLevelTags = customLevelTags;
+        this.customExceptionTags = customExceptionTags;
+    }
+
+
     @Override
     public void decode(String msg, List<ReportLog> out, String customerId, @Nullable IngesterContext ctx) {
         ReportLog log = FORMAT.drive(msg, hostNameSupplier, "default", customSourceTags, customLogTimestampTags,
-                customLogMessageTags, customApplicationTags, customServiceTags, ctx);
+                customLogMessageTags, customApplicationTags, customServiceTags, customLevelTags, customExceptionTags, ctx);
         if (out != null) {
             out.add(log);
         }
