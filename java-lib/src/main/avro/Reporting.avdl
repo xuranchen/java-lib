@@ -123,8 +123,6 @@ protocol Reporting {
   record ReportLog {
     long timestamp;
     string message;
-    string application = "none";
-    string service = "none";
     string host = "unknown";
     string level = "unknown";
     string exception = "unknown";

@@ -37,12 +37,6 @@ public class Log implements Serializable {
     @JsonProperty()
     private String source;
 
-    @JsonProperty("application")
-    private String application;
-
-    @JsonProperty("service")
-    private String service;
-
     @JsonProperty("log_level")
     private String level;
 
@@ -61,8 +55,6 @@ public class Log implements Serializable {
         this.timestamp = log.getTimestamp();
         this.message = log.getMessage();
         this.source = log.getHost();
-        this.application = log.getApplication();
-        this.service = log.getService();
         this.level = log.getLevel();
         this.exception = log.getException();
         this.annotations = new HashMap<>();
@@ -78,14 +70,6 @@ public class Log implements Serializable {
 
     public String getMessage() {
         return message;
-    }
-
-    public String getApplication() {
-        return application;
-    }
-
-    public String getService() {
-        return service;
     }
 
     public String getSource() { return source; }
@@ -113,8 +97,6 @@ public class Log implements Serializable {
         result = result * 31 + (int) (timestamp ^ (timestamp >>> 32));
         result = result * 31 + (message == null ? 0 : message.hashCode());
         result = result * 31 + (source == null ? 0 : source.hashCode());
-        result = result * 31 + (application == null ? 0 : application.hashCode());
-        result = result * 31 + (service == null ? 0 : service.hashCode());
         result = result * 31 + (level == null ? 0 : level.hashCode());
         result = result * 31 + (exception == null ? 0 : exception.hashCode());
         result = result * 31 + annotations.hashCode();
@@ -128,8 +110,6 @@ public class Log implements Serializable {
         Log other = (Log) obj;
         if (timestamp != other.timestamp) return false;
         if (!Objects.equals(message, other.message)) return false;
-        if (!Objects.equals(application, other.application)) return false;
-        if (!Objects.equals(service, other.service)) return false;
         if (!Objects.equals(source, other.source)) return false;
         if (!Objects.equals(level, other.level)) return false;
         if (!Objects.equals(exception, other.exception)) return false;
@@ -157,14 +137,6 @@ public class Log implements Serializable {
         appendQuoted(sb, "source");
         sb.append(":");
         appendQuoted(sb, source);
-        sb.append(", ");
-        appendQuoted(sb, "application");
-        sb.append(":");
-        appendQuoted(sb, application);
-        sb.append(", ");
-        appendQuoted(sb, "service");
-        sb.append(":");
-        appendQuoted(sb, service);
         sb.append(", ");
         appendQuoted(sb, "log_level");
         sb.append(":");
