@@ -3,6 +3,7 @@ package com.wavefront.ingester;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang.StringUtils;
 import wavefront.report.Annotation;
 import wavefront.report.ReportLog;
 
@@ -66,11 +67,11 @@ public class ReportLogIngesterFormatter extends AbstractIngesterFormatter<Report
             String message = AbstractIngesterFormatter.getLogMessage(log.getAnnotations(), customLogMessageTags);
             log.setMessage(message);
             String application = AbstractIngesterFormatter.getLogApplication(log.getAnnotations(), customLogApplicationTags);
-            if (application != null && !Objects.equals(application.toLowerCase(Locale.ROOT), NONE)) {
+            if (!StringUtils.equalsIgnoreCase(application, NONE)) {
                 log.getAnnotations().add(Annotation.newBuilder().setKey(APPLICATION).setValue(application).build());
             }
             String service = AbstractIngesterFormatter.getLogService(log.getAnnotations(), customLogServiceTags);
-            if (service != null && !Objects.equals(service, NONE)) {
+            if (!StringUtils.equalsIgnoreCase(service, NONE)) {
                 log.getAnnotations().add(Annotation.newBuilder().setKey(SERVICE).setValue(service).build());
             }
             String level = AbstractIngesterFormatter.getLogLevel(log.getAnnotations(), customLogLevelTags);
