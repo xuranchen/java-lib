@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.wavefront.api.agent.AgentConfiguration;
 import com.wavefront.api.agent.ShellOutputDTO;
 
-import org.jboss.resteasy.annotations.GZIP;
-
 import java.util.UUID;
 
 import javax.validation.Valid;
@@ -60,7 +58,7 @@ public interface WavefrontAPI {
                              @QueryParam("version") String version,
                              @QueryParam("currentMillis") final Long currentMillis,
                              @QueryParam("local") Boolean localAgent,
-                             @GZIP JsonNode agentMetrics,
+                             JsonNode agentMetrics,
                              @QueryParam("push") Boolean pushAgent,
                              @QueryParam("ephemeral") Boolean ephemeral);
 
@@ -81,7 +79,7 @@ public interface WavefrontAPI {
                         @PathParam("workUnitId") UUID workUnitId,
                         @Deprecated @QueryParam("currentMillis") Long currentMillis,
                         @QueryParam("format") String format,
-                        @GZIP String pushData);
+                        String pushData);
 
   /**
    * Reports an error that occured in the agent.
@@ -112,7 +110,7 @@ public interface WavefrontAPI {
   Response postWorkUnitResult(@PathParam("agentId") UUID agentId,
                               @PathParam("workUnitId") UUID workUnitId,
                               @PathParam("hostId") UUID targetId,
-                              @GZIP @Valid ShellOutputDTO shellOutputDTO);
+                              @Valid ShellOutputDTO shellOutputDTO);
 
   /**
    * Reports that a host has failed to connect.

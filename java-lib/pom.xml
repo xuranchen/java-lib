@@ -3,12 +3,12 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>java-lib</artifactId>
-  <version>2022-08.3-SNAPSHOT</version>
+  <version>MONIT-29238-resteasy-jaxrs-SNAPSHOT</version>
 
   <parent>
     <groupId>com.wavefront</groupId>
     <artifactId>javalib</artifactId>
-    <version>2022-08.3-SNAPSHOT</version>
+    <version>MONIT-29238-resteasy-jaxrs-SNAPSHOT</version>
   </parent>
 
   <name>Wavefront Shared Java Library</name>
@@ -29,10 +29,6 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.jboss.resteasy</groupId>
-      <artifactId>resteasy-jaxrs</artifactId>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -121,6 +117,11 @@
       <scope>test</scope>
       <version>4.0.1</version>
     </dependency>
+      <dependency>
+          <groupId>javax.ws.rs</groupId>
+          <artifactId>javax.ws.rs-api</artifactId>
+          <version>2.1.1</version>
+      </dependency>
   </dependencies>
 
   <build>
