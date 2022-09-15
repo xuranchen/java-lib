@@ -40,8 +40,6 @@ public class ReportLogDecoderTest {
         assertEquals(out.size(), 1);
         log = out.get(0);
         assertEquals(log.getMessage(), "");
-        assertEquals(log.getApplication(), "none");
-        assertEquals(log.getService(), "none");
         assertEquals(log.getHost(), "unknown");
         assertEquals(log.getAnnotations().size(), 0);
     }
@@ -79,8 +77,6 @@ public class ReportLogDecoderTest {
         String jsonStr = "{\n" +
                 "   \"message\": \"a log message\",\n" +
                 "   \"source\": \"my unit test\",\n" +
-                "   \"application\": \"my app\",\n" +
-                "   \"service\": \"my service\",\n" +
                 "   \"timestamp\": \"" + curTime + "\",\n" +
                 "   \"extraTag1\": \"extraValue1\",\n" +
                 "   \"extraTag2\": \"extraValue2\"\n" +
@@ -90,8 +86,6 @@ public class ReportLogDecoderTest {
         ReportLog log = out.get(0);
         assertEquals(log.getMessage(), "a log message");
         assertEquals(log.getHost(), "my unit test");
-        assertEquals(log.getApplication(), "my app");
-        assertEquals(log.getService(), "my service");
         assertEquals(log.getTimestamp(), curTime);
         assertEquals(log.getAnnotations().size(), 2);
         assertEquals(log.getAnnotations().get(0).getKey(), "extraTag1");
@@ -124,15 +118,47 @@ public class ReportLogDecoderTest {
         ReportLog log = out.get(0);
         assertEquals(log.getMessage(), "a log message");
         assertEquals(log.getHost(), "my unit test");
-        assertEquals(log.getApplication(), "my app");
-        assertEquals(log.getService(), "my service");
         assertEquals(log.getTimestamp(), curTime);
-        assertEquals(log.getAnnotations().size(), 3);
+        assertEquals(log.getAnnotations().size(), 5);
         assertEquals(log.getAnnotations().get(0).getKey(), "customMessage2");
         assertEquals(log.getAnnotations().get(1).getKey(), "customHost");
         assertEquals(log.getAnnotations().get(2).getKey(), "customTimestamp2");
+        assertEquals(log.getAnnotations().get(3).getKey(), "application");
+        assertEquals(log.getAnnotations().get(4).getKey(), "service");
         assertEquals(log.getAnnotations().get(0).getValue(), "not the message");
         assertEquals(log.getAnnotations().get(1).getValue(), "my unit test");
         assertEquals(log.getAnnotations().get(2).getValue(), String.valueOf(0));
+        assertEquals(log.getAnnotations().get(3).getValue(), "my app");
+        assertEquals(log.getAnnotations().get(4).getValue(), "my service");
+    }
+
+    // Tests removal of application/service being none
+    @Test
+    public void testApplicationServiceRemoval() {
+        ReportLogDecoder decoder = new ReportLogDecoder(defaultHostSupplier, null, null,
+                null, null, null, null, null);
+        List<ReportLog> out = new ArrayList<>();
+
+        long curTime = Clock.now();
+        String jsonStr = "{\n" +
+                "   \"message\": \"a log message\",\n" +
+                "   \"source\": \"my unit test\",\n" +
+                "   \"timestamp\": \"" + curTime + "\",\n" +
+                "   \"extraTag1\": \"extraValue1\",\n" +
+                "   \"extraTag2\": \"extraValue2\",\n" +
+                "   \"application\": \"none\",\n" +
+                "   \"service\": \"none\"\n" +
+                "}";
+        decoder.decode(jsonStr, out, "unitTestCustomer", null);
+        assertEquals(out.size(), 1);
+        ReportLog log = out.get(0);
+        assertEquals(log.getMessage(), "a log message");
+        assertEquals(log.getHost(), "my unit test");
+        assertEquals(log.getTimestamp(), curTime);
+        assertEquals(log.getAnnotations().size(), 2);
+        assertEquals(log.getAnnotations().get(0).getKey(), "extraTag1");
+        assertEquals(log.getAnnotations().get(1).getKey(), "extraTag2");
+        assertEquals(log.getAnnotations().get(0).getValue(), "extraValue1");
+        assertEquals(log.getAnnotations().get(1).getValue(), "extraValue2");
     }
 }
