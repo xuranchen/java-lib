@@ -75,9 +75,13 @@ public class ReportLogIngesterFormatter extends AbstractIngesterFormatter<Report
                 log.getAnnotations().add(Annotation.newBuilder().setKey(SERVICE).setValue(service).build());
             }
             String level = AbstractIngesterFormatter.getLogLevel(log.getAnnotations(), customLogLevelTags);
-            log.setLevel(level);
+            if (!StringUtils.equalsIgnoreCase(level, "")) {
+                log.setLevel(level);
+            }
             String exception = AbstractIngesterFormatter.getLogException(log.getAnnotations(), customLogExceptionTags);
-            log.setException(exception);
+            if (!StringUtils.equalsIgnoreCase(exception, "")) {
+                log.setLevel(exception);
+            }
             return log;
         } catch (JsonProcessingException e) {
             e.printStackTrace();
