@@ -3,12 +3,12 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>java-lib</artifactId>
-  <version>MONIT-29238-resteasy-jaxrs-SNAPSHOT</version>
+  <version>2022-09.1</version>
 
   <parent>
     <groupId>com.wavefront</groupId>
     <artifactId>javalib</artifactId>
-    <version>MONIT-29238-resteasy-jaxrs-SNAPSHOT</version>
+    <version>2022-09.1</version>
   </parent>
 
   <name>Wavefront Shared Java Library</name>
