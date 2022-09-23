@@ -124,8 +124,6 @@ protocol Reporting {
     long timestamp;
     string message;
     string host = "unknown";
-    string level = "unknown";
-    string exception = "unknown";
     array<Annotation> annotations = [];
   }
 
