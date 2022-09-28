@@ -1,12 +1,10 @@
 package com.wavefront.dto;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.joda.time.Instant;
 import wavefront.report.Annotation;
@@ -26,6 +24,7 @@ import static com.wavefront.common.SerializerUtils.appendQuoted;
  * @author amitw@vmware.com
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonDeserialize(using = LogDeserializer.class)
 public class Log implements Serializable {
 
     @JsonProperty("timestamp")
