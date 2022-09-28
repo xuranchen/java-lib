@@ -1,8 +1,5 @@
 package com.wavefront.dto;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import junit.framework.TestCase;
 import org.junit.Test;
 import wavefront.report.Annotation;
@@ -15,19 +12,6 @@ import java.util.Collections;
 import static org.junit.Assert.*;
 
 public class LogTest {
-
-    @Test
-    public void testSerialize() throws JsonProcessingException {
-        Log log1 = new Log(new ReportLog(1234567L, "oops", "myHost", Collections.singletonList(
-                new Annotation("key1", "value1")
-        )));
-        ObjectMapper mapper = new ObjectMapper();
-        String jsonResult = mapper.writerWithDefaultPrettyPrinter()
-                .writeValueAsString(log1);
-        Log out = mapper.readValue(jsonResult, Log.class);
-        assertEquals(log1, out);
-    }
-
     @Test
     public void testToString_NoAnnotations() {
 
