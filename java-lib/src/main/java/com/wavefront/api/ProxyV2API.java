@@ -29,6 +29,7 @@ public interface ProxyV2API {
    * @param proxyId       ID of the proxy.
    * @param authorization Authorization token.
    * @param hostname      Host name of the proxy.
+   * @param proxyname     Proxy name of the proxy (used as internal metric source).
    * @param version       Build version of the proxy.
    * @param currentMillis Current time at the proxy (used to calculate clock drift).
    * @param agentMetrics  Proxy metrics.
@@ -42,6 +43,7 @@ public interface ProxyV2API {
   AgentConfiguration proxyCheckin(@HeaderParam("X-WF-PROXY-ID") final UUID proxyId,
                                   @HeaderParam("Authorization") String authorization,
                                   @QueryParam("hostname") String hostname,
+                                  @QueryParam("proxyname") String proxyname,
                                   @QueryParam("version") String version,
                                   @QueryParam("currentMillis") final Long currentMillis,
                                   JsonNode agentMetrics,

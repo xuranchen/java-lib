@@ -710,7 +710,7 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
         }
       }
     }
-    return logLvlStr;
+    return (logLvlStr == null)? "" : logLvlStr;
   }
 
   @Nullable
@@ -747,7 +747,7 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
         }
       }
     }
-    return exceptionStr;
+    return (exceptionStr == null)? "" : exceptionStr;
   }
 
   public T drive(String input, @Nullable Supplier<String> defaultHostNameSupplier,

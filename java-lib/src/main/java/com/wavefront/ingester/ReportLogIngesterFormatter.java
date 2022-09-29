@@ -22,6 +22,9 @@ public class ReportLogIngesterFormatter extends AbstractIngesterFormatter<Report
     private final String NONE = "none";
     private final String APPLICATION = "application";
     private final String SERVICE = "service";
+    private final String LOG_LEVEL = "log_level";
+    private final String ERROR_NAME = "error_name";
+
 
     private ReportLogIngesterFormatter(List<FormatterElement<ReportLog>> elements) {
         super(elements);
@@ -75,9 +78,13 @@ public class ReportLogIngesterFormatter extends AbstractIngesterFormatter<Report
                 log.getAnnotations().add(Annotation.newBuilder().setKey(SERVICE).setValue(service).build());
             }
             String level = AbstractIngesterFormatter.getLogLevel(log.getAnnotations(), customLogLevelTags);
-            log.setLevel(level);
+            if (!StringUtils.equalsIgnoreCase(level, "")) {
+                log.getAnnotations().add(Annotation.newBuilder().setKey(LOG_LEVEL).setValue(level).build());
+            }
             String exception = AbstractIngesterFormatter.getLogException(log.getAnnotations(), customLogExceptionTags);
-            log.setException(exception);
+            if (!StringUtils.equalsIgnoreCase(exception, "")) {
+                log.getAnnotations().add(Annotation.newBuilder().setKey(ERROR_NAME).setValue(exception).build());
+            }
             return log;
         } catch (JsonProcessingException e) {
             e.printStackTrace();

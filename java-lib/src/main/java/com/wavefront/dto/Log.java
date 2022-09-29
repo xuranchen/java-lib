@@ -30,12 +30,6 @@ public class Log implements Serializable {
     @JsonProperty()
     private String source;
 
-    @JsonProperty("log_level")
-    private String level;
-
-    @JsonProperty("error_name")
-    private String exception;
-
     private Map<String, String> annotations;
 
     @JsonIgnore
@@ -48,8 +42,6 @@ public class Log implements Serializable {
         this.timestamp = log.getTimestamp();
         this.message = log.getMessage();
         this.source = log.getHost();
-        this.level = log.getLevel();
-        this.exception = log.getException();
         this.annotations = new HashMap<>();
         for (Annotation tag : log.getAnnotations()) {
             annotations.put(tag.getKey(), tag.getValue());
@@ -71,14 +63,6 @@ public class Log implements Serializable {
         return dataSize;
     }
 
-    public String getLevel() {
-        return level;
-    }
-
-    public String getException() {
-        return exception;
-    }
-
     @JsonAnyGetter
     public Map<String, String> getAnnotations() {
         return annotations;
@@ -90,8 +74,6 @@ public class Log implements Serializable {
         result = result * 31 + (int) (timestamp ^ (timestamp >>> 32));
         result = result * 31 + (message == null ? 0 : message.hashCode());
         result = result * 31 + (source == null ? 0 : source.hashCode());
-        result = result * 31 + (level == null ? 0 : level.hashCode());
-        result = result * 31 + (exception == null ? 0 : exception.hashCode());
         result = result * 31 + annotations.hashCode();
         return result;
     }
@@ -104,8 +86,6 @@ public class Log implements Serializable {
         if (timestamp != other.timestamp) return false;
         if (!Objects.equals(message, other.message)) return false;
         if (!Objects.equals(source, other.source)) return false;
-        if (!Objects.equals(level, other.level)) return false;
-        if (!Objects.equals(exception, other.exception)) return false;
         if (!annotations.equals(other.annotations)) return false;
         return true;
     }
@@ -130,14 +110,6 @@ public class Log implements Serializable {
         appendQuoted(sb, "source");
         sb.append(":");
         appendQuoted(sb, source);
-        sb.append(", ");
-        appendQuoted(sb, "log_level");
-        sb.append(":");
-        appendQuoted(sb, level);
-        sb.append(", ");
-        appendQuoted(sb, "error_name");
-        sb.append(":");
-        appendQuoted(sb, exception);
         sb.append("}");
         return sb.toString();
     }
