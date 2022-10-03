@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -82,7 +83,7 @@ public class WavefrontYammerHttpMetricsReporterTest {
           build();
       metricsServer = ServerBootstrap.bootstrap().
           setLocalAddress(InetAddress.getLoopbackAddress()).
-          setListenerPort(0).
+          setListenerPort(getFreePort()).
           setServerInfo("Test/1.1").
           setIOReactorConfig(metricsIOreactor).
           registerHandler("*", new HttpAsyncRequestHandler<HttpRequest>() {
@@ -134,10 +135,12 @@ public class WavefrontYammerHttpMetricsReporterTest {
         throw new RuntimeException("Interrupted trying to sleep.", ex);
       }
     }
+
+    InetSocketAddress address =(InetSocketAddress) metricsServer.getEndpoint().getAddress();
     wavefrontYammerHttpMetricsReporter = new WavefrontYammerHttpMetricsReporter.Builder().
         withName("test-http").
         withMetricsRegistry(metricsRegistry).
-        withEndpoint(InetAddress.getLoopbackAddress().getHostAddress(), ((InetSocketAddress) metricsServer.getEndpoint().getAddress()).getPort()).
+        withEndpoint(address.getHostName(),address.getPort()).
         withTimeSupplier(() -> stubbedTime).
         withMetricTranslator(metricTranslator).
         withPrependedGroupNames(prependGroupName).
@@ -557,5 +560,11 @@ public class WavefrontYammerHttpMetricsReporterTest {
     inputMetrics.clear();
     wavefrontYammerHttpMetricsReporter.run();
     wavefrontYammerHttpMetricsReporter.flush();
+  }
+
+  private int getFreePort() throws IOException {
+    try (ServerSocket serverSocket = new ServerSocket(0)) {
+      return serverSocket.getLocalPort();
+    }
   }
 }
