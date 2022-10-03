@@ -3,6 +3,7 @@ package com.wavefront.ingester;
 import wavefront.report.Annotation;
 
 import javax.annotation.Nonnull;
+import java.lang.reflect.Array;
 import java.util.List;
 import java.util.Map;
 
@@ -13,6 +14,7 @@ public class JsonParser {
     private final Map<String, Object> input;
     private final String UNDERSCORE = "_";
     private final List<String> ignoreFlatten;
+    char[] labelsToReplace = new char[]{'-', '.', '/'};
 
     /***
      * @param ignoreFlatten list of strings that will not be flattened
@@ -56,7 +58,10 @@ public class JsonParser {
         return s1 + UNDERSCORE + s2;
     }
     private String labelReplace(String label) {
-        String intermediate = label.replace('-', '_');
-        return intermediate.replace('.', '_');
+        String finalLabel = label;
+        for (char charToReplace : labelsToReplace) {
+            finalLabel = finalLabel.replace(charToReplace, '_');
+        }
+        return finalLabel;
     }
 }
