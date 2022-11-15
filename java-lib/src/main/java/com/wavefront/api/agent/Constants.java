@@ -37,7 +37,7 @@ public abstract class Constants {
   /**
    * Line-delimited JSON objects of logs
    */
-  public static final String PUSH_FORMAT_LOGS_JSON_LINE = "logs_json_lines";
+  public static final String PUSH_FORMAT_LOGS_JSON_LINES = "logs_json_lines";
 
   /**
    * Line-delimited format for source tag commands
