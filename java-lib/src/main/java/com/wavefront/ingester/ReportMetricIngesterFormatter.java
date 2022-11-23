@@ -52,7 +52,7 @@ public class ReportMetricIngesterFormatter extends AbstractIngesterFormatter<Rep
       throw new ParseException("Unexpected extra input: " + parser.next());
     }
 
-    String host = AbstractIngesterFormatter.getHost(point.getAnnotations(), customSourceTags);
+    String host = AbstractIngesterFormatter.getHostAndNormalizeTags(point.getAnnotations(), customSourceTags, true);
     if (host == null) {
       if (defaultHostNameSupplier == null) {
         host = "unknown";

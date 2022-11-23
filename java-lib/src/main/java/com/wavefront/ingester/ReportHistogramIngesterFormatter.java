@@ -53,7 +53,7 @@ public class ReportHistogramIngesterFormatter extends AbstractIngesterFormatter<
       throw new ParseException("Unexpected extra input: " + parser.next());
     }
 
-    String host = AbstractIngesterFormatter.getHost(histogram.getAnnotations(), customSourceTags);
+    String host = AbstractIngesterFormatter.getHostAndNormalizeTags(histogram.getAnnotations(), customSourceTags, true);
     if (host == null) {
       host = defaultHostNameSupplier.get();
     }
