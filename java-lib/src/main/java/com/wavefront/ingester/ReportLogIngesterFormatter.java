@@ -56,7 +56,7 @@ public class ReportLogIngesterFormatter extends AbstractIngesterFormatter<Report
             JsonParser parser = new JsonParser(tagMap, logMessageTags);
             parser.flattenJson(annotations);
             log.setAnnotations(annotations);
-            String host = AbstractIngesterFormatter.getLogHost(log.getAnnotations(), customSourceTags);
+            String host = AbstractIngesterFormatter.getHost(log.getAnnotations(), customSourceTags, false);
             if (host == null) {
                 if (defaultHostNameSupplier == null) {
                     host = "unknown";

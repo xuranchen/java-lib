@@ -469,7 +469,8 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
 
   @Nullable
   public static String getHost(@Nullable List<Annotation> annotations,
-                               @Nullable List<String> customSourceTags) {
+                               @Nullable List<String> customSourceTags,
+                               boolean replaceTag) {
     String source = null;
     String host = null;
     if (annotations != null) {
@@ -482,49 +483,8 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
         } else if (annotation.getKey().equals("host")) {
           iter.remove();
           host = annotation.getValue();
-        } else if (annotation.getKey().equals("tag")) {
+        } else if (annotation.getKey().equals("tag") && replaceTag) {
           annotation.setKey("_tag");
-        }
-      }
-      if (host != null) {
-        if (source == null) {
-          source = host;
-        } else {
-          annotations.add(new Annotation("_host", host));
-        }
-      }
-      if (source == null && customSourceTags != null) {
-        // iterate over the set of custom tags, breaking when one is found
-        for (String tag : customSourceTags) {
-          // nested loops are not pretty but we need to ensure the order of customSourceTags
-          for (Annotation annotation : annotations) {
-            if (annotation.getKey().equals(tag)) {
-              source = annotation.getValue();
-              break;
-            }
-          }
-          if (source != null) break;
-        }
-      }
-    }
-    return source;
-  }
-
-  @Nullable
-  public static String getLogHost(@Nullable List<Annotation> annotations,
-                               @Nullable List<String> customSourceTags) {
-    String source = null;
-    String host = null;
-    if (annotations != null) {
-      Iterator<Annotation> iter = annotations.iterator();
-      while (iter.hasNext()) {
-        Annotation annotation = iter.next();
-        if (annotation.getKey().equals("source")) {
-          iter.remove();
-          source = annotation.getValue();
-        } else if (annotation.getKey().equals("host")) {
-          iter.remove();
-          host = annotation.getValue();
         }
       }
       if (host != null) {
