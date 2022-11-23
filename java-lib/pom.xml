@@ -3,12 +3,12 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>java-lib</artifactId>
-  <version>2022-11.1</version>
+  <version>2022-11.2-SNAPSHOT</version>
 
   <parent>
     <groupId>com.wavefront</groupId>
     <artifactId>javalib</artifactId>
-    <version>2022-11.1</version>
+    <version>2022-11.2-SNAPSHOT</version>
   </parent>
 
   <name>Wavefront Shared Java Library</name>
