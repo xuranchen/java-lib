@@ -468,9 +468,9 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
   }
 
   @Nullable
-  public static String getHost(@Nullable List<Annotation> annotations,
-                               @Nullable List<String> customSourceTags,
-                               boolean replaceTag) {
+  public static String getHostAndNormalizeTags(@Nullable List<Annotation> annotations,
+                                               @Nullable List<String> customSourceTags,
+                                               boolean replaceTag) {
     String source = null;
     String host = null;
     if (annotations != null) {
@@ -484,6 +484,7 @@ public abstract class AbstractIngesterFormatter<T extends SpecificRecordBase> {
           iter.remove();
           host = annotation.getValue();
         } else if (annotation.getKey().equals("tag") && replaceTag) {
+          // TODO: investigate why we add underscore here
           annotation.setKey("_tag");
         }
       }

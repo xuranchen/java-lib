@@ -109,7 +109,7 @@ public class PickleProtocolMetricDecoder implements ReportableEntityDecoder<byte
       point.setMetric(components.metric);
       String host = components.source;
       if (host == null) {
-        host = AbstractIngesterFormatter.getHost(point.getAnnotations(), customSourceTags, true);
+        host = AbstractIngesterFormatter.getHostAndNormalizeTags(point.getAnnotations(), customSourceTags, true);
       }
       if (host == null) {
         host = this.defaultHostName;
