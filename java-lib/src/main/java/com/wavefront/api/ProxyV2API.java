@@ -49,6 +49,12 @@ public interface ProxyV2API {
                                   JsonNode agentMetrics,
                                   @QueryParam("ephemeral") Boolean ephemeral);
 
+  @POST
+  @Path("v2/wfproxy/savePreprocessorRules")
+  @Consumes(MediaType.APPLICATION_JSON)
+  void proxySavePreprocessorRules(@HeaderParam("X-WF-PROXY-ID") final UUID proxyId,
+                       JsonNode proxyPreprocessorRules);
+
   /**
    * Report batched data (metrics, histograms, spans, etc) to Wavefront servers.
    *
