@@ -48,7 +48,13 @@ public interface ProxyV2API {
                                   @QueryParam("currentMillis") final Long currentMillis,
                                   JsonNode agentMetrics,
                                   @QueryParam("ephemeral") Boolean ephemeral);
-
+                                  
+  @POST
+  @Path("v2/wfproxy/saveConfig")
+  @Consumes(MediaType.APPLICATION_JSON)
+  void proxySaveConfig(@HeaderParam("X-WF-PROXY-ID") final UUID proxyId,
+                                  JsonNode proxyConfig);
+  
   @POST
   @Path("v2/wfproxy/savePreprocessorRules")
   @Consumes(MediaType.APPLICATION_JSON)
