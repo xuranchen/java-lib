@@ -1,6 +1,6 @@
-open_source_license.txt
+open_source_licenses.txt
 
-Wavefront by VMware 2023-04.1 GA
+Wavefront by VMware 2023-02.1 GA
 ======================================================================
 
 The following copyright statements and licenses apply to various open
@@ -12,8 +12,8 @@ contain additional open source software packages. One or more such
 open_source_licenses.txt files may therefore accompany this VMware
 service.
 
-The VMware service that includes this file does not necessarily use all the open 
-source software packages referred to below and may also only use portions of a 
+The VMware service that includes this file does not necessarily use all the open
+source software packages referred to below and may also only use portions of a
 given package.
 
 ==================== TABLE OF CONTENTS ====================
@@ -22,7 +22,6 @@ The following is a listing of the open source components detailed in
 this document. This list is provided for your convenience; please read
 further if you wish to review the copyright notice(s) and the full text
 of the license associated with each component.
-
 
 SECTION 1: Apache License, V2.0
 
@@ -48,7 +47,7 @@ SECTION 1: Apache License, V2.0
    >>> joda-time:joda-time-2.10.14
    >>> com.fasterxml.jackson.core:jackson-core-2.13.3
    >>> com.fasterxml.jackson.core:jackson-annotations-2.13.3
-   >>> com.fasterxml.jackson.core:jackson-databind-2.13.4.2
+   >>> com.fasterxml.jackson.core:jackson-databind-2.13.4.1
    >>> io.netty:netty-buffer-4.1.89.Final
    >>> io.netty:netty-transport-4.1.89.Final
    >>> io.netty:netty-resolver-4.1.89.Final
@@ -71,7 +70,7 @@ SECTION 2: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> com.google.re2j:re2j-1.6
    >>> dk.brics:automaton-1.12-4
 
-SECTION 3: Creative Commons Attribution 2.5 
+SECTION 3: Creative Commons Attribution 2.5
 
    >>> com.google.code.findbugs:jsr305-3.0.2
 
@@ -83,86 +82,147 @@ SECTION 4: Eclipse Public License, V2.0
 APPENDIX. Standard License Files
 
    >>> Apache License, V2.0
-   >>> Creative Commons Attribution 2.5 
+   >>> Creative Commons Attribution 2.5
    >>> Eclipse Public License, V2.0
-
 
 -------------------- SECTION 1: Apache License, V2.0 --------------------
 
    >>> commons-lang:commons-lang-2.6
 
        Apache Commons Lang
+
        Copyright 2001-2011 The Apache Software Foundation
-       
+
+
+
        This product includes software developed by
+
        The Apache Software Foundation (http://www.apache.org/).
-       
+
+
+
        Licensed to the Apache Software Foundation (ASF) under one or more
+
        contributor license agreements.  See the NOTICE file distributed with
+
        this work for additional information regarding copyright ownership.
+
        The ASF licenses this file to You under the Apache License, Version 2.0
+
        (the "License"); you may not use this file except in compliance with
+
        the License.  You may obtain a copy of the License at
-       
+
+
+
        http://www.apache.org/licenses/LICENSE-2.0
-       
+
+
+
        Unless required by applicable law or agreed to in writing, software
+
        distributed under the License is distributed on an "AS IS" BASIS,
+
        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
        See the License for the specific language governing permissions and
+
        limitations under the License.
 
 
    >>> commons-logging:commons-logging-1.2
 
        Apache Commons Logging
+
        Copyright 2003-2014 The Apache Software Foundation
-       
+
+
+
        This product includes software developed at
+
        The Apache Software Foundation (http://www.apache.org/).
-       
+
+
+
        Licensed to the Apache Software Foundation (ASF) under one or more
+
        contributor license agreements.  See the NOTICE file distributed with
+
        this work for additional information regarding copyright ownership.
+
        The ASF licenses this file to You under the Apache License, Version 2.0
+
        (the "License"); you may not use this file except in compliance with
+
        the License.  You may obtain a copy of the License at
-       
+
+
+
        http://www.apache.org/licenses/LICENSE-2.0
-       
+
+
+
        Unless required by applicable law or agreed to in writing, software
+
        distributed under the License is distributed on an "AS IS" BASIS,
+
        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
        See the License for the specific language governing permissions and
+
        limitations under the License.
-       
+
+
+
        This software consists of voluntary contributions made by many
+
        individuals on behalf of the Apache Software Foundation.  For more
+
        information on the Apache Software Foundation, please see
+
        <http://www.apache.org/>.
 
 
    >>> commons-collections:commons-collections-3.2.2
 
        Apache Commons Collections
+
        Copyright 2001-2015 The Apache Software Foundation
-       
+
+
+
        This product includes software developed by
+
        The Apache Software Foundation (http://www.apache.org/).
-       
+
+
+
        Licensed to the Apache Software Foundation (ASF) under one or more
+
        contributor license agreements.  See the NOTICE file distributed with
+
        this work for additional information regarding copyright ownership.
+
        The ASF licenses this file to You under the Apache License, Version 2.0
+
        (the "License"); you may not use this file except in compliance with
+
        the License.  You may obtain a copy of the License at
-       
+
+
+
        http://www.apache.org/licenses/LICENSE-2.0
-       
+
+
+
        Unless required by applicable law or agreed to in writing, software
+
        distributed under the License is distributed on an "AS IS" BASIS,
+
        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
        See the License for the specific language governing permissions and
+
        limitations under the License.
 
 
@@ -2897,7 +2957,7 @@ APPENDIX. Standard License Files
 
    >>> com.github.ben-manes.caffeine:caffeine-2.9.3
 
-       
+
         * Copyright 2015 Ben Manes. All Rights Reserved.
         *
         * Licensed under the Apache License, Version 2.0 (the "License");
@@ -6394,7 +6454,7 @@ APPENDIX. Standard License Files
 
    >>> joda-time:joda-time-2.10.14
 
-       
+
 
        = NOTICE file corresponding to section 4d of the Apache License Version 2.0 =
 
@@ -6402,13 +6462,13 @@ APPENDIX. Standard License Files
        Joda.org (https://www.joda.org/).
 
          Copyright 2001-2005 Stephen Colebourne
-        
+
           Licensed under the Apache License, Version 2.0 (the "License");
           you may not use this file except in compliance with the License.
           You may obtain a copy of the License at
-        
+
               http://www.apache.org/licenses/LICENSE-2.0
-        
+
           Unless required by applicable law or agreed to in writing, software
           distributed under the License is distributed on an "AS IS" BASIS,
           WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -6426,20 +6486,20 @@ APPENDIX. Standard License Files
 
 
 
-   >>> com.fasterxml.jackson.core:jackson-databind-2.13.4.2
+   >>> com.fasterxml.jackson.core:jackson-databind-2.13.4.1
 
 
 
    >>> io.netty:netty-buffer-4.1.89.Final
 
        Copyright 2020 The Netty Project
-        
+
          The Netty Project licenses this file to you under the Apache License,
          version 2.0 (the "License"); you may not use this file except in compliance
          with the License. You may obtain a copy of the License at:
-        
+
            https://www.apache.org/licenses/LICENSE-2.0
-        
+
          Unless required by applicable law or agreed to in writing, software
          distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
          WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -8019,13 +8079,13 @@ APPENDIX. Standard License Files
    >>> io.netty:netty-codec-4.1.89.Final
 
        Copyright 2012 The Netty Project
-        
+
          The Netty Project licenses this file to you under the Apache License,
          version 2.0 (the "License"); you may not use this file except in compliance
          with the License. You may obtain a copy of the License at:
-        
+
            https://www.apache.org/licenses/LICENSE-2.0
-        
+
          Unless required by applicable law or agreed to in writing, software
          distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
          WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -10226,13 +10286,13 @@ APPENDIX. Standard License Files
    >>> io.netty:netty-transport-native-epoll-4.1.89.Final
 
        Copyright 2016 The Netty Project
-        
+
          The Netty Project licenses this file to you under the Apache License,
          version 2.0 (the "License"); you may not use this file except in compliance
          with the License. You may obtain a copy of the License at:
-        
+
            https://www.apache.org/licenses/LICENSE-2.0
-        
+
          Unless required by applicable law or agreed to in writing, software
          distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
          WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -10243,13 +10303,13 @@ APPENDIX. Standard License Files
    >>> io.netty:netty-transport-classes-epoll-4.1.89.Final
 
        Copyright 2016 The Netty Project
-        
+
          The Netty Project licenses this file to you under the Apache License,
          version 2.0 (the "License"); you may not use this file except in compliance
          with the License. You may obtain a copy of the License at:
-        
+
            https://www.apache.org/licenses/LICENSE-2.0
-        
+
          Unless required by applicable law or agreed to in writing, software
          distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
          WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -10262,9 +10322,13 @@ APPENDIX. Standard License Files
    >>> com.yammer.metrics:metrics-core-2.2.0
 
        Written by Doug Lea with assistance from members of JCP JSR-166
-       
+
+
+
        Expert Group and released to the public domain, as explained at
-       
+
+
+
        http://creativecommons.org/publicdomain/zero/1.0/
 
 
@@ -10347,7 +10411,7 @@ APPENDIX. Standard License Files
    >>> com.google.re2j:re2j-1.6
 
        Copyright (c) 2020 The Go Authors. All rights reserved.
-        
+
          Use of this source code is governed by a BSD-style
          license that can be found in the LICENSE file.
 
@@ -10356,7 +10420,7 @@ APPENDIX. Standard License Files
 
        * Copyright (c) 2001-2017 Anders Moeller
         * All rights reserved.
-        * 
+        *
         * Redistribution and use in source and binary forms, with or without
         * modification, are permitted provided that the following conditions
         * are met:
@@ -10367,7 +10431,7 @@ APPENDIX. Standard License Files
         *    documentation and/or other materials provided with the distribution.
         * 3. The name of the author may not be used to endorse or promote products
         *    derived from this software without specific prior written permission.
-        * 
+        *
         * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
         * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
         * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -10440,12 +10504,12 @@ APPENDIX. Standard License Files
 
 -------------------- SECTION 1: Apache License, V2.0 --------------------
 
-Apache License 
+Apache License
 
-Version 2.0, January 2004 
-http://www.apache.org/licenses/ 
+Version 2.0, January 2004
+http://www.apache.org/licenses/
 
-TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION 
+TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 
 1. Definitions.
 
@@ -10453,7 +10517,7 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 and distribution as defined by Sections 1 through 9 of this document.
 
 "Licensor" shall mean the copyright owner or entity authorized by the
-copyright owner that is granting the License.  
+copyright owner that is granting the License.
 
 "Legal Entity" shall mean the union of the acting entity and all other
 entities that control, are controlled by, or are under common control
@@ -10464,7 +10528,7 @@ of fifty percent (50%) or more of the outstanding shares, or (iii)
 beneficial ownership of such entity.
 
 "You" (or "Your") shall mean an individual or Legal Entity exercising
-permissions granted by this License.  
+permissions granted by this License.
 
 "Source" form shall mean the preferred form for making modifications,
 including but not limited to software source code, documentation source,
@@ -10473,12 +10537,12 @@ and configuration files.
 "Object" form shall mean any form resulting from mechanical transformation
 or translation of a Source form, including but not limited to compiled
 object code, generated documentation, and conversions to other media
-types.  
+types.
 
 "Work" shall mean the work of authorship, whether in Source or
 Object form, made available under the License, as indicated by a copyright
 notice that is included in or attached to the work (an example is provided
-in the Appendix below).  
+in the Appendix below).
 
 "Derivative Works" shall mean any work, whether in Source or Object form,
 that is based on (or derived from) the Work and for which the editorial
@@ -10613,7 +10677,7 @@ hold each Contributor harmless for any liability incurred by, or claims
 asserted against, such Contributor by reason of your accepting any such
 warranty or additional liability.
 
-END OF TERMS AND CONDITIONS 
+END OF TERMS AND CONDITIONS
 
 APPENDIX: How to apply the Apache License to your work.
 
@@ -10644,65 +10708,126 @@ limitations under the License.
 
 CREATIVE COMMONS CORPORATION IS NOT A LAW FIRM AND DOES NOT PROVIDE LEGAL SERVICES. DISTRIBUTION OF THIS LICENSE DOES NOT CREATE AN ATTORNEY-CLIENT RELATIONSHIP. CREATIVE COMMONS PROVIDES THIS INFORMATION ON AN "AS-IS" BASIS. CREATIVE COMMONS MAKES NO WARRANTIES REGARDING THE INFORMATION PROVIDED, AND DISCLAIMS LIABILITY FOR DAMAGES RESULTING FROM ITS USE.
 
+
+
 License
+
+
 
 THE WORK (AS DEFINED BELOW) IS PROVIDED UNDER THE TERMS OF THIS CREATIVE COMMONS PUBLIC LICENSE ("CCPL" OR "LICENSE"). THE WORK IS PROTECTED BY COPYRIGHT AND/OR OTHER APPLICABLE LAW. ANY USE OF THE WORK OTHER THAN AS AUTHORIZED UNDER THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
 
+
+
 BY EXERCISING ANY RIGHTS TO THE WORK PROVIDED HERE, YOU ACCEPT AND AGREE TO BE BOUND BY THE TERMS OF THIS LICENSE. THE LICENSOR GRANTS YOU THE RIGHTS CONTAINED HERE IN CONSIDERATION OF YOUR ACCEPTANCE OF SUCH TERMS AND CONDITIONS.
+
+
 
 1. Definitions
 
+
+
 "Collective Work" means a work, such as a periodical issue, anthology or encyclopedia, in which the Work in its entirety in unmodified form, along with a number of other contributions, constituting separate and independent works in themselves, are assembled into a collective whole. A work that constitutes a Collective Work will not be considered a Derivative Work (as defined below) for the purposes of this License.
+
+
 
 "Derivative Work" means a work based upon the Work or upon the Work and other pre-existing works, such as a translation, musical arrangement, dramatization, fictionalization, motion picture version, sound recording, art reproduction, abridgment, condensation, or any other form in which the Work may be recast, transformed, or adapted, except that a work that constitutes a Collective Work will not be considered a Derivative Work for the purpose of this License. For the avoidance of doubt, where the Work is a musical composition or sound recording, the synchronization of the Work in timed-relation with a moving image ("synching") will be considered a Derivative Work for the purpose of this License.
 
+
+
 "Licensor" means the individual or entity that offers the Work under the terms of this License.
+
+
 
 "Original Author" means the individual or entity who created the Work.
 
+
+
 "Work" means the copyrightable work of authorship offered under the terms of this License.
+
+
 
 "You" means an individual or entity exercising rights under this License who has not previously violated the terms of this License with respect to the Work, or who has received express permission from the Licensor to exercise rights under this License despite a previous violation.
 
+
+
 2. Fair Use Rights. Nothing in this license is intended to reduce, limit, or restrict any rights arising from fair use, first sale or other limitations on the exclusive rights of the copyright owner under copyright law or other applicable laws.
+
+
 
 3. License Grant. Subject to the terms and conditions of this License, Licensor hereby grants You a worldwide, royalty-free, non-exclusive, perpetual (for the duration of the applicable copyright) license to exercise the rights in the Work as stated below:
 
+
+
     to reproduce the Work, to incorporate the Work into one or more Collective Works, and to   reproduce the Work as incorporated in the Collective Works;
+
     to create and reproduce Derivative Works;
+
     to distribute copies or phonorecords of, display publicly, perform publicly, and perform publicly by means of a digital audio transmission the Work including as incorporated in Collective Works;
+
     to distribute copies or phonorecords of, display publicly, perform publicly, and perform publicly by means of a digital audio transmission Derivative Works.
 
+
+
 For the avoidance of doubt, where the work is a musical composition:
+
      Performance Royalties Under Blanket Licenses. Licensor waives the exclusive right to collect, whether individually or via a performance rights society (e.g. ASCAP, BMI, SESAC), royalties for the public performance or public digital performance (e.g. webcast) of the Work.
+
      Mechanical Rights and Statutory Royalties. Licensor waives the exclusive right to collect, whether individually or via a music rights agency or designated agent (e.g. Harry Fox Agency), royalties for any phonorecord You create from the Work ("cover version") and distribute, subject to the compulsory license created by 17 USC Section 115 of the US Copyright Act (or the equivalent in other jurisdictions).
+
     Webcasting Rights and Statutory Royalties. For the avoidance of doubt, where the Work is a sound recording, Licensor waives the exclusive right to collect, whether individually or via a performance-rights society (e.g. SoundExchange), royalties for the public digital performance (e.g. webcast) of the Work, subject to the compulsory license created by 17 USC Section 114 of the US Copyright Act (or the equivalent in other jurisdictions).
+
+
 
 The above rights may be exercised in all media and formats whether now known or hereafter devised. The above rights include the right to make such modifications as are technically necessary to exercise the rights in other media and formats. All rights not expressly granted by Licensor are hereby reserved.
 
+
+
 4. Restrictions.The license granted in Section 3 above is expressly made subject to and limited by the following restrictions:
 
+
+
     You may distribute, publicly display, publicly perform, or publicly digitally perform the Work only under the terms of this License, and You must include a copy of, or the Uniform Resource Identifier for, this License with every copy or phonorecord of the Work You distribute, publicly display, publicly perform, or publicly digitally perform. You may not offer or impose any terms on the Work that alter or restrict the terms of this License or the recipients' exercise of the rights granted hereunder. You may not sublicense the Work. You must keep intact all notices that refer to this License and to the disclaimer of warranties. You may not distribute, publicly display, publicly perform, or publicly digitally perform the Work with any technological measures that control access or use of the Work in a manner inconsistent with the terms of this License Agreement. The above applies to the Work as incorporated in a Collective Work, but this does not require the Collective Work apart from the Work itself to be made subject to the terms of this License. If You create a Collective Work, upon notice from any Licensor You must, to the extent practicable, remove from the Collective Work any credit as required by clause 4(b), as requested. If You create a Derivative Work, upon notice from any Licensor You must, to the extent practicable, remove from the Derivative Work any credit as required by clause 4(b), as requested.
+
     If you distribute, publicly display, publicly perform, or publicly digitally perform the Work or any Derivative Works or Collective Works, You must keep intact all copyright notices for the Work and provide, reasonable to the medium or means You are utilizing: (i) the name of the Original Author (or pseudonym, if applicable) if supplied, and/or (ii) if the Original Author and/or Licensor designate another party or parties (e.g. a sponsor institute, publishing entity, journal) for attribution in Licensor's copyright notice, terms of service or by other reasonable means, the name of such party or parties; the title of the Work if supplied; to the extent reasonably practicable, the Uniform Resource Identifier, if any, that Licensor specifies to be associated with the Work, unless such URI does not refer to the copyright notice or licensing information for the Work; and in the case of a Derivative Work, a credit identifying the use of the Work in the Derivative Work (e.g., "French translation of the Work by Original Author," or "Screenplay based on original Work by Original Author"). Such credit may be implemented in any reasonable manner; provided, however, that in the case of a Derivative Work or Collective Work, at a minimum such credit will appear where any other comparable authorship credit appears and in a manner at least as prominent as such other comparable authorship credit.
+
+
 
 5. Representations, Warranties and Disclaimer
 
+
+
 UNLESS OTHERWISE MUTUALLY AGREED TO BY THE PARTIES IN WRITING, LICENSOR OFFERS THE WORK AS-IS AND MAKES NO REPRESENTATIONS OR WARRANTIES OF ANY KIND CONCERNING THE WORK, EXPRESS, IMPLIED, STATUTORY OR OTHERWISE, INCLUDING, WITHOUT LIMITATION, WARRANTIES OF TITLE, MERCHANTIBILITY, FITNESS FOR A PARTICULAR PURPOSE, NONINFRINGEMENT, OR THE ABSENCE OF LATENT OR OTHER DEFECTS, ACCURACY, OR THE PRESENCE OF ABSENCE OF ERRORS, WHETHER OR NOT DISCOVERABLE. SOME JURISDICTIONS DO NOT ALLOW THE EXCLUSION OF IMPLIED WARRANTIES, SO SUCH EXCLUSION MAY NOT APPLY TO YOU.
+
+
 
 6. Limitation on Liability. EXCEPT TO THE EXTENT REQUIRED BY APPLICABLE LAW, IN NO EVENT WILL LICENSOR BE LIABLE TO YOU ON ANY LEGAL THEORY FOR ANY SPECIAL, INCIDENTAL, CONSEQUENTIAL, PUNITIVE OR EXEMPLARY DAMAGES ARISING OUT OF THIS LICENSE OR THE USE OF THE WORK, EVEN IF LICENSOR HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 
+
+
 7. Termination
 
+
+
     This License and the rights granted hereunder will terminate automatically upon any breach by You of the terms of this License. Individuals or entities who have received Derivative Works or Collective Works from You under this License, however, will not have their licenses terminated provided such individuals or entities remain in full compliance with those licenses. Sections 1, 2, 5, 6, 7, and 8 will survive any termination of this License.
+
     Subject to the above terms and conditions, the license granted here is perpetual (for the duration of the applicable copyright in the Work). Notwithstanding the above, Licensor reserves the right to release the Work under different license terms or to stop distributing the Work at any time; provided, however that any such election will not serve to withdraw this License (or any other license that has been, or is required to be, granted under the terms of this License), and this License will continue in full force and effect unless terminated as stated above.
+
+
 
 8. Miscellaneous
 
+
+
     Each time You distribute or publicly digitally perform the Work or a Collective Work, the Licensor offers to the recipient a license to the Work on the same terms and conditions as the license granted to You under this License.
+
     Each time You distribute or publicly digitally perform a Derivative Work, Licensor offers to the recipient a license to the original Work on the same terms and conditions as the license granted to You under this License.
+
     If any provision of this License is invalid or unenforceable under applicable law, it shall not affect the validity or enforceability of the remainder of the terms of this License, and without further action by the parties to this agreement, such provision shall be reformed to the minimum extent necessary to make such provision valid and enforceable.
+
     No term or provision of this License shall be deemed waived and no breach consented to unless such waiver or consent shall be in writing and signed by the party to be charged with such waiver or consent.
+
     This License constitutes the entire agreement between the parties with respect to the Work licensed here. There are no understandings, agreements or representations with respect to the Work not specified here. Licensor shall not be bound by any additional provisions that may appear in any communication from You. This License may not be modified without the mutual written agreement of the Licensor and You.
+
 
 
 -------------------- SECTION 3: Eclipse Public License, V2.0 --------------------
@@ -11005,16 +11130,16 @@ are met:
 1. Redistributions of source code must retain the above copyright
    notice, this list of conditions and the following disclaimer.
 
-2. The origin of this software must not be misrepresented; you must 
-   not claim that you wrote the original software.  If you use this 
-   software in a product, an acknowledgment in the product 
+2. The origin of this software must not be misrepresented; you must
+   not claim that you wrote the original software.  If you use this
+   software in a product, an acknowledgment in the product
    documentation would be appreciated but is not required.
 
 3. Altered source versions must be plainly marked as such, and must
    not be misrepresented as being the original software.
 
-4. The name of the author may not be used to endorse or promote 
-   products derived from this software without specific prior written 
+4. The name of the author may not be used to endorse or promote
+   products derived from this software without specific prior written
    permission.
 
 THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
@@ -11123,6 +11248,9 @@ The Apache Software Foundation (http://www.apache.org/).
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations
  * under the License.
+
+
+
 ======================================================================
 
 To the extent any open source components are licensed under the GPL
@@ -11140,4 +11268,5 @@ a CD or equivalent physical medium. This offer to obtain a copy of the
 Source Files is valid for three years from the date you acquired or last used this
 Software product. Alternatively, the Source Files may accompany the
 VMware service.
-[WAVEFRONTHQJAVA2023-04.1GAAT041023]
+
+[WAVEFRONTHQJAVA2023021GASV021623]
