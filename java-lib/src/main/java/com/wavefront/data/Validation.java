@@ -499,12 +499,12 @@ public class Validation {
     final String source = log.getHost();
     final String message = log.getMessage();
 
-
     if (StringUtils.isBlank(source)) {
       LOG_ERROR_COUNTERS.get("logSourceMissing").inc();
       throw new DataValidationException(Validation.LOG_SOURCE_REQUIRED_ERROR);
     }
-    if (source.length() > config.getHostLengthLimit()) {
+
+    if (!config.enableHyperlogsConvergedCsp() && source.length() > config.getHostLengthLimit()) {
       LOG_ERROR_COUNTERS.get("logSourceTooLong").inc();
       throw new DataValidationException(String.format(LOG_SOURCE_TOO_LONG_ERROR, source.length(),
               config.getHostLengthLimit(), source));

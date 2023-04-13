@@ -599,6 +599,19 @@ public class ValidationTest {
   }
 
   @Test
+  public void testValidLogForCSPTenant() {
+    ReportLog hostTooLongLog = getValidLog();
+    StringBuilder hostTooLong = new StringBuilder();
+    config.setEnableHyperlogsConvergedCsp(true);
+    for (int i = 0; i < config.getHostLengthLimit() + 1; i++) {
+      hostTooLong.append("a");
+    }
+    hostTooLongLog.setHost(String.valueOf(hostTooLong));
+    // does not throw an exception: LOG_SOURCE_TOO_LONG_ERROR
+    Validation.validateLog(hostTooLongLog, config);
+  }
+
+  @Test
   public void testValidHistogram() {
     ReportHistogramDecoder decoder = new ReportHistogramDecoder();
     List<ReportHistogram> out = new ArrayList<>();

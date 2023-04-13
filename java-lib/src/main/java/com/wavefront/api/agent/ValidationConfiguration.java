@@ -88,6 +88,12 @@ public class ValidationConfiguration {
    */
   private int logAnnotationsCountLimit = 100;
 
+  /**
+   * This flag indicates if the customer is on CSP and tenants are converged (the same)
+   * between WF and VRLIC
+   */
+  private boolean enableHyperlogsConvergedCsp = false;
+
   public int getMetricLengthLimit() {
     return metricLengthLimit;
   }
@@ -212,6 +218,15 @@ public class ValidationConfiguration {
     return this;
   }
 
+  public boolean enableHyperlogsConvergedCsp() {
+    return enableHyperlogsConvergedCsp;
+  }
+
+  public ValidationConfiguration setEnableHyperlogsConvergedCsp(boolean enableHyperlogsConvergedCsp) {
+    this.enableHyperlogsConvergedCsp = enableHyperlogsConvergedCsp;
+    return this;
+  }
+
   public void updateFrom(@Nullable ValidationConfiguration other) {
     if (other == null) return;
     this.metricLengthLimit = other.getMetricLengthLimit();
@@ -228,5 +243,6 @@ public class ValidationConfiguration {
     this.logAnnotationsKeyLengthLimit = other.getLogAnnotationsKeyLengthLimit();
     this.logAnnotationsValueLengthLimit = other.getLogAnnotationsValueLengthLimit();
     this.logAnnotationsCountLimit = other.getLogAnnotationsCountLimit();
+    this.enableHyperlogsConvergedCsp = other.enableHyperlogsConvergedCsp();
   }
 }
