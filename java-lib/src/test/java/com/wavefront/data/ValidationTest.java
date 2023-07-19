@@ -493,17 +493,6 @@ public class ValidationTest {
     Exception e = assertThrows(DataValidationException.class, () -> Validation.validateLog(nullHostLog, config));
     assertEquals(Validation.LOG_SOURCE_REQUIRED_ERROR, e.getMessage());
 
-    // Test Host Too Long
-    ReportLog hostTooLongLog = getValidLog();
-    StringBuilder hostTooLong = new StringBuilder();
-    for (int i = 0; i < config.getHostLengthLimit() + 1; i++) {
-      hostTooLong.append("a");
-    }
-    hostTooLongLog.setHost(String.valueOf(hostTooLong));
-    e = assertThrows(DataValidationException.class, () -> Validation.validateLog(hostTooLongLog, config));
-    String errorMsg = String.format(Validation.LOG_SOURCE_TOO_LONG_ERROR, (config.getHostLengthLimit() + 1)
-            , config.getHostLengthLimit(), hostTooLong);
-    assertEquals(errorMsg, e.getMessage());
 
     // Test Log Message Too Long
     ReportLog messageTooLongLog = getValidLog();
@@ -513,7 +502,8 @@ public class ValidationTest {
     }
     messageTooLongLog.setMessage(String.valueOf(stringTooLong));
     e = assertThrows(DataValidationException.class, () -> Validation.validateLog(messageTooLongLog, config));
-    errorMsg = String.format(Validation.LOG_MESSAGE_TOO_LONG_ERROR, config.getLogLengthLimit() + 1
+    String errorMsg = String.format(Validation.LOG_MESSAGE_TOO_LONG_ERROR,
+        config.getLogLengthLimit() + 1
             , config.getLogLengthLimit(), messageTooLongLog.getMessage());
     assertEquals(errorMsg, e.getMessage());
 
@@ -599,10 +589,9 @@ public class ValidationTest {
   }
 
   @Test
-  public void testValidLogForCSPTenant() {
+  public void testDoNotValidLogSourceLength() {
     ReportLog hostTooLongLog = getValidLog();
     StringBuilder hostTooLong = new StringBuilder();
-    config.setEnableHyperlogsConvergedCsp(true);
     for (int i = 0; i < config.getHostLengthLimit() + 1; i++) {
       hostTooLong.append("a");
     }
