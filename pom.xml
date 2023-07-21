@@ -4,7 +4,7 @@
 
   <groupId>com.wavefront</groupId>
   <artifactId>javalib</artifactId>
-  <version>2023-07.5</version>
+  <version>2023-07.6-SNAPSHOT</version>
   <modules>
     <module>java-lib</module>
     <module>yammer-metrics</module>
@@ -33,7 +33,7 @@
     <connection>scm:git:git@github.com:wavefronthq/java-lib.git</connection>
     <developerConnection>scm:git:git@github.com:wavefronthq/java-lib.git</developerConnection>
     <url>git@github.com:wavefronthq/java-lib.git</url>
-    <tag>javalib-2023-07.5</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <distributionManagement>
