@@ -530,10 +530,6 @@ public class Validation {
           LOG_ERROR_COUNTERS.get("logAnnotationKeyBadChars").inc();
           throw new DataValidationException(String.format(Validation.LOG_TAG_KEY_ILLEGAL_CHAR_ERROR, tagK));
         }
-        if (StringUtils.isBlank(tagV)) {
-          LOG_ERROR_COUNTERS.get("logAnnotationValueEmpty").inc();
-          throw new EmptyTagValueException(String.format(Validation.LOG_ANNOTATION_NO_VALUE_ERROR, tagK));
-        }
 
         if (tagV.length() > config.getLogAnnotationsValueLengthLimit()) {
           LOG_ERROR_COUNTERS.get("logAnnotationValueTooLong").inc();

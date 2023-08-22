@@ -563,15 +563,6 @@ public class ValidationTest {
     errorMsg = String.format(Validation.LOG_TAG_KEY_ILLEGAL_CHAR_ERROR, invalidKey);
     assertEquals(errorMsg, e.getMessage());
 
-    // Test blank Annotation value
-    ReportLog blankAnnotationValueLog = getValidLog();
-    annotationList = new ArrayList<>();
-    annotationList.add(new Annotation("mKey", ""));
-    blankAnnotationValueLog.setAnnotations(annotationList);
-    e = assertThrows(EmptyTagValueException.class, () -> Validation.validateLog(blankAnnotationValueLog, config));
-    errorMsg = String.format(Validation.LOG_ANNOTATION_NO_VALUE_ERROR, "mKey");
-    assertEquals(errorMsg, e.getMessage());
-
     // Test annotation value Too long
     ReportLog annotationValueTooLongLog = getValidLog();
     annotationList = new ArrayList<>();
