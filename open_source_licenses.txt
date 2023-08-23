@@ -1,6 +1,6 @@
 open_source_licenses.txt
 
-Wavefront by VMware 2023-08.1 GA
+Wavefront by VMware 2023-08.2 GA
 ======================================================================
 
 The following copyright statements and licenses apply to various open
